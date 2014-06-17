@@ -1144,13 +1144,13 @@ def main(argv):
     pass
   
 if __name__ == '__main__':
-#  try:
+  try:
     main(sys.argv[1:])
-#  except KeyboardInterrupt:
-#    try:
-#      sqlconn.commit()
-#      sqlconn.close()
-#      print
-    #except NameError:
-    #  pass
-    #sys.exit(4)
+  except KeyboardInterrupt:
+    try:
+      sqlconn.commit()
+      sqlconn.close()
+      print
+    except NameError:
+      pass
+    sys.exit(4)
