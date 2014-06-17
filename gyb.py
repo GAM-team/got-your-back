@@ -860,6 +860,7 @@ def main(argv):
       divider = '\\'
     else:
       divider = '/'
+    created_labels = []
     for path, subdirs, files in os.walk(options.local_folder):
       for filename in files:
         if filename[-4:].lower() != u'.mbx' and filename[-5:].lower() != u'.mbox':
@@ -889,6 +890,15 @@ def main(argv):
             labels = []
           if options.label_restored:
             labels.append(options.label_restored)
+          for label in labels:
+            if label not in created_labels and label.find('/') != -1: # create parent labels
+              create_label = label
+              while True:
+                imapconn.create(create_label)
+                created_labels.append(create_label)
+                if create_label.find('/') == -1:
+                  break
+                create_label = create_label[:create_label.rfind('/')]
           flags = []
           if u'Unread' in labels:
             labels.remove(u'Unread')
