@@ -52,3 +52,7 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Project specific
+*.cfg
+nobrowser.txt
+GYB-GMail-Backup-*/
