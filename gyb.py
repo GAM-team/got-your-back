@@ -14,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""\n%s\n\nGot Your Back (GYB) is a command line tool which allows users to backup and restore their Gmail.
+u"""\n%s\n\nGot Your Back (GYB) is a command line tool which allows users to backup and restore their Gmail.
 
 For more information, see http://code.google.com/p/got-your-back/
 """
 
 global __name__, __author__, __email__, __version__, __license__
-__program_name__ = 'Got Your Back: Gmail Backup'
-__author__ = 'Jay Lee'
-__email__ = 'jay0lee@gmail.com'
-__version__ = '0.21 Alpha'
-__license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
-__db_schema_version__ = '5'
-__db_schema_min_version__ = '2'        #Minimum for restore
+__program_name__ = u'Got Your Back: Gmail Backup'
+__author__ = u'Jay Lee'
+__email__ = u'jay0lee@gmail.com'
+__version__ = u'0.21 Alpha'
+__license__ = u'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
+__db_schema_version__ = u'5'
+__db_schema_min_version__ = u'2'        #Minimum for restore
 
 import imaplib
 from optparse import OptionParser, SUPPRESS_HELP
@@ -42,6 +42,7 @@ import socket
 import datetime
 import sqlite3
 import email
+import mailbox
 import mimetypes
 import re
 import shlex
@@ -69,7 +70,7 @@ def SetupOptionParser():
   parser.add_option('--email',
     dest='email',
     help='Full email address of user or group to act against')
-  action_choices = ['backup','restore', 'attach2drive', 'restore-group', 'count', 'purge', 'estimate', 'reindex']
+  action_choices = ['backup','restore', 'restore-group', 'restore-mbox', 'count', 'purge', 'estimate', 'reindex']
   parser.add_option('--action',
     type='choice',
     choices=action_choices,
@@ -280,7 +281,7 @@ def check_db_settings(db_settings, action, user_email_address):
     sys.exit(4)
 
   # Only restores are allowed to use a backup folder started with another account (can't allow 2 Google Accounts to backup/estimate from same folder)
-  if action not in ['restore', 'restore-group']:
+  if action not in ['restore', 'restore-group', 'restore-mbox']:
     if user_email_address.lower() != db_settings['email_address'].lower():
       print "\n\nSorry, this backup folder should only be used with the %s account that it was created with for incremental backups. You specified the %s account" % (db_settings['email_address'], user_email_address)
       sys.exit(5)
@@ -483,7 +484,7 @@ def main(argv):
       sys.exit(9)
 
   if not os.path.isdir(options.local_folder):
-    if options.action in ['backup', 'attach2drive']:
+    if options.action in ['backup',]:
       os.mkdir(options.local_folder)
     elif options.action in ['restore', 'restore-group']:
       print 'Error: Folder %s does not exist. Cannot restore.' % options.local_folder
@@ -506,10 +507,10 @@ def main(argv):
 
   sqldbfile = os.path.join(options.local_folder, 'msg-db.sqlite')
   # Do we need to initialize a new database?
-  newDB = (not os.path.isfile(sqldbfile)) and (options.action in ['backup', 'attach2drive'])
+  newDB = (not os.path.isfile(sqldbfile)) and (options.action in ['backup', u'restore-mbox'])
   
   #If we're not doing a estimate or if the db file actually exists we open it (creates db if it doesn't exist)
-  if options.action not in ['estimate', 'count', 'purge'] or os.path.isfile(sqldbfile):
+  if options.action not in ['estimate', 'count', 'purge',] or os.path.isfile(sqldbfile):
     print "\nUsing backup folder %s" % options.local_folder
     global sqlconn
     global sqlcur
@@ -520,7 +521,7 @@ def main(argv):
       initializeDB(sqlcur, sqlconn, options.email, uidvalidity)
     db_settings = get_db_settings(sqlcur)
     check_db_settings(db_settings, options.action, options.email)
-    if options.action not in ['restore', 'restore-group']:
+    if options.action not in ['restore', 'restore-group', u'restore-mbox']:
       if ('uidvalidity' not in db_settings or 
           db_settings['db_version'] <  __db_schema_version__):
         convertDB(sqlconn, uidvalidity, db_settings['db_version'])
@@ -537,76 +538,6 @@ def main(argv):
       if db_settings['uidvalidity'] != uidvalidity:
         print "Because of changes on the Gmail server, this folder cannot be used for incremental backups."
         sys.exit(3)
-
-  # ATTACH2DRIVE
-  if options.action == 'attach2drive':
-    if options.use_folder:
-      print 'Using folder %s' % options.use_folder
-      imapconn.select(options.use_folder, readonly=True)
-    else:
-      imapconn.select(ALL_MAIL, readonly=True)
-    messages_to_process = gimaplib.GImapSearch(imapconn, options.gmail_search)
-    backup_path = options.local_folder
-    if not os.path.isdir(backup_path):
-      os.mkdir(backup_path)
-    messages_to_backup = []
-    messages_to_refresh = []
-    #Determine which messages from the search we haven't processed before.
-    print "GYB needs to examine %s messages" % len(messages_to_process)
-    for message_num in messages_to_process:
-      if not newDB and message_is_backed_up(message_num, sqlcur, sqlconn, options.local_folder):
-        messages_to_refresh.append(message_num)
-      else:
-        messages_to_backup.append(message_num)
-    print "GYB already has a backup of %s messages" % (len(messages_to_process) - len(messages_to_backup))
-    backup_count = len(messages_to_backup)
-    print "GYB needs to backup %s messages" % backup_count
-    messages_at_once = options.batch_size
-    backed_up_messages = 0
-    header_parser = email.parser.HeaderParser()
-    for working_messages in batch(messages_to_backup, messages_at_once):
-      #Save message content
-      batch_string = ','.join(working_messages)
-      bad_count = 0
-      while True:
-        try:
-          r, d = imapconn.uid('FETCH', batch_string, '(X-GM-LABELS INTERNALDATE FLAGS BODY.PEEK[])')
-          if r != 'OK':
-            bad_count = bad_count + 1
-            if bad_count > 7:
-              print "\nError: failed to retrieve messages."
-              print "%s %s" % (r, d)
-              sys.exit(5)
-            sleep_time = math.pow(2, bad_count)
-            sys.stdout.write("\nServer responded with %s %s, will retry in %s seconds" % (r, d, str(sleep_time)))
-            time.sleep(sleep_time) # sleep 2 seconds, then 4, 8, 16, 32, 64, 128
-            imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
-            imapconn.select(ALL_MAIL, readonly=True)
-            continue
-          break
-        except imaplib.IMAP4.abort, e:
-          print 'imaplib.abort error:%s, retrying...' % e
-          imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
-          imapconn.select(ALL_MAIL, readonly=True)
-        except socket.error, e:
-          print 'socket.error:%s, retrying...' % e
-          imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
-          imapconn.select(ALL_MAIL, readonly=True)
-      for everything_else_string, full_message in (x for x in d if x != ')'):
-        msg = email.message_from_string(full_message)
-        for part in msg.walk():
-          # multipart/* are just containers
-          if part.get_content_maintype() == 'multipart':
-            continue
-          # Applications should really sanitize the given filename so that an
-          # email message can't be used to overwrite important files
-          filename = part.get_filename()
-          if not filename or filename[-4:].lower() != '.pdf':
-            continue
-          filename = filename.replace('\n', '').replace('\r', '').replace('\\', '-').replace('/', '-')
-          fp = open(os.path.join(options.local_folder, filename), 'wb')
-          fp.write(part.get_payload(decode=True))
-          fp.close()
 
   # BACKUP #
   if options.action == 'backup':
@@ -830,9 +761,11 @@ def main(argv):
     sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from restored_messages''')
     sqlcur.execute('''SELECT message_num, message_internaldate, message_filename FROM messages
                       WHERE message_num NOT IN skip_messages ORDER BY message_internaldate DESC''') # All messages
+
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
     current = 0
+    created_labels = []
     for x in messages_to_restore_results:
       restart_line()
       current += 1
@@ -857,6 +790,15 @@ def main(argv):
         labels.append(l[0].replace('\\','\\\\').replace('"','\\"'))
       if options.label_restored:
         labels.append(options.label_restored)
+      for label in labels:
+        if label not in created_labels and label.find('/') != -1: # create parent labels
+          create_label = label
+          while True:
+            imapconn.create(create_label)
+            created_labels.append(create_label)
+            if create_label.find('/') == -1:
+              break
+            create_label = create_label[:create_label.rfind('/')] 
       flags_query = sqlcur.execute('SELECT DISTINCT flag FROM flags WHERE message_num = ?', (message_num,))
       flags_results = sqlcur.fetchall()
       flags = []
@@ -891,6 +833,121 @@ def main(argv):
            (message_num,))
       sqlconn.commit()
     sqlconn.execute('DETACH resume')
+    sqlconn.commit()
+
+ # RESTORE-MBOX #
+  elif options.action == 'restore-mbox':
+    if options.use_folder:
+      imapconn.select(options.use_folder)
+    else:
+      imapconn.select(ALL_MAIL)  # read/write!
+    resumedb = os.path.join(options.local_folder,
+                            "%s-restored.sqlite" % options.email)
+    if options.noresume:
+      try:
+        os.remove(resumedb)
+      except IOError:
+        pass
+    sqlcur.execute('ATTACH ? as mbox_resume', (resumedb,))
+    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS mbox_resume.restored_messages 
+                        (message TEXT PRIMARY KEY)''')
+    sqlcur.execute('''SELECT message FROM mbox_resume.restored_messages''')
+    messages_to_skip_results = sqlcur.fetchall()
+    messages_to_skip = []
+    for a_message in messages_to_skip_results:
+      messages_to_skip.append(a_message[0])
+    if os.name == 'windows' or os.name == 'nt':
+      divider = '\\'
+    else:
+      divider = '/'
+    for path, subdirs, files in os.walk(options.local_folder):
+      for filename in files:
+        if filename[-4:].lower() != u'.mbx' and filename[-5:].lower() != u'.mbox':
+          continue
+        file_path = '%s%s%s' % (path, divider, filename)
+        mbox = mailbox.mbox(file_path)
+        mbox_count = len(mbox.items())
+        current = 0
+        for message in mbox:
+          current += 1
+          message_marker = '%s-%s' % (file_path, current)
+          if message_marker in messages_to_skip:
+            continue
+          restart_line()
+          labels = message[u'X-Gmail-Labels']
+          if labels != None and labels != u'':
+            bytes, encoding = email.header.decode_header(labels)[0]
+            if encoding != None:
+              try:
+                labels = bytes.decode(encoding)
+              except UnicodeDecodeError:
+                pass
+            else:
+              labels = labels.decode('string-escape')
+            labels = labels.split(u',')
+          else:
+            labels = []
+          if options.label_restored:
+            labels.append(options.label_restored)
+          flags = []
+          if u'Unread' in labels:
+            labels.remove(u'Unread')
+          else:
+            flags.append(u'\Seen')
+          if u'Starred' in labels:
+            flags.append(u'\Flagged')
+            labels.remove(u'Starred')
+          if u'Sent' in labels:
+            labels.remove(u'Sent')
+            labels.append(u'\\\\Sent')
+          if u'Inbox' in labels:
+            labels.remove(u'Inbox')
+            labels.append(u'\\\\Inbox')
+          escaped_labels = []
+          for label in labels:
+            if label.find('\"') != -1:
+              escaped_labels.append(label.replace('\"', '\\"'))
+            else:
+              escaped_labels.append(label)
+            #if label.find('/') != -1:
+            #  labels.remove(label)
+            #  labels.append(label.replace('/', '\/'))
+          del message[u'X-Gmail-Labels']
+          del message[u'X-GM-THRID']
+          flags_string = ' '.join(flags)
+          msg_account, internal_datetime = message.get_from().split(' ', 1)
+          internal_datetime_seconds = time.mktime(email.utils.parsedate(internal_datetime))
+          sys.stdout.write("restoring message %s of %s from %s" % (current, mbox_count, file_path))
+          sys.stdout.flush()
+          full_message = message.as_string()
+          while True:
+            try:
+              r, d = imapconn.append(ALL_MAIL, flags_string, internal_datetime_seconds, full_message)
+              if r != 'OK':
+                print '\nError: %s %s' % (r,d)
+                sys.exit(5)
+              restored_uid = int(re.search('^[APPENDUID [0-9]* ([0-9]*)] \(Success\)$', d[0]).group(1))
+              if len(labels) > 0:
+                labels_string = '("'+'" "'.join(escaped_labels)+'")'
+                r, d = imapconn.uid('STORE', restored_uid, '+X-GM-LABELS', labels_string)
+                if r != 'OK':
+                  print '\nGImap Set Message Labels Failed: %s %s' % (r, d)
+                  sys.exit(33)
+              break
+            except imaplib.IMAP4.abort, e:
+              print '\nimaplib.abort error:%s, retrying...' % e
+              imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
+              imapconn.select(ALL_MAIL)
+            except socket.error, e:
+              print '\nsocket.error:%s, retrying...' % e
+              imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
+              imapconn.select(ALL_MAIL)
+          #Save the fact that it is completed
+          sqlconn.execute(
+            'INSERT INTO restored_messages (message) VALUES (?)',
+             (message_marker,))
+          sqlconn.commit()
+    sqlconn.execute('DETACH mbox_resume')
     sqlconn.commit()
 
   # RESTORE-GROUP #
@@ -1087,13 +1144,13 @@ def main(argv):
     pass
   
 if __name__ == '__main__':
-  try:
+#  try:
     main(sys.argv[1:])
-  except KeyboardInterrupt:
-    try:
-      sqlconn.commit()
-      sqlconn.close()
-      print
-    except NameError:
-      pass
-    sys.exit(4)
+#  except KeyboardInterrupt:
+#    try:
+#      sqlconn.commit()
+#      sqlconn.close()
+#      print
+    #except NameError:
+    #  pass
+    #sys.exit(4)
