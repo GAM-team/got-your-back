@@ -69,7 +69,8 @@ def GImapSearch(imapconn, gmail_search):
   #t, d = imapconn.search(None, 'X-GM-RAW', gmail_search)
   gmail_search = gmail_search.replace('\\', '\\\\').replace('"', '\\"')
   gmail_search = '"' + gmail_search + '"'
-  t, d = imapconn.uid('SEARCH', 'X-GM-RAW', gmail_search)
+  imapconn.literal = gmail_search
+  t, d = imapconn.uid('SEARCH', 'CHARSET', 'UTF-8', 'X-GM-RAW')
   if t != 'OK':
     raise GImapSearchError('GImap Search Failed: %s' % t)
   return d[0].split()
