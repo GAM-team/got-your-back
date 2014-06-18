@@ -23,7 +23,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = u'Got Your Back: Gmail Backup'
 __author__ = u'Jay Lee'
 __email__ = u'jay0lee@gmail.com'
-__version__ = u'0.22'
+__version__ = u'0.23'
 __license__ = u'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __db_schema_version__ = u'5'
 __db_schema_min_version__ = u'2'        #Minimum for restore
@@ -823,7 +823,7 @@ def main(argv):
           try:
             restored_uid = int(re.search('^[APPENDUID [0-9]* ([0-9]*)] \(Success\)$', d[0]).group(1))
           except AttributeError:
-            print '\nerror retrieving uid: retrying...'
+            print '\nerror retrieving uid: %s: retrying...' % d
             time.sleep(3)
             imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
             imapconn.select(ALL_MAIL)
