@@ -70,7 +70,7 @@ def SetupOptionParser():
   parser.add_option('--email',
     dest='email',
     help='Full email address of user or group to act against')
-  action_choices = ['backup','restore', 'restore-group', 'restore-mbox', 'count', 'purge', 'estimate', 'reindex']
+  action_choices = ['backup','restore', 'restore-group', 'restore-mbox', 'count', 'purge', 'purge-labels', 'estimate', 'reindex']
   parser.add_option('--action',
     type='choice',
     choices=action_choices,
@@ -208,6 +208,9 @@ def generateXOAuthString(email, service_account=False, debug=False):
       disable_ssl_certificate_validation = True
     credentials.refresh(httplib2.Http(ca_certs=getProgPath()+'cacert.pem', disable_ssl_certificate_validation=disable_ssl_certificate_validation))
   return "user=%s\001auth=OAuth %s\001\001" % (email, credentials.access_token)
+
+def just_quote(self, arg):
+        return '"%s"' % arg
 
 def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
   method = getattr(service, function)
@@ -510,7 +513,7 @@ def main(argv):
   newDB = (not os.path.isfile(sqldbfile)) and (options.action in ['backup', u'restore-mbox'])
   
   #If we're not doing a estimate or if the db file actually exists we open it (creates db if it doesn't exist)
-  if options.action not in ['estimate', 'count', 'purge',] or os.path.isfile(sqldbfile):
+  if options.action not in ['estimate', 'count', 'purge', 'purge-labels'] or os.path.isfile(sqldbfile):
     print "\nUsing backup folder %s" % options.local_folder
     global sqlconn
     global sqlcur
@@ -1096,6 +1099,24 @@ def main(argv):
       trash_uid_string = ','.join(working_messages)
       t, d = imapconn.uid('STORE', trash_uid_string, '+FLAGS', '\Deleted')
     imapconn.expunge()
+
+  # PURGE-LABELS #
+  elif options.action == u'purge-labels':
+    r, existing_labels = imapconn.list()
+    for label_result in existing_labels:
+      label = re.search(u'\" \"(.*)\"$', label_result).group(1)
+      if label == u'INBOX' or label == u'Deleted' or label[:7] == u'[Gmail]':
+        continue
+
+      # ugly hacking of imaplib to keep it from overquoting/escaping
+      funcType = type(imapconn._quote)
+      imapconn._quote =  funcType(just_quote, imapconn, imapconn)
+
+      print u'Deleting label %s' % label
+      try:
+        r, d = imapconn.delete(label)
+      except imaplib.IMAP4.error, e:
+        print 'bad response: %s' % e
 
   # ESTIMATE #
   elif options.action == 'estimate':
