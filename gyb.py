@@ -363,7 +363,10 @@ def rebuildUIDTable(imapconn, sqlconn):
     for extras, header in (x for x in d if x != ')'):
       uid, message_date = re.search('UID ([0-9]*) (INTERNALDATE \".*\")', 
                                      extras).groups()
-      time_seconds = time.mktime(imaplib.Internaldate2tuple(message_date))
+      try:
+        time_seconds = time.mktime(imaplib.Internaldate2tuple(message_date))
+      except OverflowError:
+        time_seconds = time.time()
       message_internaldate = datetime.datetime.fromtimestamp(time_seconds)
       m = header_parser.parsestr(header, True)
       msgid = m.get('message-id') or '<DummyMsgID>'
@@ -610,7 +613,10 @@ def main(argv):
         uid = search_results.group(2)
         message_date_string = search_results.group(3)
         message_flags_string = search_results.group(4)
-        message_date = imaplib.Internaldate2tuple(message_date_string)
+        try:
+          message_date = imaplib.Internaldate2tuple(message_date_string)
+        except OverflowError: # Bad internal time? Use now...
+          message_date = time.gmtime()
         time_seconds_since_epoch = time.mktime(message_date)
         message_internal_datetime = datetime.datetime.fromtimestamp(time_seconds_since_epoch)
         message_flags = imaplib.ParseFlags(message_flags_string)
@@ -1102,8 +1108,14 @@ def main(argv):
 
   # PURGE-LABELS #
   elif options.action == u'purge-labels':
-    r, existing_labels = imapconn.list()
+    pattern = options.gmail_search
+    if pattern == u'in:anywhere':
+      pattern = u'*'
+    pattern = r'%s' % pattern
+    r, existing_labels = imapconn.list(pattern=pattern)
     for label_result in existing_labels:
+      if type(label_result) is not str:
+        continue 
       label = re.search(u'\" \"(.*)\"$', label_result).group(1)
       if label == u'INBOX' or label == u'Deleted' or label[:7] == u'[Gmail]':
         continue
