@@ -820,7 +820,13 @@ def main(argv):
           if r != 'OK':
             print '\nError: %s %s' % (r,d)
             sys.exit(5)
-          restored_uid = int(re.search('^[APPENDUID [0-9]* ([0-9]*)] \(Success\)$', d[0]).group(1))
+          try:
+            restored_uid = int(re.search('^[APPENDUID [0-9]* ([0-9]*)] \(Success\)$', d[0]).group(1))
+          except AttributeError:
+            print '\nerror retrieving uid: retrying...'
+            time.sleep(3)
+            imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
+            imapconn.select(ALL_MAIL)
           if len(labels) > 0:
             labels_string = '("'+'" "'.join(labels)+'")'
             r, d = imapconn.uid('STORE', restored_uid, '+X-GM-LABELS', labels_string)
