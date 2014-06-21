@@ -932,6 +932,9 @@ def main(argv):
           if u'Inbox' in labels:
             labels.remove(u'Inbox')
             labels.append(u'\\\\Inbox')
+          if u'Important' in labels:
+            labels.remove(u'Important')
+            labels.append(u'\\\\Important')
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
