@@ -189,7 +189,7 @@ found at:
 with information from the APIs Console <https://code.google.com/apis/console>.
 
 """ % (CLIENT_SECRETS)
-  FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS, scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE)
+  FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS, scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=email)
   cfgFile = '%s%s.cfg' % (getProgPath(), email)
   storage = oauth2client.file.Storage(cfgFile)
   credentials = storage.get()

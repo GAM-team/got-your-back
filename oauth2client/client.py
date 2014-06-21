@@ -1164,6 +1164,7 @@ class OAuth2WebServerFlow(Flow):
                auth_uri=GOOGLE_AUTH_URI,
                token_uri=GOOGLE_TOKEN_URI,
                revoke_uri=GOOGLE_REVOKE_URI,
+               login_hint=None,
                **kwargs):
     """Constructor for OAuth2WebServerFlow.
 
@@ -1186,6 +1187,9 @@ class OAuth2WebServerFlow(Flow):
         defaults to Google's endpoints but any OAuth 2.0 provider can be used.
       revoke_uri: string, URI for revoke endpoint. For convenience
         defaults to Google's endpoints but any OAuth 2.0 provider can be used.
+      login_hint: string, Either an email address or domain. Passing this hint
+        will either pre-fill the email box on the sign-in form or select the
+        proper multi-login session, thereby simplifying the login flow.
       **kwargs: dict, The keyword arguments are all optional and required
                         parameters for the OAuth calls.
     """
@@ -1193,6 +1197,7 @@ class OAuth2WebServerFlow(Flow):
     self.client_secret = client_secret
     self.scope = util.scopes_to_string(scope)
     self.redirect_uri = redirect_uri
+    self.login_hint = login_hint
     self.user_agent = user_agent
     self.auth_uri = auth_uri
     self.token_uri = token_uri
@@ -1230,6 +1235,8 @@ class OAuth2WebServerFlow(Flow):
         'redirect_uri': self.redirect_uri,
         'scope': self.scope,
     }
+    if self.login_hint is not None:
+      query_params['login_hint'] = self.login_hint
     query_params.update(self.params)
     return _update_query_params(self.auth_uri, query_params)
 
@@ -1312,7 +1319,7 @@ class OAuth2WebServerFlow(Flow):
 
 @util.positional(2)
 def flow_from_clientsecrets(filename, scope, redirect_uri=None,
-                            message=None, cache=None):
+                            message=None, cache=None, login_hint=None):
   """Create a Flow from a clientsecrets file.
 
   Will create the right kind of Flow based on the contents of the clientsecrets
@@ -1330,7 +1337,9 @@ def flow_from_clientsecrets(filename, scope, redirect_uri=None,
       provided then clientsecrets.InvalidClientSecretsError will be raised.
     cache: An optional cache service client that implements get() and set()
       methods. See clientsecrets.loadfile() for details.
-
+    login_hint: string, Either an email address or domain. Passing this hint
+      will either pre-fill the email box on the sign-in form or select the
+      proper multi-login session, thereby simplifying the login flow.
   Returns:
     A Flow object.
 
@@ -1346,6 +1355,7 @@ def flow_from_clientsecrets(filename, scope, redirect_uri=None,
           'redirect_uri': redirect_uri,
           'auth_uri': client_info['auth_uri'],
           'token_uri': client_info['token_uri'],
+          'login_hint': login_hint,
       }
       revoke_uri = client_info.get('revoke_uri')
       if revoke_uri is not None:
