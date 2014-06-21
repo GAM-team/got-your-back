@@ -91,6 +91,11 @@ def SetupOptionParser():
   parser.add_option('--label-restored',
     dest='label_restored',
     help='Optional: On restore, all messages will additionally receive this label. For example, "--label_restored gyb-restored" will label all uploaded messages with a gyb-restored label.')
+  parser.add_option('--strip-labels',
+    dest='strip_labels',
+    action='store_true',
+    default=False,
+    help='Optional: On restore and restore-mbox, strip existing labels from messages except for those explicitly declared with the --label-restored parameter.')
   parser.add_option('--service-account',
     dest='service_account',
     help='Google Apps Business and Education only. Use OAuth 2.0 Service Account to authenticate.')
@@ -790,11 +795,12 @@ def main(argv):
       full_message = f.read()
       f.close()
       full_message = full_message.replace('\x00', '') # No NULL chars
-      labels_query = sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num = ?', (message_num,))
-      labels_results = sqlcur.fetchall()
       labels = []
-      for l in labels_results:
-        labels.append(l[0].replace('\\','\\\\').replace('"','\\"'))
+      if not options.strip_labels:
+        labels_query = sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num = ?', (message_num,))
+        labels_results = sqlcur.fetchall()
+        for l in labels_results:
+          labels.append(l[0]).replace('\\','\\\\').replace('"','\\"')
       if options.label_restored:
         labels.append(options.label_restored)
       for label in labels:
@@ -889,7 +895,7 @@ def main(argv):
             continue
           restart_line()
           labels = message[u'X-Gmail-Labels']
-          if labels != None and labels != u'':
+          if labels != None and labels != u'' and not options.strip_labels:
             bytes, encoding = email.header.decode_header(labels)[0]
             if encoding != None:
               try:
