@@ -112,25 +112,22 @@ def GImapSetMessageLabels(imapconn, uid, labels):
     print 'GImap Set Message Labels Failed: %s' % t
     exit(33)
 
-def GImapGetFolders(imapconn, folders=['\All']):
+def GImapGetFolders(imapconn):
   '''
   Args:
     imapconn: object, an authenticated IMAP connection
-    foldertype: one of the Gmail special folder types
   
   Returns:
-    string,  selectable IMAP name of folder
+    list of dicts, Gmail special folder types mapped to their localized name
   '''
   list_response_pattern = re.compile(r'\((?P<flags>.*?)\) "(?P<delimiter>.*)" (?P<name>.*)')
-  t, d = imapconn.xatom('list', '"[Gmail]"', '*')
+  t, d = imapconn.xatom('list', '"[Gmail]/"', '*')
   if t != 'OK':
     raise GImapHasExtensionsError('GImap Get Folder could not check server XLIST: %s' % t)
   list_data = imapconn.response('LIST')[1]
+  label_mappings = {}
   for line in list_data:
     flags, delimiter, label_local_name = list_response_pattern.match(line).groups()
-    labels = [None] * len(folders)
     flags_list = flags.split(' ')
-    for folder in folders:
-      if folder in flags_list:
-        labels[folders.index(folder)] = label_local_name
-  return tuple(labels) 
+    label_mappings[flags_list[-1]] = label_local_name[1:-1]
+  return label_mappings

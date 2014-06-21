@@ -524,10 +524,14 @@ def main(argv):
   if options.action not in ['restore-group']:
     imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
     global ALL_MAIL, TRASH, SPAM
-    (ALL_MAIL, TRASH, SPAM) = gimaplib.GImapGetFolders(imapconn, folders=[u'\All', u'Trash', u'Junk'])
-    if ALL_MAIL == None:
-      # Last ditched best guess but All Mail is probably hidden from IMAP...
-      ALL_MAIL = '[Gmail]/All Mail'
+    label_mappings = gimaplib.GImapGetFolders(imapconn)
+    try:
+      ALL_MAIL = label_mappings[u'\\All']
+    except KeyError:
+      print 'Error: Cannot find the Gmail "All Mail" folder. Please make sure it is not hidden from IMAP.'
+      sys.exit(3)
+    TRASH = label_mappings[u'\\Trash']
+    SPAM = label_mappings[u'\\Junk']
     r, d = imapconn.select(ALL_MAIL, readonly=True)
     if r == 'NO':
       print "Error: Cannot select the Gmail \"All Mail\" folder. Please make sure it is not hidden from IMAP."
