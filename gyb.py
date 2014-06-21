@@ -499,9 +499,7 @@ def main(argv):
   if options.action not in ['restore-group']:
     imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
     global ALL_MAIL, TRASH, SPAM
-    ALL_MAIL = gimaplib.GImapGetFolder(imapconn)
-    TRASH = gimaplib.GImapGetFolder(imapconn, foldertype='\Trash')
-    SPAM = gimaplib.GImapGetFolder(imapconn, foldertype='\Spam')
+    (ALL_MAIL, TRASH, SPAM) = gimaplib.GImapGetFolders(imapconn, folders=[u'\All', u'Trash', u'Junk'])
     if ALL_MAIL == None:
       # Last ditched best guess but All Mail is probably hidden from IMAP...
       ALL_MAIL = '[Gmail]/All Mail'
