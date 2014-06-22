@@ -953,6 +953,9 @@ def main(argv):
           if u'Important' in labels:
             labels.remove(u'Important')
             labels.append(u'\\\\Important')
+          if u'Drafts' in labels:
+            labels.remove(u'Drafts')
+            labels.append(u'\\\\Draft')
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
