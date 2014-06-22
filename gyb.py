@@ -578,8 +578,6 @@ def main(argv):
       sys.exit(3)
     if not options.use_folder:
       options.use_folder = ALL_MAIL
-    TRASH = label_mappings[u'\\Trash']
-    SPAM = label_mappings[u'\\Junk']
     r, d = imapconn.select(ALL_MAIL, readonly=True)
     if r == 'NO':
       print "Error: Cannot select the Gmail \"All Mail\" folder. Please make sure it is not hidden from IMAP."
@@ -1170,6 +1168,11 @@ def main(argv):
     for working_messages in batch(messages_to_process, messages_at_once):
       uid_string = ','.join(working_messages)
       t, d = imapconn.uid('STORE', uid_string, '+X-GM-LABELS', '\\Trash')
+    try:
+      SPAM = label_mappings[u'\\Junk']
+    except KeyError:
+      print 'Error: could not select the Spam folder. Please make sure it is not hidden from IMAP.'
+      sys.exit(2)
     r, d = imapconn.select(SPAM, readonly=False)
     if r == 'NO':
       print "Error: Cannot select the Gmail \"Spam\" folder. Please make sure it is not hidden from IMAP."
@@ -1180,6 +1183,11 @@ def main(argv):
       spam_uid_string = ','.join(working_messages)
       t, d = imapconn.uid('STORE', spam_uid_string, '+FLAGS', '\Deleted')
     imapconn.expunge()
+    try:
+      TRASH = label_mappings[u'\\Trash']
+    except KeyError:
+      print 'Error: could not select the Trash folder. Please make sure it is not hidden from IMAP.'
+      sys.exit(4)
     r, d = imapconn.select(TRASH, readonly=False)
     if r == 'NO':
       print "Error: Cannot select the Gmail \"Trash\" folder. Please make sure it is not hidden from IMAP."
