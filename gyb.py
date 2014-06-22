@@ -1002,6 +1002,9 @@ def main(argv):
           if u'Drafts' in labels:
             labels.remove(u'Drafts')
             labels.append(u'\\\\Draft')
+          if u'Chat' in labels:
+            labels.remove(u'Chat')
+            labels.append(u'Restored Chats')
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
