@@ -956,6 +956,7 @@ def main(argv):
         mbox = mailbox.mbox(file_path)
         mbox_count = len(mbox.items())
         current = 0
+        print "\nRestoring from %s" % file_path
         for message in mbox:
           current += 1
           message_marker = '%s-%s' % (file_path, current)
@@ -1020,7 +1021,7 @@ def main(argv):
           flags_string = ' '.join(flags)
           msg_account, internal_datetime = message.get_from().split(' ', 1)
           internal_datetime_seconds = time.mktime(email.utils.parsedate(internal_datetime))
-          sys.stdout.write("restoring message %s of %s from %s" % (current, mbox_count, file_path))
+          sys.stdout.write(" message %s of %s" % (current, mbox_count))
           sys.stdout.flush()
           full_message = message.as_string()
           while True:
