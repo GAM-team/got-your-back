@@ -962,9 +962,6 @@ def main(argv):
               escaped_labels.append(label.replace('\"', '\\"'))
             else:
               escaped_labels.append(label)
-            #if label.find('/') != -1:
-            #  labels.remove(label)
-            #  labels.append(label.replace('/', '\/'))
           del message[u'X-Gmail-Labels']
           del message[u'X-GM-THRID']
           flags_string = ' '.join(flags)
