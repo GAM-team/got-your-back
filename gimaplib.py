@@ -121,10 +121,13 @@ def GImapGetFolders(imapconn):
     list of dicts, Gmail special folder types mapped to their localized name
   '''
   list_response_pattern = re.compile(r'\((?P<flags>.*?)\) "(?P<delimiter>.*)" (?P<name>.*)')
-  t, d = imapconn.xatom('list', '"[Gmail]/"', '*')
-  if t != 'OK':
-    raise GImapHasExtensionsError('GImap Get Folder could not check server XLIST: %s' % t)
-  list_data = imapconn.response('LIST')[1]
+  for prefix in ['"[Gmail]/"', '"[Google Mail]/"', '""']:
+    t, d = imapconn.xatom('list', prefix, '*')
+    if t != 'OK':
+      raise GImapHasExtensionsError('GImap Get Folder could not check server XLIST: %s' % t)
+    list_data = imapconn.response('LIST')[1]
+    if list_data != [None]:
+      break
   label_mappings = {}
   for line in list_data:
     flags, delimiter, label_local_name = list_response_pattern.match(line).groups()
