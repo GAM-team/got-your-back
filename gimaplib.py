@@ -122,14 +122,13 @@ def GImapGetFolders(imapconn):
   '''
   list_response_pattern = re.compile(r'\((?P<flags>.*?)\) "(?P<delimiter>.*)" (?P<name>.*)')
   for prefix in ['"[Gmail]/"', '"[Google Mail]/"', '""']:
-    t, d = imapconn.xatom('list', prefix, '*')
+    t, d = imapconn.list(prefix, '*')
     if t != 'OK':
-      raise GImapHasExtensionsError('GImap Get Folder could not check server XLIST: %s' % t)
-    list_data = imapconn.response('LIST')[1]
-    if list_data != [None]:
+      raise GImapHasExtensionsError('GImap Get Folder could not check server LIST: %s' % t)
+    if d != [None]:
       break
   label_mappings = {}
-  for line in list_data:
+  for line in d:
     flags, delimiter, label_local_name = list_response_pattern.match(line).groups()
     flags_list = flags.split(' ')
     label_mappings[flags_list[-1]] = label_local_name[1:-1]
