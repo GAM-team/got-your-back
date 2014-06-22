@@ -831,6 +831,8 @@ def main(argv):
     if options.noresume:
       try:
         os.remove(resumedb)
+      except OSError:
+        pass
       except IOError:
         pass
     sqlcur.execute('ATTACH ? as resume', (resumedb,))
@@ -929,6 +931,8 @@ def main(argv):
     if options.noresume:
       try:
         os.remove(resumedb)
+      except OSError:
+        pass
       except IOError:
         pass
     sqlcur.execute('ATTACH ? as mbox_resume', (resumedb,))
@@ -1056,6 +1060,8 @@ def main(argv):
     if options.noresume:
       try:
         os.remove(resumedb)
+      except OSError:
+        pass
       except IOError:
         pass
     sqlcur.execute('ATTACH ? as resume', (resumedb,))
