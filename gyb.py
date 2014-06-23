@@ -23,7 +23,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = u'Got Your Back: Gmail Backup'
 __author__ = u'Jay Lee'
 __email__ = u'jay0lee@gmail.com'
-__version__ = u'0.26'
+__version__ = u'0.23'
 __license__ = u'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __db_schema_version__ = u'5'
 __db_schema_min_version__ = u'2'        #Minimum for restore
@@ -205,8 +205,9 @@ with information from the APIs Console <https://code.google.com/apis/console>.
 
 def doGYBCheckForUpdates():
   import urllib2, calendar
-  last_update_check_file = getProgPath()+'noupdatecheck.txt'
-  if os.path.isfile(last_update_check_file): return
+  no_update_check_file = getProgPath()+'noupdatecheck.txt'
+  last_update_check_file = getProgPath()+'lastcheck.txt'
+  if os.path.isfile(no_update_check_file): return
   try:
     current_version = float(__version__)
   except ValueError:
@@ -235,7 +236,7 @@ def doGYBCheckForUpdates():
     announcement = a.read()
     sys.stderr.write('\nThere\'s a new version of GYB!!!\n\n')
     sys.stderr.write(announcement)
-    visit_gyb = raw_input(u"\n\nHit Y to visit the GYB website and download the latest release. Hit Enter to just continue with this boring old version. GYB won't bother you with this announcemnt for 1 week or you can create a file named noupdatecheck.txt in the same location as gyb.py or gyb.exe and GYB won't ever check for updates: ")
+    visit_gyb = raw_input(u"\n\nHit Y to visit the GYB website and download the latest release. Hit Enter to just continue with this boring old version. GYB won't bother you with this announcemnt for 1 week or you can create a file named %s and GYB won't ever check for updates: " % no_update_check_file)
     if visit_gyb.lower() == u'y':
       import webbrowser
       webbrowser.open(u'http://git.io/gyb')
