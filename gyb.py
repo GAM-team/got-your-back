@@ -70,7 +70,7 @@ def SetupOptionParser():
   parser.add_option('--email',
     dest='email',
     help='Full email address of user or group to act against')
-  action_choices = ['backup','restore', 'restore-group', 'restore-mbox', 'count', 'purge', 'purge-labels', 'estimate', 'reindex']
+  action_choices = ['backup','restore', 'restore-group', 'restore-mbox', 'count', 'purge', 'purge-labels', 'estimate', 'quota', 'reindex']
   parser.add_option('--action',
     type='choice',
     choices=action_choices,
@@ -590,30 +590,31 @@ def main(argv):
   newDB = (not os.path.isfile(sqldbfile)) and (options.action in ['backup', u'restore-mbox'])
   
   #If we're not doing a estimate or if the db file actually exists we open it (creates db if it doesn't exist)
-  if options.action not in ['estimate', 'count', 'purge', 'purge-labels'] or os.path.isfile(sqldbfile):
-    print "\nUsing backup folder %s" % options.local_folder
-    global sqlconn
-    global sqlcur
-    sqlconn = sqlite3.connect(sqldbfile, detect_types=sqlite3.PARSE_DECLTYPES)
-    sqlconn.text_factory = str
-    sqlcur = sqlconn.cursor()
-    if newDB:
-      initializeDB(sqlcur, sqlconn, options.email, uidvalidity)
-    db_settings = get_db_settings(sqlcur)
-    check_db_settings(db_settings, options.action, options.email)
-    if options.action not in ['restore', 'restore-group', u'restore-mbox']:
-      if ('uidvalidity' not in db_settings or 
-          db_settings['db_version'] <  __db_schema_version__):
-        convertDB(sqlconn, uidvalidity, db_settings['db_version'])
-        db_settings = get_db_settings(sqlcur)
-      if options.action == 'reindex':
-        getMessageIDs(sqlconn, options.local_folder)
-        rebuildUIDTable(imapconn, sqlconn)
-        sqlconn.execute('''
-            UPDATE settings SET value = ? where name = 'uidvalidity'
-        ''', ((uidvalidity),))
-        sqlconn.commit()
-        sys.exit(0)
+  if options.action not in ['count', 'purge', 'purge-labels', 'quota']:
+    if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
+      print "\nUsing backup folder %s" % options.local_folder
+      global sqlconn
+      global sqlcur
+      sqlconn = sqlite3.connect(sqldbfile, detect_types=sqlite3.PARSE_DECLTYPES)
+      sqlconn.text_factory = str
+      sqlcur = sqlconn.cursor()
+      if newDB:
+        initializeDB(sqlcur, sqlconn, options.email, uidvalidity)
+      db_settings = get_db_settings(sqlcur)
+      check_db_settings(db_settings, options.action, options.email)
+      if options.action not in ['restore', 'restore-group', u'restore-mbox']:
+        if ('uidvalidity' not in db_settings or 
+            db_settings['db_version'] <  __db_schema_version__):
+          convertDB(sqlconn, uidvalidity, db_settings['db_version'])
+          db_settings = get_db_settings(sqlcur)
+        if options.action == 'reindex':
+          getMessageIDs(sqlconn, options.local_folder)
+          rebuildUIDTable(imapconn, sqlconn)
+          sqlconn.execute('''
+              UPDATE settings SET value = ? where name = 'uidvalidity'
+          ''', ((uidvalidity),))
+          sqlconn.commit()
+          sys.exit(0)
 
       if db_settings['uidvalidity'] != uidvalidity:
         print "Because of changes on the Gmail server, this folder cannot be used for incremental backups."
@@ -1226,6 +1227,38 @@ def main(argv):
         r, d = imapconn.delete(label)
       except imaplib.IMAP4.error, e:
         print 'bad response: %s' % e
+
+  # QUOTA #
+  elif options.action == 'quota':
+    result = imapconn.getquotaroot("INBOX")[1][1][0]
+    quota_used, quota_size = re.search('^".*" \(STORAGE ([0-9]*) ([0-9]*)\)$', result).groups()
+    quota_used = float(quota_used) / 1024.0
+    quota_size = float(quota_size) / 1024.0
+    used_pct = (quota_used / quota_size) * 100
+    quota_used_term = 'MB'
+    quota_size_term = 'MB'
+    if quota_size > 1024.0:
+      quota_size = quota_size / 1024.0
+      quota_size_term = 'GB'
+    if quota_size > 1024.0:
+      quota_size = quota_size / 1024.0
+      quota_size_term = 'TB'
+    if quota_size > 1024.0:
+      quota_size = quota_size / 1024.0
+      quota_size_term = 'PB'
+    if quota_used > 1024.0:
+      quota_used = quota_used / 1024.0
+      quota_used_term = 'GB'
+    if quota_used > 1024.0:
+      quota_used = quota_used / 1024.0
+      quota_used_term = 'TB'
+    if quota_used > 1024.0:
+      quota_used = quota_used / 1024.0
+      quota_used_term = 'PB'
+
+    print 'Total Google Storage: %.2f %s' % (quota_size, quota_size_term)
+    print 'Used Google Storage:  %.2f %s' % (quota_used, quota_used_term)
+    print '%.2f%%' % used_pct
 
   # ESTIMATE #
   elif options.action == 'estimate':
