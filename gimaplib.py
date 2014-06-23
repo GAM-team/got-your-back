@@ -118,7 +118,7 @@ def GImapGetFolders(imapconn):
     imapconn: object, an authenticated IMAP connection
   
   Returns:
-    list of dicts, Gmail special folder types mapped to their localized name
+    dictionary, Gmail special folder types mapped to their localized name
   '''
   list_response_pattern = re.compile(r'\((?P<flags>.*?)\) "(?P<delimiter>.*)" (?P<name>.*)')
   for prefix in ['"[Gmail]/"', '"[Google Mail]/"', '""']:
