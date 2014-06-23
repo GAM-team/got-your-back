@@ -1009,6 +1009,9 @@ def main(argv):
           if u'Chat' in labels:
             labels.remove(u'Chat')
             labels.append(u'Restored Chats')
+          if u'Muted' in labels:
+            labels.remove(u'Muted')
+            labels.append(u'\\\\Muted')
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
