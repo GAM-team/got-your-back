@@ -1278,20 +1278,23 @@ def main(argv):
     for working_messages in batch(messages_to_estimate, messages_at_once):
       messages_size = get_message_size(imapconn, working_messages)
       total_size = total_size + messages_size
-      if total_size > 1048576:
-        math_size = total_size/1048576
-        print_size = "%.2fM" % math_size
+      if total_size > (1024 * 1024 * 1024):
+        math_size = total_size/(1024 * 1024 * 1024)
+        print_size = "%.2f GB" % math_size
+      elif total_size > (1024 * 1024):
+        math_size = total_size / (1024 * 1024)
+        print_size = "%.2f MB" % math_size
       elif total_size > 1024:
         math_size = total_size/1024
-        print_size = "%.2fK" % math_size
+        print_size = "%.2f KB" % math_size
       else:
-        print_size = "%.2fb" % total_size
+        print_size = "%.2f bytes" % total_size
       if estimated_messages+messages_at_once < estimate_count:
         estimated_messages = estimated_messages + messages_at_once
       else:
         estimated_messages = estimate_count
       restart_line()
-      sys.stdout.write("Messages estimated: %s  Estimated size: %s" % (estimated_messages, print_size))
+      sys.stdout.write("Messages estimated: %s  Estimated size: %s          " % (estimated_messages, print_size))
       sys.stdout.flush()
       time.sleep(1)
   print ""
