@@ -995,24 +995,12 @@ def main(argv):
           if u'Starred' in labels:
             flags.append(u'\Flagged')
             labels.remove(u'Starred')
-          if u'Sent' in labels:
-            labels.remove(u'Sent')
-            labels.append(u'\\\\Sent')
-          if u'Inbox' in labels:
-            labels.remove(u'Inbox')
-            labels.append(u'\\\\Inbox')
-          if u'Important' in labels:
-            labels.remove(u'Important')
-            labels.append(u'\\\\Important')
-          if u'Drafts' in labels:
-            labels.remove(u'Drafts')
-            labels.append(u'\\\\Draft')
-          if u'Chat' in labels:
-            labels.remove(u'Chat')
-            labels.append(u'Restored Chats')
-          if u'Muted' in labels:
-            labels.remove(u'Muted')
-            labels.append(u'\\\\Muted')
+          for bad_label in [u'Sent', u'Inbox', u'Important', u'Drafts', u'Chat', u'Muted', u'Trash', u'Spam']:
+            if bad_label in labels:
+              labels.remove(bad_label)
+              if bad_label == u'Chat':
+                bad_label = u'Restored Chat'
+              labels.append(u'\\\\%s' % bad_label)
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
