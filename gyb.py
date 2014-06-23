@@ -999,8 +999,11 @@ def main(argv):
             if bad_label in labels:
               labels.remove(bad_label)
               if bad_label == u'Chat':
-                bad_label = u'Restored Chat'
-              labels.append(u'\\\\%s' % bad_label)
+                labels.append(u'Restored Chats')
+              elif bad_label == u'Drafts':
+                labels.append(u'\\\\Draft')
+              else:
+                labels.append(u'\\\\%s' % bad_label)
           escaped_labels = []
           for label in labels:
             if label.find('\"') != -1:
