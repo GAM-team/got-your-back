@@ -1266,7 +1266,7 @@ def main(argv):
       sys.stdout.write("Messages estimated: %s  Estimated size: %s" % (estimated_messages, print_size))
       sys.stdout.flush()
       time.sleep(1)
-    print ""
+  print ""
   try:
     sqlconn.close()
   except NameError:
