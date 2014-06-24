@@ -616,9 +616,9 @@ def main(argv):
           sqlconn.commit()
           sys.exit(0)
 
-      if db_settings['uidvalidity'] != uidvalidity:
-        print "Because of changes on the Gmail server, this folder cannot be used for incremental backups."
-        sys.exit(3)
+        if db_settings['uidvalidity'] != uidvalidity:
+          print "Because of changes on the Gmail server, this folder cannot be used for incremental backups."
+          sys.exit(3)
 
   # BACKUP #
   if options.action == 'backup':
