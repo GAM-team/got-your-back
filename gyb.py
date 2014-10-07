@@ -524,8 +524,11 @@ def get_message_size(imapconn, uids):
     exit(9)
   total_size = 0
   for x in d:
-    message_size = int(re.search('^[0-9]* \(UID [0-9]* RFC822.SIZE ([0-9]*)\)$', x).group(1))
-    total_size = total_size + message_size
+    try:
+      message_size = int(re.search('^[0-9]* \(UID [0-9]* RFC822.SIZE ([0-9]*)\)$', x).group(1))
+      total_size = total_size + message_size
+    except AttributeError:
+      pass
   return total_size
 
 def getGYBVersion(divider="\n"):
