@@ -162,6 +162,47 @@ def batch(iterable, size):
     batchiter = islice(sourceiter, size)
     yield chain([batchiter.next()], batchiter)
 
+def getOAuthFromConfigFile(email):
+  cfgFile = '%s%s.cfg' % (getProgPath(), email)
+  if os.path.isfile(cfgFile):
+    f = open(cfgFile, 'r')
+    key = f.readline()[0:-1]
+    secret = f.readline()
+    f.close()
+    return (key, secret)
+  else:
+    return (False, False)
+
+def requestOAuthAccess(email, debug=False):
+  scopes = ['https://mail.google.com/',                        # IMAP/SMTP client access
+            'https://www.googleapis.com/auth/userinfo#email',
+            'https://www.googleapis.com/auth/apps.groups.migration']
+  CLIENT_SECRETS = getProgPath()+'client_secrets.json'
+  MISSING_CLIENT_SECRETS_MESSAGE = """
+WARNING: Please configure OAuth 2.0
+
+To make GYB run you will need to populate the client_secrets.json file
+found at:
+
+   %s
+
+with information from the APIs Console <https://code.google.com/apis/console>.
+
+""" % (CLIENT_SECRETS)
+  FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS, scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=email)
+  cfgFile = '%s%s.cfg' % (getProgPath(), email)
+  storage = oauth2client.file.Storage(cfgFile)
+  credentials = storage.get()
+  if os.path.isfile(getProgPath()+'nobrowser.txt'):
+    gflags.FLAGS.auth_local_webserver = False
+  if credentials is None or credentials.invalid:
+    certFile = getProgPath()+'cacert.pem'
+    disable_ssl_certificate_validation = False
+    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+      disable_ssl_certificate_validation = True
+    http = httplib2.Http(ca_certs=certFile, disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+    credentials = oauth2client.tools.run(FLOW, storage, short_url=True, http=http)
+
 def doGYBCheckForUpdates():
   import urllib2, calendar
   no_update_check_file = getProgPath()+'noupdatecheck.txt'
@@ -243,166 +284,9 @@ def generateXOAuthString(email, service_account=False, debug=False):
 def just_quote(self, arg):
         return '"%s"' % arg
 
-def getOAuthFromConfigFile(email):
-  cfgFile = '%s%s.cfg' % (getProgPath(), email)
-  if os.path.isfile(cfgFile):
-    f = open(cfgFile, 'r')
-    key = f.readline()[0:-1]
-    secret = f.readline()
-    f.close()
-    return (key, secret)
-  else:
-    return (False, False)
-
-class cmd_flags(object):
-  def __init__(self):
-    self.short_url = True
-    self.noauth_local_webserver = False
-    self.logging_level = u'ERROR'
-    self.auth_host_name = u'localhost'
-    self.auth_host_port = [8080, 9090]
-
-def requestOAuthAccess(email, debug=False):
-  scopes = ['https://mail.google.com/',                        # IMAP/SMTP client access
-            'https://www.googleapis.com/auth/userinfo#email',
-            'https://www.googleapis.com/auth/apps.groups.migration']
-  CLIENT_SECRETS = getProgPath()+'client_secrets.json'
-  MISSING_CLIENT_SECRETS_MESSAGE = """
-WARNING: Please configure OAuth 2.0
-
-To make GYB run you will need to populate the client_secrets.json file
-found at:
-
-   %s
-
-with information from the APIs Console <https://code.google.com/apis/console>.
-
-""" % (CLIENT_SECRETS)
-  FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS, scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=options.email)
-  cfgFile = '%s%s.cfg' % (getProgPath(), email)
-  storage = oauth2client.file.Storage(cfgFile)
-  credentials = storage.get()
-  if credentials is None or credentials.invalid:
-    certFile = getProgPath()+'cacert.pem'
-    disable_ssl_certificate_validation = False
-    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
-      disable_ssl_certificate_validation = True
-    http = httplib2.Http(ca_certs=certFile, disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-    flags = cmd_flags()
-    if os.path.isfile(getProgPath()+'nobrowser.txt'):
-      flags.noauth_local_webserver = True
-    #credentials = oauth2client.tools.run(FLOW, storage, short_url=True, http=http)
-    credentials = oauth2client.tools.run_flow(flow=FLOW, storage=storage, flags=flags, http=http)
-
-def getAPIVer(api):
-  if api == u'oauth2':
-    return u'v2'
-  elif api == u'gmail':
-    return u'v1'
-  return u'v1'
-
-def getAPIScope(api):
-  if api == u'gmail':
-    return [u'https://mail.google.com/',]
-
-def buildGAPIObject(api):
-  global prettyPrint
-  cfgFile = '%s%s.cfg' % (getProgPath(), options.email)
-  storage = oauth2client.file.Storage(cfgFile)
-  credentials = storage.get()
-  if credentials is None or credentials.invalid:
-    requestOAuthAccess()
-    credentials = storage.get()
-  credentials.user_agent = getGYBVersion(divider=u' / ')
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+u'noverifyssl.txt'):
-    disable_ssl_certificate_validation = True
-  http = httplib2.Http(ca_certs=getProgPath()+u'cacert.pem', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-  if options.debug:
-    httplib2.debuglevel = 4
-    prettyPrint = True
-  else:
-    prettyPrint = False
-  http = credentials.authorize(http)
-  version = getAPIVer(api)
-  try:
-    service = apiclient.discovery.build(api, version, http=http)
-  except apiclient.errors.UnknownApiNameOrVersion:
-    disc_file = getProgPath()+u'%s-%s.json' % (api, version)
-    if os.path.isfile(disc_file):
-      f = file(disc_file, 'rb')
-      discovery = f.read()
-      f.close()
-      service = apiclient.discovery.build_from_document(discovery, base=u'https://www.googleapis.com', http=http)
-    else:
-      raise
-  except httplib2.CertificateValidationUnsupported:
-    print u'Error: You don\'t have the Python ssl module installed so we can\'t verify SSL Certificates. You can fix this by installing the Python SSL module or you can live on the edge and turn SSL validation off by creating a file called noverifyssl.txt in the same location as gam.exe / gam.py'
-    sys.exit(8)
-  return service
-
-def buildGAPIServiceObject(api, act_as=None):
-  global prettyPrint
-  oauth2servicefile = getProgPath()+u'oauth2service'
-  try:
-    oauth2servicefile = getProgPath()+os.environ[u'OAUTHSERVICEFILE']
-  except KeyError:
-    pass
-  oauth2servicefilejson = u'%s.json' % oauth2servicefile
-  oauth2servicefilep12 = u'%s.p12' % oauth2servicefile
-  try:
-    json_string = open(oauth2servicefilejson).read()
-    json_data = json.loads(json_string)
-    SERVICE_ACCOUNT_EMAIL = json_data[u'web'][u'client_email']
-    SERVICE_ACCOUNT_CLIENT_ID = json_data[u'web'][u'client_id']
-    f = file(oauth2servicefilep12, 'rb')
-    key = f.read()
-    f.close()
-  except IOError, e:
-    print u'Error: %s' % e
-    print u''
-    print u'Please follow the instructions at:\n\nhttps://code.google.com/p/google-apps-manager/wiki/GAM3OAuthServiceAccountSetup\n\nto setup a Service Account'
-    sys.exit(6)
-  scope = getAPIScope(api)
-  if act_as == None:
-    credentials = oauth2client.client.SignedJwtAssertionCredentials(SERVICE_ACCOUNT_EMAIL, key, scope=scope)
-  else:
-    credentials = oauth2client.client.SignedJwtAssertionCredentials(SERVICE_ACCOUNT_EMAIL, key, scope=scope, sub=act_as)
-  credentials.user_agent = getGYBVersion(divider=u' / ') 
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(getGamPath()+u'noverifyssl.txt'):
-    disable_ssl_certificate_validation = True
-  http = httplib2.Http(ca_certs=getGamPath()+u'cacert.pem', disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-  if options.debug:
-    httplib2.debuglevel = 4
-    prettyPrint = True
-  else:
-    prettyPrint = False
-  http = credentials.authorize(http)
-  version = getAPIVer(api)
-  try:
-    return apiclient.discovery.build(api, version, http=http)
-  except oauth2client.client.AccessTokenRefreshError, e:
-    if e.message == u'access_denied':
-      print u'Error: Access Denied. Please make sure the Client Name:\n\n%s\n\nis authorized for the API Scope(s):\n\n%s\n\nThis can be configured in your Control Panel under:\n\nSecurity -->\nAdvanced Settings -->\nManage third party OAuth Client access' % (SERVICE_ACCOUNT_CLIENT_ID, ','.join(scope))
-      sys.exit(5)
-    else:
-      print u'Error: %s' % e
-      sys.exit(4)
-  except apiclient.errors.UnknownApiNameOrVersion:
-    disc_file = getProgPath()+u'%s-%s.json' % (api, version)
-    if os.path.isfile(disc_file):
-      f = file(disc_file, 'rb')
-      discovery = f.read()
-      f.close()
-      return apiclient.discovery.build_from_document(discovery, base=u'https://www.googleapis.com', http=http)
-    else:
-      print u'No file named %s' % disc_file
-      raise
-
 def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
   method = getattr(service, function)
-  retries = 10
+  retries = 3
   for n in range(1, retries+1):
     try:
       return method(**kwargs).execute()
@@ -414,7 +298,7 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
         message = error['error']['errors'][0]['message']
         if reason in throw_reasons:
           raise
-        if n != retries and reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError', 'userRateLimitExceeded']:
+        if n != retries and reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError']:
           wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
           randomness = float(random.randint(1,1000)) / 1000
           wait_on_fail = wait_on_fail + randomness
@@ -435,46 +319,6 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
       sys.stderr.write('Error: Authentication Token Error - %s' % e)
       sys.exit(403)
 
-def callGAPIpages(service, function, items=u'items', nextPageToken=u'nextPageToken', page_message=None, message_attribute=None, **kwargs):
-  pageToken = None
-  all_pages = list()
-  total_items = 0
-  while True:
-    this_page = callGAPI(service=service, function=function, pageToken=pageToken, **kwargs)
-    try:
-      page_items = len(this_page[items])
-    except KeyError:
-      page_items = 0
-    total_items += page_items
-    if page_message:
-      show_message = page_message
-      try:
-        show_message = show_message.replace(u'%%num_items%%', str(page_items))
-      except KeyError:
-        show_message = show_message.replace(u'%%num_items%%', '0')
-      try:
-        show_message = show_message.replace(u'%%total_items%%', str(total_items))
-      except KeyError:
-        show_message = show_message.replace(u'%%total_items%%', '0')
-      if message_attribute:
-        try:
-          show_message = show_message.replace(u'%%first_item%%', str(this_page[items][0][message_attribute]))
-          show_message = show_message.replace(u'%%last_item%%', str(this_page[items][-1][message_attribute]))
-        except KeyError:
-          show_message = show_message.replace(u'%%first_item%%', '')
-          show_message = show_message.replace(u'%%last_item%%', '')
-      sys.stdout.write('\r')
-      sys.stdout.flush()
-      sys.stdout.write(show_message)
-    try:
-      all_pages += this_page[items]
-      pageToken = this_page[nextPageToken]
-      if pageToken == '':
-        sys.stdout.write(u'\n')
-        return all_pages
-    except KeyError:
-      sys.stdout.write(u'\n')
-      return all_pages
 def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
     try:
       sqlcur.execute('''
