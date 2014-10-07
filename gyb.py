@@ -644,6 +644,7 @@ def main(argv):
     backed_up_messages = 0
     header_parser = email.parser.HeaderParser()
     for working_messages in batch(messages_to_backup, messages_at_once):
+      working_messages=list(working_messages)
       #Save message content
       batch_string = ','.join(working_messages)
       bad_count = 0
@@ -671,6 +672,8 @@ def main(argv):
           print 'socket.error:%s, retrying...' % e
           imapconn = gimaplib.ImapConnect(generateXOAuthString(options.email, options.service_account), options.debug)
           imapconn.select(ALL_MAIL, readonly=True)
+      requested_count = len(working_messages) * 2
+      d = d[:requested_count - 1] # cut off the extraneous responses for modified messages in the mailbox that we didn't request
       for everything_else_string, full_message in (x for x in d if x != ')'):
         search_results = re.search('X-GM-LABELS \((.*)\) UID ([0-9]*) (INTERNALDATE \".*\") (FLAGS \(.*\))', everything_else_string)
         labels_str = search_results.group(1)
