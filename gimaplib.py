@@ -131,5 +131,7 @@ def GImapGetFolders(imapconn):
   for line in d:
     flags, delimiter, label_local_name = list_response_pattern.match(line).groups()
     flags_list = flags.split(' ')
-    label_mappings[flags_list[-1]] = label_local_name[1:-1]
+    for flag in flags_list:
+      if flag not in [u'\\HasNoChildren', u'\\HasChildren', u'\\Noinferiors']:
+        label_mappings[flag] = label_local_name[1:-1]
   return label_mappings
