@@ -56,3 +56,6 @@ docs/_build/
 *.cfg
 nobrowser.txt
 GYB-GMail-Backup-*/
+
+# Prevents committing private key.
+privatekey.p12
