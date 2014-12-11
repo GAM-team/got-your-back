@@ -23,7 +23,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = u'Got Your Back: Gmail Backup'
 __author__ = u'Jay Lee'
 __email__ = u'jay0lee@gmail.com'
-__version__ = u'0.29'
+__version__ = u'0.29_gb'
 __license__ = u'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __db_schema_version__ = u'5'
 __db_schema_min_version__ = u'2'        #Minimum for restore
@@ -87,10 +87,13 @@ def SetupOptionParser():
     default='XXXuse-email-addressXXX')
   parser.add_option('--use-imap-folder',
     dest='use_folder',
-    help='Optional: IMAP folder to act against. Default is "All Mail" label. You can run "--use_folder [Gmail]/Chats" to backup chat.')
+    help='Optional: IMAP folder to act against. Default is "All Mail" label. You can run "--use-imap-folder [Gmail]/Chats" to backup chat.')
   parser.add_option('--label-restored',
     dest='label_restored',
-    help='Optional: On restore, all messages will additionally receive this label. For example, "--label_restored gyb-restored" will label all uploaded messages with a gyb-restored label.')
+    help='Optional: On restore, all messages will additionally receive this label. For example, "--label-restored gyb-restored" will label all uploaded messages with a gyb-restored label.')
+  parser.add_option('--prefix-labels',
+    dest='prefix_labels',
+    help='Optional: On restore, prefix existing labels with this prefix. For example, "--prefix-labels OLD/" will prefix all existing labels with "OLD/".')
   parser.add_option('--strip-labels',
     dest='strip_labels',
     action='store_true',
@@ -875,7 +878,7 @@ def main(argv):
         labels_query = sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num = ?', (message_num,))
         labels_results = sqlcur.fetchall()
         for l in labels_results:
-          labels.append(l[0].replace('\\','\\\\').replace('"','\\"'))
+          labels.append(options.prefix_labels + l[0].replace('\\','').replace('"',''))
       if options.label_restored:
         labels.append(options.label_restored)
       for label in labels:
