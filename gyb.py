@@ -792,7 +792,15 @@ def main(argv):
           imapconn.select(ALL_MAIL, readonly=True)
       for results in d:
         search_results = re.search('X-GM-LABELS \((.*)\) UID ([0-9]*) (FLAGS \(.*\))', results)
-        labels = shlex.split(search_results.group(1), posix=False)
+        labels_str = search_results.group(1)
+        quoted_labels = shlex.split(labels_str, posix=False)
+        labels = []
+        for label in quoted_labels:
+          if label[0] == '"' and label[-1] == '"':
+            label = label[1:-1]
+          if label[:2] == '\\\\':
+            label = label[1:]
+          labels.append(label)
         uid = search_results.group(2)
         message_flags_string = search_results.group(3)
         message_flags = imaplib.ParseFlags(message_flags_string)
