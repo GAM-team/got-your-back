@@ -164,11 +164,14 @@ def run(flow, storage, http=None, short_url=False):
   authorize_url = flow.step1_get_authorize_url()
   
   if short_url:
-    from apiclient.discovery import build
-    service = build('urlshortener', 'v1', http=http)
-    url_result = service.url().insert(body={'longUrl': authorize_url}).execute()
-    authorize_url = url_result['id']
-
+    try:
+      from apiclient.discovery import build
+      service = build('urlshortener', 'v1', http=http)
+      url_result = service.url().insert(body={'longUrl': authorize_url},
+        key=u'AIzaSyBlmgbii8QfJSYmC9VTMOfqrAt5Vj5wtzE').execute()
+      authorize_url = url_result['id']
+    except:
+      pass
   if FLAGS.auth_local_webserver:
     webbrowser.open(authorize_url, new=1, autoraise=True)
     print 'Your browser has been opened to visit:'
