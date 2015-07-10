@@ -23,7 +23,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = u'Got Your Back: Gmail Backup'
 __author__ = u'Jay Lee'
 __email__ = u'jay0lee@gmail.com'
-__version__ = u'0.29'
+__version__ = u'0.31'
 __license__ = u'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __db_schema_version__ = u'5'
 __db_schema_min_version__ = u'2'        #Minimum for restore
@@ -254,11 +254,18 @@ def generateXOAuthString(email, service_account=False, debug=False):
   if debug:
     httplib2.debuglevel = 4
   if service_account:
-    f = file(getProgPath()+'privatekey.p12', 'rb')
-    key = f.read()
-    f.close()
+    try:
+      f = file(getProgPath()+'privatekey.p12', 'rb')
+      key = f.read()
+      f.close()
+      service_account_name = service_account
+    except IOError:
+      json_string = file(getProgPath()+'privatekey.json', 'rb').read()
+      json_data = simplejson.loads(json_string)
+      key = json_data['private_key']
+      service_account_name = json_data['client_email']
     scope = 'https://mail.google.com/'
-    credentials = oauth2client.client.SignedJwtAssertionCredentials(service_account_name=service_account, private_key=key, scope=scope, user_agent=getGYBVersion(' / '), prn=email)
+    credentials = oauth2client.client.SignedJwtAssertionCredentials(service_account_name=service_account_name, private_key=key, scope=scope, user_agent=getGYBVersion(' / '), prn=email)
     disable_ssl_certificate_validation = False
     if os.path.isfile(getProgPath()+'noverifyssl.txt'):
       disable_ssl_certificate_validation = True
@@ -548,11 +555,7 @@ def main(argv):
     return
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
-  if options.service_account: # Service Account OAuth
-    if not os.path.isfile(getProgPath()+'privatekey.p12'):
-      print 'Error: you must have a privatekey.p12 file downloaded from the Google API Console and saved to the same path as GYB to use a service account.'
-      sys.exit(1)
-  else:  # 3-Legged OAuth
+  if not options.service_account:  # 3-Legged OAuth
     if options.use_admin:
       auth_as = options.use_admin
     else:
@@ -1078,11 +1081,18 @@ def main(argv):
       if not options.use_admin:
         print 'Error: --restore_group and --service_account require --user_admin to specify Google Apps Admin to utilize.'
         sys.exit(5)
-      f = file(getProgPath()+'privatekey.p12', 'rb')
-      key = f.read()
-      f.close()
+      try:
+        f = file(getProgPath()+'privatekey.p12', 'rb')
+        key = f.read()
+        f.close()
+        service_account_name = service_account
+      except IOError:
+        json_string = file(getProgPath()+'privatekey.json', 'rb').read()
+        json_data = simplejson.loads(json_string)
+        key = json_data['private_key']
+        service_account_name = json_data['client_email']
       scope = 'https://www.googleapis.com/auth/apps.groups.migration'
-      credentials = oauth2client.client.SignedJwtAssertionCredentials(options.service_account, key, scope=scope, prn=options.use_admin)
+      credentials = oauth2client.client.SignedJwtAssertionCredentials(options.service_account_name, key, scope=scope, prn=options.use_admin)
       disable_ssl_certificate_validation = False
       if os.path.isfile(getProgPath()+'noverifyssl.txt'):
         disable_ssl_certificate_validation = True
