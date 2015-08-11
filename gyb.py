@@ -63,6 +63,7 @@ import apiclient
 import apiclient.discovery
 import apiclient.errors
 import gimaplib
+import twisted.mail.imap4
 
 def SetupOptionParser():
   # Usage message is the module's docstring.
@@ -880,7 +881,7 @@ def main(argv):
         for l in labels_results:
           labels.append(l[0].replace('\\','\\\\').replace('"','\\"'))
       if options.label_restored:
-        labels.append(options.label_restored)
+        labels.append(options.label_restored.encode('imap4-utf-7'))
       for label in labels:
         if label not in created_labels and label.find('/') != -1: # create parent labels
           create_label = label
@@ -986,7 +987,7 @@ def main(argv):
           else:
             labels = []
           if options.label_restored:
-            labels.append(options.label_restored)
+            labels.append(options.label_restored.encode('imap4-utf-7'))
           for label in labels:
             if label not in created_labels and label.find('/') != -1: # create parent labels
               create_label = label
@@ -1034,7 +1035,7 @@ def main(argv):
                 print '\nError: %s %s' % (r,d)
                 sys.exit(5)
               restored_uid = int(re.search('^[APPENDUID [0-9]* ([0-9]*)] \(Success\)$', d[0]).group(1))
-              if len(labels) > 0:
+              if len(escaped_labels) > 0:
                 labels_string = '("'+'" "'.join(escaped_labels)+'")'
                 r, d = imapconn.uid('STORE', restored_uid, '+X-GM-LABELS', labels_string)
                 if r != 'OK':
