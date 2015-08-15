@@ -1,6 +1,4 @@
-#!/usr/bin/python2.4
-#
-# Copyright (C) 2010 Google Inc.
+# Copyright 2014 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,21 +19,21 @@ as JSON, Atom, etc. The model classes are responsible
 for converting between the wire format and the Python
 object representation.
 """
+from __future__ import absolute_import
+import six
 
 __author__ = 'jcgregorio@google.com (Joe Gregorio)'
 
-import gflags
+import json
 import logging
-import urllib
 
-from errors import HttpError
-from oauth2client.anyjson import simplejson
+from six.moves.urllib.parse import urlencode
 
-FLAGS = gflags.FLAGS
+from googleapiclient import __version__
+from googleapiclient.errors import HttpError
 
-gflags.DEFINE_boolean('dump_request_response', False,
-                      'Dump all http server requests and responses. '
-                     )
+
+dump_request_response = False
 
 
 def _abstract():
@@ -80,7 +78,7 @@ class Model(object):
       The body de-serialized as a Python object.
 
     Raises:
-      apiclient.errors.HttpError if a non 2xx response is received.
+      googleapiclient.errors.HttpError if a non 2xx response is received.
     """
     _abstract()
 
@@ -106,14 +104,14 @@ class BaseModel(Model):
 
   def _log_request(self, headers, path_params, query, body):
     """Logs debugging information about the request if requested."""
-    if FLAGS.dump_request_response:
+    if dump_request_response:
       logging.info('--request-start--')
       logging.info('-headers-start-')
-      for h, v in headers.iteritems():
+      for h, v in six.iteritems(headers):
         logging.info('%s: %s', h, v)
       logging.info('-headers-end-')
       logging.info('-path-parameters-start-')
-      for h, v in path_params.iteritems():
+      for h, v in six.iteritems(path_params):
         logging.info('%s: %s', h, v)
       logging.info('-path-parameters-end-')
       logging.info('body: %s', body)
@@ -128,7 +126,7 @@ class BaseModel(Model):
       path_params: dict, parameters that appear in the request path
       query_params: dict, parameters that appear in the query
       body_value: object, the request body as a Python object, which must be
-                  serializable by simplejson.
+                  serializable by json.
     Returns:
       A tuple of (headers, path_params, query, body)
 
@@ -144,7 +142,7 @@ class BaseModel(Model):
       headers['user-agent'] += ' '
     else:
       headers['user-agent'] = ''
-    headers['user-agent'] += 'google-api-python-client/1.0'
+    headers['user-agent'] += 'google-api-python-client/%s (gzip)' % __version__
 
     if body_value is not None:
       headers['content-type'] = self.content_type
@@ -164,22 +162,22 @@ class BaseModel(Model):
     if self.alt_param is not None:
       params.update({'alt': self.alt_param})
     astuples = []
-    for key, value in params.iteritems():
+    for key, value in six.iteritems(params):
       if type(value) == type([]):
         for x in value:
           x = x.encode('utf-8')
           astuples.append((key, x))
       else:
-        if getattr(value, 'encode', False) and callable(value.encode):
+        if isinstance(value, six.text_type) and callable(value.encode):
           value = value.encode('utf-8')
         astuples.append((key, value))
-    return '?' + urllib.urlencode(astuples)
+    return '?' + urlencode(astuples)
 
   def _log_response(self, resp, content):
     """Logs debugging information about the response if requested."""
-    if FLAGS.dump_request_response:
+    if dump_request_response:
       logging.info('--response-start--')
-      for h, v in resp.iteritems():
+      for h, v in six.iteritems(resp):
         logging.info('%s: %s', h, v)
       if content:
         logging.info(content)
@@ -196,7 +194,7 @@ class BaseModel(Model):
       The body de-serialized as a Python object.
 
     Raises:
-      apiclient.errors.HttpError if a non 2xx response is received.
+      googleapiclient.errors.HttpError if a non 2xx response is received.
     """
     self._log_response(resp, content)
     # Error handling is TBD, for example, do we retry
@@ -257,10 +255,14 @@ class JsonModel(BaseModel):
     if (isinstance(body_value, dict) and 'data' not in body_value and
         self._data_wrapper):
       body_value = {'data': body_value}
-    return simplejson.dumps(body_value)
+    return json.dumps(body_value)
 
   def deserialize(self, content):
-    body = simplejson.loads(content)
+    try:
+        content = content.decode('utf-8')
+    except AttributeError:
+        pass
+    body = json.loads(content)
     if self._data_wrapper and isinstance(body, dict) and 'data' in body:
       body = body['data']
     return body
@@ -363,7 +365,7 @@ def makepatch(original, modified):
       body=makepatch(original, item)).execute()
   """
   patch = {}
-  for key, original_value in original.iteritems():
+  for key, original_value in six.iteritems(original):
     modified_value = modified.get(key, None)
     if modified_value is None:
       # Use None to signal that the element is deleted

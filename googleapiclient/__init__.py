@@ -1,4 +1,4 @@
-# Copyright (C) 2010 Google Inc.
+# Copyright 2014 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utility module to import a JSON module
-
-Hides all the messy details of exactly where
-we get a simplejson module from.
-"""
-
-__author__ = 'jcgregorio@google.com (Joe Gregorio)'
-
-
-try: # pragma: no cover
-  # Should work for Python2.6 and higher.
-  import json as simplejson
-except ImportError: # pragma: no cover
-  try:
-    import simplejson
-  except ImportError:
-    # Try to import from django, should work on App Engine
-    from django.utils import simplejson
+__version__ = "1.4.1"

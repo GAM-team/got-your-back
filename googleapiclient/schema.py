@@ -1,4 +1,4 @@
-# Copyright (C) 2010 Google Inc.
+# Copyright 2014 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,6 +56,8 @@ For example, given the schema:
 
 The constructor takes a discovery document in which to look up named schema.
 """
+from __future__ import absolute_import
+import six
 
 # TODO(jcgregorio) support format, enum, minimum, maximum
 
@@ -64,7 +66,6 @@ __author__ = 'jcgregorio@google.com (Joe Gregorio)'
 import copy
 
 from oauth2client import util
-from oauth2client.anyjson import simplejson
 
 
 class Schemas(object):
@@ -250,7 +251,7 @@ class _SchemaToStruct(object):
       self.emitEnd('{', schema.get('description', ''))
       self.indent()
       if 'properties' in schema:
-        for pname, pschema in schema.get('properties', {}).iteritems():
+        for pname, pschema in six.iteritems(schema.get('properties', {})):
           self.emitBegin('"%s": ' % pname)
           self._to_str_impl(pschema)
       elif 'additionalProperties' in schema:

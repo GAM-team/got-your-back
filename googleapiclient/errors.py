@@ -1,6 +1,4 @@
-#!/usr/bin/python2.4
-#
-# Copyright (C) 2010 Google Inc.
+# Copyright 2014 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +17,13 @@
 All exceptions defined by the library
 should be defined in this file.
 """
+from __future__ import absolute_import
 
 __author__ = 'jcgregorio@google.com (Joe Gregorio)'
 
+import json
 
 from oauth2client import util
-from oauth2client.anyjson import simplejson
 
 
 class Error(Exception):
@@ -38,6 +37,8 @@ class HttpError(Error):
   @util.positional(3)
   def __init__(self, resp, content, uri=None):
     self.resp = resp
+    if not isinstance(content, bytes):
+        raise TypeError("HTTP content should be bytes")
     self.content = content
     self.uri = uri
 
@@ -45,7 +46,7 @@ class HttpError(Error):
     """Calculate the reason for the error from the response content."""
     reason = self.resp.reason
     try:
-      data = simplejson.loads(self.content)
+      data = json.loads(self.content.decode('utf-8'))
       reason = data['error']['message']
     except (ValueError, KeyError):
       pass
@@ -102,6 +103,9 @@ class InvalidChunkSizeError(Error):
   """The given chunksize is not valid."""
   pass
 
+class InvalidNotificationError(Error):
+  """The channel Notification is invalid."""
+  pass
 
 class BatchError(HttpError):
   """Error occured during batch operations."""
