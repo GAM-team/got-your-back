@@ -1380,7 +1380,7 @@ def main(argv):
       drive = buildGAPIServiceObject('drive')
     quota_results = callGAPI(service=drive.about(), function='get',
       fields='quotaBytesTotal,quotaBytesUsedInTrash,quotaBytesUsedAggregate,qu\
-      otaBytesByService,quotaType')
+otaBytesByService,quotaType')
     for key in quota_results:
       if key == 'quotaBytesByService':
         print('Service Usage:')
