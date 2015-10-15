@@ -889,7 +889,7 @@ def main(argv):
   else:
     gmail = buildGAPIServiceObject('gmail')
   if not os.path.isdir(options.local_folder):
-    if options.action in ['backup',]:
+    if options.action in ['backup', 'estimate']:
       os.mkdir(options.local_folder)
     elif options.action in ['restore', 'restore-group']:
       print('Error: Folder %s does not exist. Cannot restore.'
@@ -899,13 +899,13 @@ def main(argv):
   sqldbfile = os.path.join(options.local_folder, 'msg-db.sqlite')
   # Do we need to initialize a new database?
   newDB = (not os.path.isfile(sqldbfile)) and \
-    (options.action in ['backup', 'restore-mbox'])
+    (options.action in ['backup', 'restore-mbox', 'estimate'])
   
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels',
     'quota', 'revoke']:
-    if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
+    if newDB or os.path.isfile(sqldbfile):
       print("\nUsing backup folder %s" % options.local_folder)
       global sqlconn
       global sqlcur
