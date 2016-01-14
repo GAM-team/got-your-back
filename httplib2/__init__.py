@@ -24,7 +24,7 @@ __contributors__ = ["Thomas Broyer (t.broyer@ltgt.net)",
     "Louis Nyffenegger",
     "Mark Pilgrim"]
 __license__ = "MIT"
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 import re
 import sys
@@ -994,8 +994,9 @@ class Http(object):
                 raise ServerNotFoundError("Unable to find the server at %s" % conn.host)
             except socket.error as e:
                 errno_ = (e.args[0].errno if isinstance(e.args[0], socket.error) else e.errno)
-                if errno_ == errno.ECONNREFUSED: # Connection refused
-                    raise
+                if errno_ in (errno.ENETUNREACH, errno.EADDRNOTAVAIL) and i < RETRIES:
+                    continue  # retry on potentially transient errors
+                raise
             except http.client.HTTPException:
                 if conn.sock is None:
                     if i < RETRIES-1:
