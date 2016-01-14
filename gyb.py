@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '0.41'
+__version__ = '0.42'
 __license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
@@ -193,11 +193,10 @@ with information from the APIs Console https://console.developers.google.com.
   if os.path.isfile(getProgPath()+'nobrowser.txt'):
     flags.noauth_local_webserver = True
   if credentials is None or credentials.invalid:
-    certFile = getProgPath()+'cacert.pem'
     disable_ssl_certificate_validation = False
     if os.path.isfile(getProgPath()+'noverifyssl.txt'):
       disable_ssl_certificate_validation = True
-    http = httplib2.Http(ca_certs=certFile,
+    http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
     possible_scopes = ['https://www.googleapis.com/auth/gmail.modify',
                        # Gmail modify
@@ -279,11 +278,10 @@ https://www.googleapis.com/auth/gmail.labels',
       scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=auth_as)
     credentials = oauth2client.tools.run_flow(flow=FLOW, storage=storage,
       flags=flags, http=http)
-    certFile = getProgPath()+'cacert.pem'
     disable_ssl_certificate_validation = False
     if os.path.isfile(getProgPath()+'noverifyssl.txt'):
       disable_ssl_certificate_validation = True
-    http = httplib2.Http(ca_certs=certFile,
+    http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
 
 def doGYBCheckForUpdates():
@@ -374,7 +372,7 @@ def buildGAPIObject(api):
   disable_ssl_certificate_validation = False
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
     disable_ssl_certificate_validation = True
-  http = httplib2.Http(ca_certs=getProgPath()+'cacert.pem',
+  http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     httplib2.debuglevel = 4
@@ -430,7 +428,7 @@ estimate-users-and-restore-to-groups\n\nto setup a Service Account')
   disable_ssl_certificate_validation = False
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
     disable_ssl_certificate_validation = True
-  http = httplib2.Http(ca_certs=getProgPath()+'cacert.pem',
+  http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     httplib2.debuglevel = 4
@@ -1418,11 +1416,10 @@ otaBytesByService,quotaType')
     except AttributeError:
       print('Error: Authorization doesn\'t exist')
       sys.exit(1)
-    certFile = getProgPath()+'cacert.pem'
     disable_ssl_certificate_validation = False
     if os.path.isfile(getProgPath()+'noverifyssl.txt'):
       disable_ssl_certificate_validation = True
-    http = httplib2.Http(ca_certs=certFile,
+    http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
     if os.path.isfile(getProgPath()+'debug.gam'):
       httplib2.debuglevel = 4
