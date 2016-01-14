@@ -1082,11 +1082,16 @@ def main(argv):
           (current, restore_count))
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
           mimetype='message/rfc822')
-        response = callGAPI(service=restore_serv, function=restore_func,
-          userId='me', media_body=media_body, body=body,
-          deleted=options.vault, **restore_params)
+        try:
+          response = callGAPI(service=restore_serv, function=restore_func,
+            userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
+            deleted=options.vault, **restore_params)
+          exception = None
+        except googleapiclient.errors.HttpError as e:
+          response = None
+          exception = e
         restored_message(request_id=str(message_num), response=response,
-          exception=None)
+          exception=exception)
         rewrite_line('restored single large message (%s/%s)' % (current,
           restore_count))
         continue
