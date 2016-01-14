@@ -51,12 +51,6 @@ import re
 from itertools import islice, chain
 import base64
 import json
-
-try:
-  import json as simplejson
-except ImportError:
-  import simplejson
-
 import httplib2
 import oauth2client.client
 import oauth2client.file
@@ -475,7 +469,7 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
     try:
       return method.execute()
     except googleapiclient.errors.HttpError as e:
-      error = simplejson.loads(e.content.decode('utf-8'))
+      error = json.loads(e.content.decode('utf-8'))
       try:
         reason = error['error']['errors'][0]['reason']
         http_status = error['error']['code']
@@ -798,7 +792,7 @@ def refresh_message(request_id, response, exception):
 def restored_message(request_id, response, exception):
   if exception is not None:
     try:
-      error = simplejson.loads(exception.content.decode('utf-8'))
+      error = json.loads(exception.content.decode('utf-8'))
       if error['error']['code'] == 400:
         print("\nERROR: %s: %s. Skipping message restore, you can retry later with --fast-restore"
           % (error['error']['code'], error['error']['errors'][0]['message']))
