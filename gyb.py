@@ -1067,7 +1067,6 @@ def main(argv):
       f = open(os.path.join(options.local_folder, message_filename), 'rb')
       full_message = f.read()
       f.close()
-      #full_message = full_message.replace('\x00', '') # No NULL chars
       labels = []
       if not options.strip_labels:
         sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
@@ -1085,8 +1084,11 @@ def main(argv):
         # don't batch/raw >1mb messages, just do single
         rewrite_line('restoring single large message (%s/%s)' %
           (current, restore_count))
+        # Note resumable=True is important here, it prevents errors on (bad)
+        # messages that should be ASCII but contain extended chars.
+        # What's that? No, no idea why
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-          mimetype='message/rfc822')
+          mimetype='message/rfc822', resumable=True)
         try:
           response = callGAPI(service=restore_serv, function=restore_func,
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
