@@ -791,6 +791,14 @@ def refresh_message(request_id, response, exception):
 
 def restored_message(request_id, response, exception):
   if exception is not None:
+    try:
+      error = simplejson.loads(exception.content.decode('utf-8'))
+      if error['error']['code'] == 400:
+        print("\nERROR: %s: %s. Skipping message restore, you can retry later with --fast-restore"
+          % (error['error']['code'], error['error']['errors'][0]['message']))
+        return
+    except:
+      pass
     raise exception
   else:
     sqlconn.execute(
