@@ -56,6 +56,12 @@ docs/_build/
 *.cfg
 nobrowser.txt
 GYB-GMail-Backup-*/
+lastcheck.txt
+gyb/
 
 # Prevents committing private key.
 privatekey.p12
+
+# builds
+*.zip
+*.exe
