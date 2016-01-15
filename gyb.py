@@ -46,6 +46,7 @@ import platform
 import datetime
 import sqlite3
 import email
+import hashlib
 import mailbox
 import re
 from itertools import islice, chain
@@ -1216,24 +1217,31 @@ def main(argv):
           del message['X-Gmail-Labels']
           del message['X-GM-THRID']
           rewrite_line(" message %s of %s" % (current, restore_count))
-          full_message = message.as_string()
+          full_message = message.as_bytes()
           body = {'labelIds': labelIds}
           b64_message_size = (len(full_message)/3) * 4
+          # shorten request_id to prevent content-id errors
+          request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
           if b64_message_size > 1 * 1024 * 1024:
             # don't batch/raw >1mb messages, just do single
             rewrite_line(' restoring single large message (%s/%s)' %
               (current, restore_count))
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
               mimetype='message/rfc822', resumable=True)
-            response = callGAPI(service=restore_serv, function=restore_func,
-              userId='me', media_body=media_body, body=body,
-              deleted=options.vault, **restore_params)
-            restored_message(request_id=str(message_marker), response=response,
+            try:
+              response = callGAPI(service=restore_serv, function=restore_func,
+                userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
+                deleted=options.vault, **restore_params)
+              exception = None
+            except googleapiclient.errors.HttpError as e:
+              response = None
+              exception = e
+            restored_message(request_id=request_id, response=response,
               exception=None)
             rewrite_line(' restored single large message (%s/%s)' %
               (current, restore_count))
             continue
-          raw_message = base64.urlsafe_b64encode(full_message)
+          raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
           body['raw'] = raw_message
           current_batch_bytes += len(raw_message)
           for labelId in labelIds:
@@ -1253,7 +1261,7 @@ def main(argv):
             body=body, fields='id',
             deleted=options.vault, **restore_params),
             callback=restored_message,
-            request_id=str(message_marker))
+            request_id=request_id)
           if len(gbatch._order) == options.batch_size:
             rewrite_line("restoring %s messages (%s/%s)" %
               (len(gbatch._order), current, restore_count))
