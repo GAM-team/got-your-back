@@ -1116,8 +1116,6 @@ def main(argv):
         callGAPI(gbatch, None)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
-        rewrite_line("restored %s messages (%s/%s)" % (len(gbatch._order),
-          current, restore_count))
         current_batch_bytes = 5000
         largest_in_batch = 0
       gbatch.add(restore_method(userId='me',
@@ -1130,8 +1128,6 @@ def main(argv):
         callGAPI(gbatch, None)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
-        rewrite_line("restored %s messages (%s/%s)" % (len(gbatch._order),
-          current, restore_count))
         current_batch_bytes = 5000
         largest_in_batch = 0
     if len(gbatch._order) > 0:
@@ -1139,8 +1135,6 @@ def main(argv):
         current, restore_count))
       callGAPI(gbatch, None)
       sqlconn.commit()
-      rewrite_line("restored %s messages (%s/%s)" % (len(gbatch._order),
-        current, restore_count))
     print("\n")
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
@@ -1254,8 +1248,6 @@ def main(argv):
             callGAPI(gbatch, None)
             gbatch = googleapiclient.http.BatchHttpRequest()
             sqlconn.commit()
-            rewrite_line("restored %s messages (%s/%s)" %
-              (len(gbatch._order), current, restore_count))
             current_batch_bytes = 5000
             largest_in_batch = 0
           gbatch.add(restore_method(userId='me',
@@ -1269,8 +1261,6 @@ def main(argv):
             callGAPI(gbatch, None)
             gbatch = googleapiclient.http.BatchHttpRequest()
             sqlconn.commit()
-            rewrite_line("restored %s messages (%s/%s)" %
-              (len(gbatch._order), current, restore_count))
             current_batch_bytes = 5000
             largest_in_batch = 0
         if len(gbatch._order) > 0:
@@ -1278,8 +1268,6 @@ def main(argv):
             (len(gbatch._order), current, restore_count))
           callGAPI(gbatch, None)
           sqlconn.commit()
-          rewrite_line("restoring %s messages (%s/%s)" %
-            (len(gbatch._order), current, restore_count))
     sqlconn.execute('DETACH mbox_resume')
     sqlconn.commit()
 
