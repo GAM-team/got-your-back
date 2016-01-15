@@ -1465,7 +1465,7 @@ otaBytesByService,quotaType')
     #Determine which messages from the search we haven't processed before.
     print("GYB needs to examine %s messages" % len(messages_to_process))
     for message_num in messages_to_process:
-      if not newDB and message_is_backed_up(message_num['id'], sqlcur,
+      if not newDB and os.path.isfile(sqldbfile) and message_is_backed_up(message_num['id'], sqlcur,
         sqlconn, options.local_folder):
         pass
       else:
@@ -1487,13 +1487,11 @@ otaBytesByService,quotaType')
       if len(gbatch._order) == options.batch_size:
         callGAPI(gbatch, None)
         gbatch = googleapiclient.http.BatchHttpRequest()
-        sqlconn.commit()
         rewrite_line("Estimated size %s %s/%s messages" %
           (bytes_to_larger(message_size_estimate), estimated_messages,
           estimate_count))
     if len(gbatch._order) > 0:
       callGAPI(gbatch, None)
-      sqlconn.commit()
       rewrite_line("Estimated size %s %s/%s messages" %
         (bytes_to_larger(message_size_estimate), estimated_messages,
         estimate_count))
