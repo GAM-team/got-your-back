@@ -469,7 +469,11 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
     try:
       return method.execute()
     except googleapiclient.errors.HttpError as e:
-      error = json.loads(e.content.decode('utf-8'))
+      try:
+        error = json.loads(e.content.decode('utf-8'))
+      except json.decoder.JSONDecodeError:
+        sys.stderr.write('Unknown Error: %s' % e)
+        sys.exit(1)
       try:
         reason = error['error']['errors'][0]['reason']
         http_status = error['error']['code']
@@ -1223,7 +1227,7 @@ def main(argv):
             rewrite_line(' restoring single large message (%s/%s)' %
               (current, restore_count))
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-              mimetype='message/rfc822')
+              mimetype='message/rfc822', resumable=True)
             response = callGAPI(service=restore_serv, function=restore_func,
               userId='me', media_body=media_body, body=body,
               deleted=options.vault, **restore_params)
@@ -1318,7 +1322,7 @@ def main(argv):
       f.close()
       media = googleapiclient.http.MediaFileUpload(
         os.path.join(options.local_folder, message_filename),
-        mimetype='message/rfc822')
+        mimetype='message/rfc822', resumable=True)
       try:
         callGAPI(service=gmig.archive(), function='insert',
           groupId=options.email, media_body=media)
