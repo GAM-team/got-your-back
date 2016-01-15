@@ -30,10 +30,11 @@ __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail
+global extra_args, options, allLabelIds, allLabels, gmail, chunksize
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
+chunksize = 1024 * 1024 * 30
 
 import argparse
 import sys
@@ -462,11 +463,11 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
   retries = 10
   parameters = kwargs.copy()
   parameters.update(extra_args)
-  if function:
-    method = getattr(service, function)(**parameters)
-  else:
-    method = service
   for n in range(1, retries+1):
+    if function:
+      method = getattr(service, function)(**parameters)
+    else:
+      method = service
     try:
       return method.execute()
     except googleapiclient.errors.HttpError as e:
@@ -1079,7 +1080,7 @@ def main(argv):
       labelIds = labelsToLabelIds(labels)
       body = {'labelIds': labelIds}
       b64_message_size = (len(full_message)/3) * 4
-      if b64_message_size > 1 * 1024 * 1024:
+      if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
         # don't batch/raw >1mb messages, just do single
         rewrite_line('restoring single large message (%s/%s)' %
           (current, restore_count))
@@ -1087,7 +1088,7 @@ def main(argv):
         # messages that should be ASCII but contain extended chars.
         # What's that? No, no idea why
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-          mimetype='message/rfc822', resumable=True)
+          mimetype='message/rfc822', resumable=True, chunksize=chunksize)
         try:
           response = callGAPI(service=restore_serv, function=restore_func,
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1227,7 +1228,7 @@ def main(argv):
             rewrite_line(' restoring single large message (%s/%s)' %
               (current, restore_count))
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-              mimetype='message/rfc822', resumable=True)
+              mimetype='message/rfc822', resumable=True, chunksize=chunksize)
             try:
               response = callGAPI(service=restore_serv, function=restore_func,
                 userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1327,7 +1328,7 @@ def main(argv):
       f.close()
       media = googleapiclient.http.MediaFileUpload(
         os.path.join(options.local_folder, message_filename),
-        mimetype='message/rfc822', resumable=True)
+        mimetype='message/rfc822', resumable=True, chunksize=chunksize)
       try:
         callGAPI(service=gmig.archive(), function='insert',
           groupId=options.email, media_body=media)
