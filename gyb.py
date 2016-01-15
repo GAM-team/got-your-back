@@ -1194,7 +1194,9 @@ def main(argv):
         for message in mbox:
           current += 1
           message_marker = '%s-%s' % (file_path, current)
-          if message_marker in messages_to_skip:
+          # shorten request_id to prevent content-id errors
+          request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
+          if request_id in messages_to_skip:
             continue
           restart_line()
           labels = message['X-Gmail-Labels']
@@ -1220,8 +1222,6 @@ def main(argv):
           full_message = message.as_bytes()
           body = {'labelIds': labelIds}
           b64_message_size = (len(full_message)/3) * 4
-          # shorten request_id to prevent content-id errors
-          request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
           if b64_message_size > 1 * 1024 * 1024:
             # don't batch/raw >1mb messages, just do single
             rewrite_line(' restoring single large message (%s/%s)' %
