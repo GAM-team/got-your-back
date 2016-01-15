@@ -471,36 +471,33 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
     except googleapiclient.errors.HttpError as e:
       try:
         error = json.loads(e.content.decode('utf-8'))
-      except json.decoder.JSONDecodeError:
-        sys.stderr.write('Unknown Error: %s' % e)
-        sys.exit(1)
-      try:
         reason = error['error']['errors'][0]['reason']
         http_status = error['error']['code']
         message = error['error']['errors'][0]['message']
-        if reason in throw_reasons:
-          raise
-        if n != retries and (http_status >= 500 or
-         reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError']):
-          wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
-          randomness = float(random.randint(1,1000)) / 1000
-          wait_on_fail = wait_on_fail + randomness
-          if n > 3:
-            sys.stderr.write('\nTemp error %s. Backing off %s seconds...'
-              % (reason, int(wait_on_fail)))
-          time.sleep(wait_on_fail)
-          if n > 3:
-            sys.stderr.write('attempt %s/%s\n' % (n+1, retries))
-          continue
-        sys.stderr.write('\n%s: %s - %s\n' % (http_status, message, reason))
-        if soft_errors:
-          sys.stderr.write(' - Giving up.\n')
-          return
-        else:
-          sys.exit(int(http_status))
-      except KeyError:
-        sys.stderr.write('Unknown Error: %s' % e)
-        sys.exit(1)
+      except (KeyError, json.decoder.JSONDecodeError):
+        http_status = e.code
+        reason = e.reason
+        message = e.reason
+      if reason in throw_reasons:
+        raise
+      if n != retries and (http_status >= 500 or
+       reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError']):
+        wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
+        randomness = float(random.randint(1,1000)) / 1000
+        wait_on_fail += randomness
+        if n > 0:
+          sys.stderr.write('\nTemp error %s. Backing off %s seconds...'
+            % (reason, int(wait_on_fail)))
+        time.sleep(wait_on_fail)
+        if n > 0:
+          sys.stderr.write('attempt %s/%s\n' % (n+1, retries))
+        continue
+      sys.stderr.write('\n%s: %s - %s\n' % (http_status, message, reason))
+      if soft_errors:
+        sys.stderr.write(' - Giving up.\n')
+        return
+      else:
+        sys.exit(int(http_status))
     except oauth2client.client.AccessTokenRefreshError as e:
       sys.stderr.write('Error: Authentication Token Error - %s' % e)
       sys.exit(403)
