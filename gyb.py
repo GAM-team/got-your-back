@@ -477,9 +477,9 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
         http_status = error['error']['code']
         message = error['error']['errors'][0]['message']
       except (KeyError, json.decoder.JSONDecodeError):
-        http_status = e.code
-        reason = e.reason
-        message = e.reason
+        http_status = int(e.resp['status'])
+        reason = e.content
+        message = e.content
       if reason in throw_reasons:
         raise
       if n != retries and (http_status >= 500 or
