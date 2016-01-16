@@ -752,7 +752,7 @@ def labelsToLabelIds(labels):
       # create new label (or get it's id if it exists)
       try:
         label_results = callGAPI(service=gmail.users().labels(), function='create',
-          throw_reasons=['invalidArgument'],
+          throw_reasons=['invalidArgument', 'aborted'],
           body={'labelListVisibility': 'labelShow',
           'messageListVisibility': 'show', 'name': label},
           userId='me', fields='id')
@@ -763,12 +763,13 @@ def labelsToLabelIds(labels):
           if char in label_safelist:
             label += char
         label = '%s-Restored' % (label)
-        label_results = callGAPI(service=gmail.users().labels(), function='create',
-          body={'labelListVisibility': 'labelShow',
-          'messageListVisibility': 'show', 'name': label},
-          userId='me', fields='id')
-        allLabels[orig_label] = label_results['id']
-      allLabels[label] = label_results['id']
+        if label not in allLabels:
+          label_results = callGAPI(service=gmail.users().labels(), function='create',
+            body={'labelListVisibility': 'labelShow',
+            'messageListVisibility': 'show', 'name': label},
+            userId='me', fields='id')
+          allLabels[orig_label] = label_results['id']
+          allLabels[label] = label_results['id']
     try:
       labelIds.append(allLabels[label])
     except KeyError:
