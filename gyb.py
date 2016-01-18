@@ -30,10 +30,15 @@ __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
+global extra_args, options, allLabelIds, allLabels, gmail, chunksize
+extra_args = {'prettyPrint': False}
+allLabelIds = dict()
+allLabels = dict()
+chunksize = 1024 * 1024 * 30
+
 import argparse
 import sys
 import os
-import string
 import os.path
 import time
 import random
@@ -60,13 +65,6 @@ import googleapiclient.errors
 # cheat to get these pulled in by PyInstaller for Win builds
 from OpenSSL import crypto
 import cffi
-
-global extra_args, options, allLabelIds, allLabels, gmail, chunksize, label_safelist
-extra_args = {'prettyPrint': False}
-allLabelIds = dict()
-allLabels = dict()
-chunksize = 1024 * 1024 * 30
-label_safelist = string.ascii_lowercase+string.ascii_uppercase+string.digits+'/'
 
 def SetupOptionParser(argv):
   parser = argparse.ArgumentParser(add_help=False)
@@ -748,26 +746,14 @@ def labelsToLabelIds(labels):
         allLabels[a_label['name']] = a_label['id']
   labelIds = list()
   for label in labels:
+    if label == 'CHAT':
+      label = 'Chat-Restored'
     if label not in allLabels:
       # create new label (or get it's id if it exists)
-      try:
-        label_results = callGAPI(service=gmail.users().labels(), function='create',
-          throw_reasons=['invalidArgument'],
-          body={'labelListVisibility': 'labelShow',
+      label_results = callGAPI(service=gmail.users().labels(), function='create',
+        body={'labelListVisibility': 'labelShow',
           'messageListVisibility': 'show', 'name': label},
-          userId='me', fields='id')
-      except googleapiclient.errors.HttpError as e:
-        orig_label = label
-        label = ''
-        for char in orig_label:
-          if char in label_safelist:
-            label += char
-        label = '%s-Restored' % (label)
-        label_results = callGAPI(service=gmail.users().labels(), function='create',
-          body={'labelListVisibility': 'labelShow',
-          'messageListVisibility': 'show', 'name': label},
-          userId='me', fields='id')
-        allLabels[orig_label] = label_results['id']
+        userId='me', fields='id')
       allLabels[label] = label_results['id']
     try:
       labelIds.append(allLabels[label])
