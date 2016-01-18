@@ -35,6 +35,7 @@ extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
 chunksize = 1024 * 1024 * 30
+reserved_labels = ['chat', 'chats', 'migrated', 'todo', 'todos', 'buzz', 'bin', 'allmail']
 
 import argparse
 import sys
@@ -746,8 +747,9 @@ def labelsToLabelIds(labels):
         allLabels[a_label['name']] = a_label['id']
   labelIds = list()
   for label in labels:
-    if label == 'CHAT':
-      label = 'Chat-Restored'
+    base_label = label.split('/')[0].lower()
+    if base_label in reserved_labels:
+      label = '_%s' % (label)
     if label not in allLabels:
       # create new label (or get it's id if it exists)
       label_results = callGAPI(service=gmail.users().labels(), function='create',
