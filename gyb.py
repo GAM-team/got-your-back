@@ -662,6 +662,17 @@ def getMessageIDs (sqlconn, backup_folder):
 def rebuildUIDTable(sqlconn):
   pass
 
+suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+def humansize(file_path):
+  nbytes = os.stat(file_path).st_size
+  if nbytes == 0: return '0 B'
+  i = 0
+  while nbytes >= 1024 and i < len(suffixes)-1:
+    nbytes /= 1024.
+    i += 1
+  f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
+  return '%s%s' % (f, suffixes[i])
+
 def doesTokenMatchEmail():
   if options.use_admin:
     auth_as = options.use_admin
@@ -1184,10 +1195,11 @@ def main(argv):
           filename[-5:].lower() != '.mbox':
           continue
         file_path = '%s%s%s' % (path, divider, filename)
+        print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
+        print("large files may take some time to open.")
         mbox = mailbox.mbox(file_path)
         restore_count = len(list(mbox.items()))
         current = 0
-        print("\nRestoring from %s" % file_path)
         for message in mbox:
           current += 1
           message_marker = '%s-%s' % (file_path, current)
