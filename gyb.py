@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '0.44'
+__version__ = '0.45'
 __license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
@@ -57,6 +57,7 @@ import json
 import httplib2
 import oauth2client.client
 import oauth2client.file
+from oauth2client.service_account import ServiceAccountCredentials
 import oauth2client.tools
 import googleapiclient
 import googleapiclient.discovery
@@ -64,8 +65,8 @@ import googleapiclient.errors
 
 # PyOpenSSL pulls some weird hidden imports so we
 # cheat to get these pulled in by PyInstaller for Win builds
-from OpenSSL import crypto
-import cffi
+# from OpenSSL import crypto
+# import cffi
 
 def SetupOptionParser(argv):
   parser = argparse.ArgumentParser(add_help=False)
@@ -127,7 +128,7 @@ Account to authenticate.')
     type=int,
     choices=list(range(1,101)),
     default=0, # default of 0 means use per action default
-    help='Optional: Sets the number of batch operations to perform at once.')
+    help='Optional: Sets the number of operations to perform at once.')
   parser.add_argument('--noresume', 
     action='store_true',
     help='Optional: On restores, start from beginning. Default is to resume \
@@ -388,7 +389,7 @@ def buildGAPIObject(api):
   http = credentials.authorize(http)
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=http)
+    return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
     disc_file = getProgPath()+'%s-%s.json' % (api, version)
     if os.path.isfile(disc_file):
@@ -408,24 +409,11 @@ def buildGAPIServiceObject(api, soft_errors=False):
     auth_as = options.use_admin
   else:
     auth_as = options.email
-  oauth2servicefile = getProgPath()+'oauth2service'
-  oauth2servicefilejson = '%s.json' % oauth2servicefile
-  try:
-    json_string = open(oauth2servicefilejson, 'r').read()
-  except IOError as e:
-    print('Error: %s' % e)
-    print('')
-    print('Please follow the instructions at:\n\nhttps://github.com/jay0lee/go\
-t-your-back/wiki#google-apps-business-and-education-admins-backup-restore-and-\
-estimate-users-and-restore-to-groups\n\nto setup a Service Account')
-    sys.exit(6)
-  json_data = json.loads(json_string)
-  SERVICE_ACCOUNT_EMAIL = json_data['client_email']
-  SERVICE_ACCOUNT_CLIENT_ID = json_data['client_id']
-  key = json_data['private_key'].encode('utf-8')
-  scope = getAPIScope(api)
-  credentials = oauth2client.client.SignedJwtAssertionCredentials(
-    SERVICE_ACCOUNT_EMAIL, key, scope=scope, sub=auth_as)
+  oauth2servicefilejson = getProgPath()+'oauth2service.json'
+  scopes = getAPIScope(api)
+  credentials = ServiceAccountCredentials.from_json_keyfile_name(
+    oauth2servicefilejson, scopes)
+  credentials = credentials.create_delegated(auth_as)
   credentials.user_agent = getGYBVersion(' | ')
   disable_ssl_certificate_validation = False
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
@@ -444,7 +432,7 @@ estimate-users-and-restore-to-groups\n\nto setup a Service Account')
   http = credentials.authorize(http)
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=http)
+    return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
   except oauth2client.client.AccessTokenRefreshError as e:
     if e.message in ['access_denied', 'unauthorized_client: Unauthorized \
 client or scope in request.']:
