@@ -17,7 +17,6 @@ from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
-import six
 
 from oauth2client._helpers import _parse_pem_key
 from oauth2client._helpers import _to_bytes
@@ -116,7 +115,7 @@ class PyCryptoSigner(object):
         Raises:
             NotImplementedError if the key isn't in PEM format.
         """
-        parsed_pem_key = _parse_pem_key(key)
+        parsed_pem_key = _parse_pem_key(_to_bytes(key))
         if parsed_pem_key:
             pkey = RSA.importKey(parsed_pem_key)
         else:

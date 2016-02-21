@@ -26,6 +26,7 @@ import socket
 import sys
 
 from six.moves import BaseHTTPServer
+from six.moves import http_client
 from six.moves import urllib
 from six.moves import input
 
@@ -95,7 +96,7 @@ class ClientRedirectHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if the flow has completed. Note that we can't detect
         if an error occurred.
         """
-        self.send_response(200)
+        self.send_response(http_client.OK)
         self.send_header("Content-type", "text/html")
         self.end_headers()
         query = self.path.split('?', 1)[-1]
@@ -194,16 +195,6 @@ def run_flow(flow, storage, flags, http=None):
     flow.redirect_uri = oauth_callback
     authorize_url = flow.step1_get_authorize_url()
 
-    if flags.short_url:
-        try:
-            from googleapiclient.discovery import build
-            service = build('urlshortener', 'v1', http=http)
-            url_result = service.url().insert(body={'longUrl': authorize_url},
-              key=u'AIzaSyBlmgbii8QfJSYmC9VTMOfqrAt5Vj5wtzE').execute()
-            authorize_url = url_result['id']
-        except:
-          pass
-
     if not flags.noauth_local_webserver:
         import webbrowser
         webbrowser.open(authorize_url, new=1, autoraise=True)
@@ -211,8 +202,11 @@ def run_flow(flow, storage, flags, http=None):
         print()
         print('    ' + authorize_url)
         print()
-        print('If your browser is on a different machine then exit and re-run this')
-        print('after creating a file called nobrowser.txt in the same path as GAM.')
+        print('If your browser is on a different machine then '
+              'exit and re-run this')
+        print('application with the command-line parameter ')
+        print()
+        print('  --noauth_local_webserver')
         print()
     else:
         print('Go to the following link in your browser:')
