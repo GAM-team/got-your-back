@@ -63,11 +63,6 @@ import googleapiclient
 import googleapiclient.discovery
 import googleapiclient.errors
 
-# PyOpenSSL pulls some weird hidden imports so we
-# cheat to get these pulled in by PyInstaller for Win builds
-# from OpenSSL import crypto
-# import cffi
-
 def SetupOptionParser(argv):
   parser = argparse.ArgumentParser(add_help=False)
   #parser.usage = parser.print_help()
