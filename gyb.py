@@ -320,7 +320,7 @@ latest-version-announcement.txt?v=%s'
     sys.stderr.write(announcement)
     visit_gyb = input("\n\nHit Y to visit the GYB website and download \
 the latest release. Hit Enter to just continue with this boring old version.\
- GYB won't bother you with this announcemnt for 1 week or you can create a \
+ GYB won't bother you with this announcement for 1 week or you can create a \
 file named %s and GYB won't ever check for updates: " % no_update_check_file)
     if visit_gyb.lower() == 'y':
       import webbrowser
