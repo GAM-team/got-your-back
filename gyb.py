@@ -35,7 +35,7 @@ extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
 chunksize = 1024 * 1024 * 30
-reserved_labels = ['chat', 'chats', 'migrated', 'todo', 'todos', 'buzz', 'bin', 'allmail']
+reserved_labels = ['chat', 'chats', 'migrated', 'todo', 'todos', 'buzz', 'bin', 'allmail', 'drafts']
 
 import argparse
 import sys
