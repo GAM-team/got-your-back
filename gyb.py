@@ -673,18 +673,9 @@ when authorizing the token in the browser." % auth_as)
   os.remove(cfgFile)
   return False
 
-def restart_line():
-  sys.stdout.write('\r')
-  sys.stdout.flush()
-
 def rewrite_line(mystring):
-  sys.stdout.write('\r')
-  sys.stdout.flush()
-  padding_length = 80 - len(mystring)
-  padding = ' ' * padding_length
-  sys.stdout.write(mystring)
-  sys.stdout.write(padding)
-  sys.stdout.flush()
+  print(' ' * 80, end='\r')
+  print(mystring, end='\r')
 
 def initializeDB(sqlcur, sqlconn, email):
   sqlcur.executescript('''
@@ -1190,7 +1181,6 @@ def main(argv):
           request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
           if request_id in messages_to_skip:
             continue
-          restart_line()
           labels = message['X-Gmail-Labels']
           if labels != None and labels != '' and not options.strip_labels:
             mybytes, encoding = email.header.decode_header(labels)[0]
