@@ -1483,6 +1483,9 @@ otaBytesByService,quotaType')
     print('\n')
 
 if __name__ == '__main__':
+  if sys.version_info[0] < 3 or sys.version_info[1] < 5:
+    print('ERROR: GYB requires Python 3.5 or greater.')
+    sys.exit(3)
   doGYBCheckForUpdates()
   try:
     main(sys.argv[1:])
