@@ -120,9 +120,7 @@ class PyCryptoSigner(object):
             pkey = RSA.importKey(parsed_pem_key)
         else:
             raise NotImplementedError(
-                'PKCS12 format is not supported by the PyCrypto library. '
-                'Try converting to a "PEM" '
-                '(openssl pkcs12 -in xxxxx.p12 -nodes -nocerts > '
-                'privatekey.pem) '
-                'or using PyOpenSSL if native code is an option.')
+                'No key in PEM format was detected. This implementation '
+                'can only use the PyCrypto library for keys in PEM '
+                'format.')
         return PyCryptoSigner(pkey)

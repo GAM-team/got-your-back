@@ -53,9 +53,8 @@ HAS_CRYPTO = False
 try:
     from oauth2client import crypt
     HAS_CRYPTO = True
-    if crypt.OpenSSLVerifier is not None:
-        HAS_OPENSSL = True
-except ImportError:
+    HAS_OPENSSL = crypt.OpenSSLVerifier is not None
+except ImportError:  # pragma: NO COVER
     pass
 
 
@@ -179,10 +178,6 @@ class CryptoUnavailableError(Error, NotImplementedError):
     """Raised when a crypto library is required, but none is available."""
 
 
-def _abstract():
-    raise NotImplementedError('You need to override this function')
-
-
 class MemoryCache(object):
     """httplib2 Cache implementation which only caches locally."""
 
@@ -229,7 +224,7 @@ class Credentials(object):
             http: httplib2.Http, an http object to be used to make the refresh
                   request.
         """
-        _abstract()
+        raise NotImplementedError
 
     def refresh(self, http):
         """Forces a refresh of the access_token.
@@ -238,7 +233,7 @@ class Credentials(object):
             http: httplib2.Http, an http object to be used to make the refresh
                   request.
         """
-        _abstract()
+        raise NotImplementedError
 
     def revoke(self, http):
         """Revokes a refresh_token and makes the credentials void.
@@ -247,7 +242,7 @@ class Credentials(object):
             http: httplib2.Http, an http object to be used to make the revoke
                   request.
         """
-        _abstract()
+        raise NotImplementedError
 
     def apply(self, headers):
         """Add the authorization to the headers.
@@ -255,7 +250,7 @@ class Credentials(object):
         Args:
             headers: dict, the headers to add the Authorization header to.
         """
-        _abstract()
+        raise NotImplementedError
 
     def _to_json(self, strip, to_serialize=None):
         """Utility function that creates JSON repr. of a Credentials object.
@@ -274,6 +269,9 @@ class Credentials(object):
         curr_type = self.__class__
         if to_serialize is None:
             to_serialize = copy.copy(self.__dict__)
+        else:
+            # Assumes it is a str->str dictionary, so we don't deep copy.
+            to_serialize = copy.copy(to_serialize)
         for member in strip:
             if member in to_serialize:
                 del to_serialize[member]
@@ -390,7 +388,7 @@ class Storage(object):
         Returns:
             oauth2client.client.Credentials
         """
-        _abstract()
+        raise NotImplementedError
 
     def locked_put(self, credentials):
         """Write a credential.
@@ -400,14 +398,14 @@ class Storage(object):
         Args:
             credentials: Credentials, the credentials to store.
         """
-        _abstract()
+        raise NotImplementedError
 
     def locked_delete(self):
         """Delete a credential.
 
         The Storage lock must be held when this is called.
         """
-        _abstract()
+        raise NotImplementedError
 
     def get(self):
         """Retrieve credential.
@@ -494,6 +492,26 @@ def _update_query_params(uri, params):
     query_params.update(params)
     new_parts = parts._replace(query=urllib.parse.urlencode(query_params))
     return urllib.parse.urlunparse(new_parts)
+
+
+def _initialize_headers(headers):
+    """Creates a copy of the headers."""
+    if headers is None:
+        headers = {}
+    else:
+        headers = dict(headers)
+    return headers
+
+
+def _apply_user_agent(headers, user_agent):
+    """Adds a user-agent to the headers."""
+    if user_agent is not None:
+        if 'user-agent' in headers:
+            headers['user-agent'] = (user_agent + ' ' + headers['user-agent'])
+        else:
+            headers['user-agent'] = user_agent
+
+    return headers
 
 
 class OAuth2Credentials(Credentials):
@@ -599,18 +617,9 @@ class OAuth2Credentials(Credentials):
 
             # Clone and modify the request headers to add the appropriate
             # Authorization header.
-            if headers is None:
-                headers = {}
-            else:
-                headers = dict(headers)
+            headers = _initialize_headers(headers)
             self.apply(headers)
-
-            if self.user_agent is not None:
-                if 'user-agent' in headers:
-                    headers['user-agent'] = (self.user_agent + ' ' +
-                                             headers['user-agent'])
-                else:
-                    headers['user-agent'] = self.user_agent
+            _apply_user_agent(headers, self.user_agent)
 
             body_stream_position = None
             if all(getattr(body, stream_prop, None) for stream_prop in
@@ -918,7 +927,7 @@ class OAuth2Credentials(Credentials):
             # An {'error':...} response body means the token is expired or
             # revoked, so we flag the credentials as such.
             logger.info('Failed to retrieve access token: %s', content)
-            error_msg = 'Invalid response %s.' % resp['status']
+            error_msg = 'Invalid response %s.' % (resp['status'],)
             try:
                 d = json.loads(content)
                 if 'error' in d:
@@ -926,7 +935,7 @@ class OAuth2Credentials(Credentials):
                     if 'error_description' in d:
                         error_msg += ': ' + d['error_description']
                     self.invalid = True
-                    if self.store:
+                    if self.store is not None:
                         self.store.locked_put(self)
             except (TypeError, ValueError):
                 pass
@@ -1238,6 +1247,7 @@ class GoogleCredentials(OAuth2Credentials):
         # TODO(issue 388): eliminate the circularity that is the reason for
         #                  this non-top-level import.
         from oauth2client.service_account import ServiceAccountCredentials
+        from oauth2client.service_account import _JWTAccessCredentials
         data = json.loads(_from_bytes(json_data))
 
         # We handle service_account.ServiceAccountCredentials since it is a
@@ -1245,6 +1255,10 @@ class GoogleCredentials(OAuth2Credentials):
         if (data['_module'] == 'oauth2client.service_account' and
             data['_class'] == 'ServiceAccountCredentials'):
             return ServiceAccountCredentials.from_json(data)
+        elif (data['_module'] == 'oauth2client.service_account' and
+              data['_class'] == '_JWTAccessCredentials'):
+            return _JWTAccessCredentials.from_json(data)
+        
 
         token_expiry = _parse_expiry(data.get('token_expiry'))
         google_credentials = cls(
@@ -1524,8 +1538,8 @@ def _get_application_default_credential_from_file(filename):
             token_uri=GOOGLE_TOKEN_URI,
             user_agent='Python client library')
     else:  # client_credentials['type'] == SERVICE_ACCOUNT
-        from oauth2client.service_account import ServiceAccountCredentials
-        return ServiceAccountCredentials.from_json_keyfile_dict(
+        from oauth2client.service_account import _JWTAccessCredentials
+        return _JWTAccessCredentials.from_json_keyfile_dict(
             client_credentials)
 
 
@@ -1551,7 +1565,7 @@ def _get_application_default_credential_GAE():
 def _get_application_default_credential_GCE():
     from oauth2client.contrib.gce import AppAssertionCredentials
 
-    return AppAssertionCredentials([])
+    return AppAssertionCredentials()
 
 
 class AssertionCredentials(GoogleCredentials):
@@ -1605,7 +1619,7 @@ class AssertionCredentials(GoogleCredentials):
 
     def _generate_assertion(self):
         """Generate assertion string to be used in the access token request."""
-        _abstract()
+        raise NotImplementedError
 
     def _revoke(self, http_request):
         """Revokes the access_token and deletes the store if available.
@@ -1617,8 +1631,20 @@ class AssertionCredentials(GoogleCredentials):
         """
         self._do_revoke(http_request, self.access_token)
 
+    def sign_blob(self, blob):
+        """Cryptographically sign a blob (of bytes).
 
-def _RequireCryptoOrDie():
+        Args:
+            blob: bytes, Message to be signed.
+
+        Returns:
+            tuple, A pair of the private key ID used to sign the blob and
+            the signed contents.
+        """
+        raise NotImplementedError('This method is abstract.')
+
+
+def _require_crypto_or_die():
     """Ensure we have a crypto library, or throw CryptoUnavailableError.
 
     The oauth2client.crypt module requires either PyCrypto or PyOpenSSL
@@ -1657,7 +1683,7 @@ def verify_id_token(id_token, audience, http=None,
         oauth2client.crypt.AppIdentityError: if the JWT fails to verify.
         CryptoUnavailableError: if no crypto library is available.
     """
-    _RequireCryptoOrDie()
+    _require_crypto_or_die()
     if http is None:
         http = _cached_http
 
@@ -1852,7 +1878,7 @@ class DeviceFlowInfo(collections.namedtuple('DeviceFlowInfo', (
         })
         if 'expires_in' in response:
             kwargs['user_code_expiry'] = (
-                datetime.datetime.now() +
+                _UTCNOW() +
                 datetime.timedelta(seconds=int(response['expires_in'])))
         return cls(**kwargs)
 
@@ -2010,17 +2036,17 @@ class OAuth2WebServerFlow(Flow):
         if resp.status == http_client.OK:
             try:
                 flow_info = json.loads(content)
-            except ValueError as e:
+            except ValueError as exc:
                 raise OAuth2DeviceCodeError(
                     'Could not parse server response as JSON: "%s", '
-                    'error: "%s"' % (content, e))
+                    'error: "%s"' % (content, exc))
             return DeviceFlowInfo.FromResponse(flow_info)
         else:
-            error_msg = 'Invalid response %s.' % resp.status
+            error_msg = 'Invalid response %s.' % (resp.status,)
             try:
-                d = json.loads(content)
-                if 'error' in d:
-                    error_msg += ' Error: %s' % d['error']
+                error_dict = json.loads(content)
+                if 'error' in error_dict:
+                    error_msg += ' Error: %s' % (error_dict['error'],)
             except ValueError:
                 # Couldn't decode a JSON response, stick with the
                 # default message.
@@ -2057,7 +2083,7 @@ class OAuth2WebServerFlow(Flow):
 
         if code is None:
             code = device_flow_info.device_code
-        elif not isinstance(code, six.string_types):
+        elif not isinstance(code, (six.string_types, six.binary_type)):
             if 'code' not in code:
                 raise FlowExchangeError(code.get(
                     'error', 'No code was supplied in the query parameters.'))
@@ -2191,4 +2217,4 @@ def flow_from_clientsecrets(filename, scope, redirect_uri=None,
             raise
     else:
         raise UnknownClientSecretsFlowError(
-            'This OAuth 2.0 flow is unsupported: %r' % client_type)
+            'This OAuth 2.0 flow is unsupported: %r' % (client_type,))

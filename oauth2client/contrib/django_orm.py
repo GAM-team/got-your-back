@@ -109,7 +109,7 @@ class Storage(BaseStorage):
     """Store and retrieve a single credential to and from the Django datastore.
 
     This Storage helper presumes the Credentials
-    have been stored as a CredenialsField
+    have been stored as a CredentialsField
     on a db model class.
     """
 

@@ -100,7 +100,7 @@ request.oauth
 
    @oauth_required
    def requires_default_scopes(request):
-      email = request.credentials.id_token['email']
+      email = request.oauth.credentials.id_token['email']
       service = build(serviceName='calendar', version='v3',
                     http=request.oauth.http,
                    developerKey=API_KEY)

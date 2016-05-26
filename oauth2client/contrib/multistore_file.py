@@ -73,6 +73,21 @@ class NewerCredentialStoreError(Error):
     """The credential store is a newer version than supported."""
 
 
+def _dict_to_tuple_key(dictionary):
+    """Converts a dictionary to a tuple that can be used as an immutable key.
+
+    The resulting key is always sorted so that logically equivalent
+    dictionaries always produce an identical tuple for a key.
+
+    Args:
+        dictionary: the dictionary to use as the key.
+
+    Returns:
+        A tuple representing the dictionary in it's naturally sorted ordering.
+    """
+    return tuple(sorted(dictionary.items()))
+
+
 @util.positional(4)
 def get_credential_storage(filename, client_id, user_agent, scope,
                            warn_on_readonly=True):
@@ -93,7 +108,7 @@ def get_credential_storage(filename, client_id, user_agent, scope,
     key = {'clientId': client_id, 'userAgent': user_agent,
            'scope': util.scopes_to_string(scope)}
     return get_credential_storage_custom_key(
-      filename, key, warn_on_readonly=warn_on_readonly)
+        filename, key, warn_on_readonly=warn_on_readonly)
 
 
 @util.positional(2)
@@ -116,7 +131,7 @@ def get_credential_storage_custom_string_key(filename, key_string,
     # Create a key dictionary that can be used
     key_dict = {'key': key_string}
     return get_credential_storage_custom_key(
-      filename, key_dict, warn_on_readonly=warn_on_readonly)
+        filename, key_dict, warn_on_readonly=warn_on_readonly)
 
 
 @util.positional(2)
@@ -139,7 +154,7 @@ def get_credential_storage_custom_key(filename, key_dict,
         credential.
     """
     multistore = _get_multistore(filename, warn_on_readonly=warn_on_readonly)
-    key = util.dict_to_tuple_key(key_dict)
+    key = _dict_to_tuple_key(key_dict)
     return multistore._get_storage(key)
 
 
@@ -304,6 +319,7 @@ class _MultiStore(object):
                             'Opening in read-only mode. Any refreshed '
                             'credentials will only be '
                             'valid for this run.', self._file.filename())
+
         if os.path.getsize(self._file.filename()) == 0:
             logger.debug('Initializing empty multistore file')
             # The multistore is empty so write out an empty file.
@@ -404,7 +420,7 @@ class _MultiStore(object):
             OAuth2Credential object.
         """
         raw_key = cred_entry['key']
-        key = util.dict_to_tuple_key(raw_key)
+        key = _dict_to_tuple_key(raw_key)
         credential = None
         credential = Credentials.new_from_json(
             json.dumps(cred_entry['credential']))

@@ -132,8 +132,6 @@ def positional(max_positional_args):
                     raise TypeError(message)
                 elif positional_parameters_enforcement == POSITIONAL_WARNING:
                     logger.warning(message)
-                else:  # IGNORE
-                    pass
             return wrapped(*args, **kwargs)
         return positional_wrapper
 
@@ -181,21 +179,6 @@ def string_to_scopes(scopes):
         return scopes.split(' ')
     else:
         return scopes
-
-
-def dict_to_tuple_key(dictionary):
-    """Converts a dictionary to a tuple that can be used as an immutable key.
-
-    The resulting key is always sorted so that logically equivalent
-    dictionaries always produce an identical tuple for a key.
-
-    Args:
-        dictionary: the dictionary to use as the key.
-
-    Returns:
-        A tuple representing the dictionary in it's naturally sorted ordering.
-    """
-    return tuple(sorted(dictionary.items()))
 
 
 def _add_query_parameter(url, name, value):
