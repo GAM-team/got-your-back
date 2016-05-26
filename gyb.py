@@ -78,7 +78,7 @@ def SetupOptionParser(argv):
     help='Action to perform. Default is backup.')
   parser.add_argument('--search',
     dest='gmail_search',
-    default=None,
+    default='-is:chat',
     help='Optional: On backup, estimate, count and purge, Gmail search to \
 scope operation against')
   parser.add_argument('--local-folder',
@@ -815,6 +815,8 @@ def backup_message(request_id, response, exception):
       labelIds = response['labelIds']
     else:
       labelIds = list()
+    if 'CHATS' in labelIds: # skip CHATS
+      return
     labels = labelIdsToLabels(labelIds)
     message_file_name = "%s.eml" % (response['id'])
     message_time = int(response['internalDate'])/1000
