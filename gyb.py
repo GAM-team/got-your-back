@@ -218,7 +218,7 @@ https://www.googleapis.com/auth/gmail.labels',
                        'https://www.googleapis.com/auth/drive.appdata']
                        # Drive app config (used for quota)
 
-    selected_scopes = ['*', ' ', ' ', ' ', ' ', ' ', '*']
+    selected_scopes = [' ', ' ', ' ', '*', ' ', '*', '*']
     menu = '''Select the actions you wish GYB to be able to perform for %s
 
 [%s]  0)  Gmail Backup And Restore - read/write mailbox access
