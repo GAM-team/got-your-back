@@ -35,7 +35,9 @@ extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
 chunksize = 1024 * 1024 * 30
-reserved_labels = ['chat', 'chats', 'migrated', 'todo', 'todos', 'buzz', 'bin', 'allmail', 'drafts']
+reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
+  'sent', 'draft', 'chat', 'chats', 'migrated', 'todo', 'todos', 'buzz',
+  'bin', 'allmail', 'drafts']
 
 import argparse
 import sys
@@ -429,13 +431,15 @@ def buildGAPIServiceObject(api, soft_errors=False):
   try:
     return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
   except oauth2client.client.AccessTokenRefreshError as e:
-    if e.message in ['access_denied', 'unauthorized_client: Unauthorized \
-client or scope in request.']:
+    message = e.args[0]
+    if message in ['access_denied',
+                   'unauthorized_client: Unauthorized client or scope in request.',
+                   'access_denied: Requested client not authorized.']:
       print('Error: Access Denied. Please make sure the Client Name:\
 \n\n%s\n\nis authorized for the API Scope(s):\n\n%s\n\nThis can be \
 configured in your Control Panel under:\n\nSecurity -->\nAdvanced \
 Settings -->\nManage third party OAuth Client access'
-% (SERVICE_ACCOUNT_CLIENT_ID, ','.join(scope)))
+% (credentials.client_id, ','.join(scopes)))
       sys.exit(5)
     else:
       print('Error: %s' % e)
@@ -732,8 +736,8 @@ def labelsToLabelIds(labels):
         allLabels[a_label['name']] = a_label['id']
   labelIds = list()
   for label in labels:
-    base_label = label.split('/')[0].lower()
-    if base_label in reserved_labels:
+    base_label = label.split('/')[0]
+    if base_label in reserved_labels and base_label not in allLabels.keys():
       label = '_%s' % (label)
     if label not in allLabels:
       # create new label (or get it's id if it exists)
@@ -1191,15 +1195,19 @@ def main(argv):
                 labels = mybytes.decode(encoding)
               except UnicodeDecodeError:
                 pass
-            else:
-              labels = labels.decode('string-escape')
             labels = labels.split(',')
           else:
             labels = []
           if options.label_restored:
             for restore_label in options.label_restored:
               labels.append(restore_label)
-          labelIds = labelsToLabelIds(labels)
+          cased_labels = []
+          for label in labels:
+            if label.lower() in reserved_labels:
+              cased_labels.append(label.upper())
+            else:
+              cased_labels.append(label)
+          labelIds = labelsToLabelIds(cased_labels)
           del message['X-Gmail-Labels']
           del message['X-GM-THRID']
           rewrite_line(" message %s of %s" % (current, restore_count))
@@ -1360,7 +1368,7 @@ def main(argv):
   # PURGE-LABELS #
   elif options.action == 'purge-labels':
     pattern = options.gmail_search
-    if pattern == None:
+    if pattern == '-is:chat':
       pattern = '.*'
     pattern = re.compile(pattern)
     existing_labels = callGAPI(service=gmail.users().labels(), function='list',
