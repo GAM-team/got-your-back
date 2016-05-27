@@ -966,13 +966,13 @@ def main(argv):
         callback=backup_message)
       backed_up_messages += 1
       if len(gbatch._order) == options.batch_size:
-        callGAPI(gbatch, None)
+        callGAPI(gbatch, None, soft_errors=True)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
         rewrite_line("backed up %s of %s messages" %
           (backed_up_messages, backup_count))
     if len(gbatch._order) > 0:
-      callGAPI(gbatch, None)
+      callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
       rewrite_line("backed up %s of %s messages" %
         (backed_up_messages, backup_count))
@@ -994,13 +994,13 @@ def main(argv):
         callback=refresh_message)
       refreshed_messages += 1
       if len(gbatch._order) == options.batch_size:
-        callGAPI(gbatch, None)
+        callGAPI(gbatch, None, soft_errors=True)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
         rewrite_line("refreshed %s of %s messages" %
           (refreshed_messages, refresh_count))
     if len(gbatch._order) > 0:
-      callGAPI(gbatch, None)
+      callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
       rewrite_line("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
@@ -1085,7 +1085,7 @@ def main(argv):
         try:
           response = callGAPI(service=restore_serv, function=restore_func,
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-            deleted=options.vault, **restore_params)
+            deleted=options.vault, soft_errors=True, **restore_params)
           exception = None
         except googleapiclient.errors.HttpError as e:
           response = None
@@ -1106,7 +1106,7 @@ def main(argv):
         # this message would put us over max, execute current batch first
         rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
-        callGAPI(gbatch, None)
+        callGAPI(gbatch, None, soft_errors=True)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
         current_batch_bytes = 5000
@@ -1118,7 +1118,7 @@ def main(argv):
       if len(gbatch._order) == options.batch_size:
         rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
-        callGAPI(gbatch, None)
+        callGAPI(gbatch, None, soft_errors=True)
         gbatch = googleapiclient.http.BatchHttpRequest()
         sqlconn.commit()
         current_batch_bytes = 5000
@@ -1126,7 +1126,7 @@ def main(argv):
     if len(gbatch._order) > 0:
       rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
         current, restore_count))
-      callGAPI(gbatch, None)
+      callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
     print("\n")
     sqlconn.execute('DETACH resume')
@@ -1223,7 +1223,9 @@ def main(argv):
             try:
               response = callGAPI(service=restore_serv, function=restore_func,
                 userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-                deleted=options.vault, **restore_params)
+                deleted=options.vault, soft_errors=True, **restore_params)
+              if response == None:
+                continue
               exception = None
             except googleapiclient.errors.HttpError as e:
               response = None
@@ -1242,7 +1244,7 @@ def main(argv):
             # this message would put us over max, execute current batch first
             rewrite_line("restoring %s messages (%s/%s)" %
               (len(gbatch._order), current, restore_count))
-            callGAPI(gbatch, None)
+            callGAPI(gbatch, None, soft_errors=True)
             gbatch = googleapiclient.http.BatchHttpRequest()
             sqlconn.commit()
             current_batch_bytes = 5000
@@ -1255,7 +1257,7 @@ def main(argv):
           if len(gbatch._order) == options.batch_size:
             rewrite_line("restoring %s messages (%s/%s)" %
               (len(gbatch._order), current, restore_count))
-            callGAPI(gbatch, None)
+            callGAPI(gbatch, None, soft_errors=True)
             gbatch = googleapiclient.http.BatchHttpRequest()
             sqlconn.commit()
             current_batch_bytes = 5000
@@ -1263,7 +1265,7 @@ def main(argv):
         if len(gbatch._order) > 0:
           rewrite_line("restoring %s messages (%s/%s)" %
             (len(gbatch._order), current, restore_count))
-          callGAPI(gbatch, None)
+          callGAPI(gbatch, None, soft_errors=True)
           sqlconn.commit()
     sqlconn.execute('DETACH mbox_resume')
     sqlconn.commit()
@@ -1316,7 +1318,7 @@ def main(argv):
         mimetype='message/rfc822', resumable=True, chunksize=chunksize)
       try:
         callGAPI(service=gmig.archive(), function='insert',
-          groupId=options.email, media_body=media)
+          groupId=options.email, media_body=media, soft_errors=True)
       except googleapiclient.errors.MediaUploadSizeError as e:
         print('\n ERROR: Message is to large for groups (16mb limit). \
           Skipping...')
@@ -1356,12 +1358,12 @@ def main(argv):
         id=a_message['id']), callback=purged_message)
       purged_messages += 1
       if len(gbatch._order) == options.batch_size:
-        callGAPI(gbatch, None)
+        callGAPI(gbatch, None, soft_errors=True)
         gbatch = googleapiclient.http.BatchHttpRequest()
         rewrite_line("purged %s of %s messages" %
           (purged_messages, purge_count))
     if len(gbatch._order) > 0:
-      callGAPI(gbatch, None)
+      callGAPI(gbatch, None, soft_errors=True)
       rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
     print("\n")
 
@@ -1379,7 +1381,7 @@ def main(argv):
         continue
       rewrite_line('Deleting label %s' % label_result['name'])
       callGAPI(service=gmail.users().labels(), function='delete',
-        userId='me', id=label_result['id'])
+        userId='me', id=label_result['id'], soft_errors=True)
     print('\n')
 
   # QUOTA #
