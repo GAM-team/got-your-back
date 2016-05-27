@@ -317,7 +317,7 @@ def doGYBCheckForUpdates():
     announceUrl = 'https://gyb-update.appspot.com/\
 latest-version-announcement.txt?v=%s'
     a = urllib.request.urlopen(announceUrl % (__version__,))
-    announcement = a.read()
+    announcement = a.read().decode("utf-8")
     sys.stderr.write('\nThere\'s a new version of GYB!!!\n\n')
     sys.stderr.write(announcement)
     visit_gyb = input("\n\nHit Y to visit the GYB website and download \
