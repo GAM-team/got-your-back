@@ -57,7 +57,7 @@ class AlreadyLockedException(Exception):
 def validate_file(filename):
     if os.path.islink(filename):
         raise CredentialsFileSymbolicLinkError(
-            'File: %s is a symbolic link.' % filename)
+            'File: {0} is a symbolic link.'.format(filename))
 
 
 class _Opener(object):
@@ -122,8 +122,8 @@ class _PosixOpener(_Opener):
             CredentialsFileSymbolicLinkError if the file is a symbolic link.
         """
         if self._locked:
-            raise AlreadyLockedException('File %s is already locked' %
-                                         self._filename)
+            raise AlreadyLockedException(
+                'File {0} is already locked'.format(self._filename))
         self._locked = False
 
         validate_file(self._filename)
@@ -170,7 +170,7 @@ class _PosixOpener(_Opener):
 
     def _posix_lockfile(self, filename):
         """The name of the lock file to use for posix locking."""
-        return '%s.lock' % filename
+        return '{0}.lock'.format(filename)
 
 
 class LockedFile(object):
