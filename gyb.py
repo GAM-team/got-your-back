@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '0.47'
+__version__ = '0.48'
 __license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
@@ -764,7 +764,7 @@ def labelsToLabelIds(labels):
     base_label = label.split('/')[0]
     if base_label in reserved_labels and base_label not in allLabels.keys():
       label = '_%s' % (label)
-    if label not in allLabels:
+    if label not in allLabels.keys():
       # create new label (or get it's id if it exists)
       label_results = callGAPI(service=gmail.users().labels(), function='create',
         body={'labelListVisibility': 'labelShow',
@@ -1229,7 +1229,10 @@ def main(argv):
           cased_labels = []
           for label in labels:
             if label.lower() in reserved_labels:
-              cased_labels.append(label.upper())
+              label = label.upper()
+              if label == u'DRAFTS':
+                label = u'DRAFT' 
+              cased_labels.append(label)
             else:
               cased_labels.append(label)
           labelIds = labelsToLabelIds(cased_labels)
