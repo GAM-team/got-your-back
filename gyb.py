@@ -65,6 +65,31 @@ import googleapiclient
 import googleapiclient.discovery
 import googleapiclient.errors
 
+# Override some oauth2client.tools strings saving us a few GAM-specific mods to oauth2client
+oauth2client.tools._FAILED_START_MESSAGE = """
+Failed to start a local webserver listening on either port 8080
+or port 8090. Please check your firewall settings and locally
+running programs that may be blocking or using those ports.
+
+Falling back to nobrowser.txt and continuing with
+authorization.
+"""
+
+oauth2client.tools._BROWSER_OPENED_MESSAGE = """
+Your browser has been opened to visit:
+
+    {address}
+
+If your browser is on a different machine then press CTRL+C and
+create a file called nobrowser.txt in the same folder as GYB.
+"""
+
+oauth2client.tools._GO_TO_LINK_MESSAGE = """
+Go to the following link in your browser:
+
+    {address}
+"""
+
 def SetupOptionParser(argv):
   parser = argparse.ArgumentParser(add_help=False)
   #parser.usage = parser.print_help()
