@@ -923,7 +923,7 @@ def main(argv):
         chunk_number = 0
         chunk_name_pattern = '%s-%%05d.mbox' % (os.path.splitext(file_path)[0])
         print('opening %s' % file_path)
-        with open(file_path, 'rb') as f:
+        with open(file_path, 'r') as f:
           current_email = ''
           current_chunk = ''
           for line in f:
