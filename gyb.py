@@ -913,7 +913,7 @@ def main(argv):
   # SPLIT-MBOX
   if options.action == 'split-mbox':
     from_pattern = 'From '
-    max_chunk_size = 25 * 1024 * 1024
+    max_chunk_size = 100 * 1024 * 1024
     for path, subdirs, files in os.walk(options.local_folder):
       for filename in files:
         if filename[-4:].lower() != '.mbx' and \
@@ -927,8 +927,12 @@ def main(argv):
           current_email = ''
           current_chunk = ''
           for line in f:
-            if line.startswith(from_pattern):
-              if len(current_chunk) + len(current_email) > max_chunk_size:
+            if line.startswith(from_pattern): # found end of email
+              if len(current_chunk) + len(current_email) > max_chunk_size: # reached max chunk size
+                if len(current_email) > max_chunk_size: # email is larger than chunk
+                  print('WARNING: skipping 100mb+ email')
+                  current_email = line
+                  continue
                 # write chunk and start new
                 chunk_filename = chunk_name_pattern % (chunk_number)
                 c = open(chunk_filename, 'w+')
@@ -937,13 +941,13 @@ def main(argv):
                 c.close()
                 chunk_number += 1
                 current_chunk = current_email
-                current_email = ''
-              else:
+                current_email = line
+              else: # add email to chunk
                 # add email to chunk and start on next
                 current_chunk += current_email
                 current_email = line
                 continue
-            else:
+            else: # read another line
               current_email += line
           if len(current_chunk) > 0:
             # write last chunk
