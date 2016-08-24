@@ -1276,7 +1276,10 @@ def main(argv):
           for label in labels:
             if label.lower() in reserved_labels:
               label = label.upper()
-              if label == u'DRAFTS':
+              if label in ['CHAT', 'CHATS']:
+                cased_labels.append('Chats_restored')
+                continue
+              if label == 'DRAFTS':
                 label = u'DRAFT' 
               cased_labels.append(label)
             else:
