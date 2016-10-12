@@ -1,6 +1,5 @@
 # -*- mode: python -*-
 a = Analysis(['gyb.py'],
-             pathex=['C:\\Users\\jlee\\Documents\\GitHub\\got-your-back'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
