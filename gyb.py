@@ -202,6 +202,8 @@ def requestOAuthAccess():
   else:
     auth_as = options.email
   CLIENT_SECRETS = getProgPath()+'client_secrets.json'
+  if not os.path.exists(CLIENT_SECRETS) and hasattr(sys, '_MEIPASS'):
+    CLIENT_SECRETS = os.path.join(sys._MEIPASS, 'client_secrets.json')
   MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
 
