@@ -16,7 +16,7 @@ The GYB mailing list / discussion group is hosted on [Google Groups].  You can j
 
 Author
 ------
-GYB is maintained by <a href="mailto:jay0lee@gmail.com">Jay Lee</a>.
+GYB is maintained by <a href="mailto:jay0lee@gmail.com">Jay Lee</a>. Please direct "how do I?" questions to the mailing list.
 
 [GitHub Releases]: https://github.com/jay0lee/got-your-back/releases
 [GitHub]: https://github.com/jay0lee/got-your-back/tree/master
