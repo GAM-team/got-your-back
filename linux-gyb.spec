@@ -8,6 +8,7 @@ for d in a.datas:
         a.datas.remove(d)
         break
 a.datas += [('httplib2/cacerts.txt', 'httplib2/cacerts.txt', 'DATA')]
+a.datas += [('client_secrets.json', 'client_secrets.json', 'DATA')]
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
