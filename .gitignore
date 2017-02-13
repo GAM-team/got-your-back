@@ -66,3 +66,4 @@ privatekey.p12
 # builds
 *.zip
 *.exe
+*.tar.xz
