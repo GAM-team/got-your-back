@@ -141,7 +141,7 @@ visible in user\'s Gmail but are subject to Vault discovery/retention.')
   parser.add_argument('--service-account',
     action='store_true',
     dest='service_account',
-    help='Google Apps Business and Education only. Use OAuth 2.0 Service \
+    help='G Suite only. Use OAuth 2.0 Service \
 Account to authenticate.')
   parser.add_argument('--use-admin',
     dest='use_admin',
@@ -258,7 +258,7 @@ https://www.googleapis.com/auth/gmail.labels',
 [%s]  3)  Gmail Full Access - read/write mailbox access and message purge
 [%s]  4)  No Gmail Access
 
-[%s]  5)  Groups Restore - write to Google Apps Groups Archive
+[%s]  5)  Groups Restore - write to G Suite Groups Archive
 [%s]  6)  Storage Quota - Drive app config scope used for --action quota
 
       7)  Continue
