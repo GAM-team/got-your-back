@@ -766,7 +766,7 @@ def labelsToLabelIds(labels):
   labelIds = list()
   for label in labels:
     base_label = label.split('/')[0]
-    if base_label in reserved_labels and base_label not in allLabels.keys():
+    if base_label.lower() in reserved_labels and base_label not in allLabels.keys():
       label = '_%s' % (label)
     if label not in allLabels.keys():
       # create new label (or get it's id if it exists)
