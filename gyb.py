@@ -1415,7 +1415,7 @@ def main(argv):
     if options.batch_size == 0:
       options.batch_size = 100
     messages_to_process = callGAPIpages(service=gmail.users().messages(),
-      function='list', items='messages', maxResults=500
+      function='list', items='messages', maxResults=500,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
       fields='nextPageToken,messages/id')
     estimate_count = len(messages_to_process)
