@@ -1415,7 +1415,7 @@ def main(argv):
     if options.batch_size == 0:
       options.batch_size = 100
     messages_to_process = callGAPIpages(service=gmail.users().messages(),
-      function='list', items='messages',
+      function='list', items='messages', maxResults=500
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
       fields='nextPageToken,messages/id')
     estimate_count = len(messages_to_process)
@@ -1429,7 +1429,7 @@ def main(argv):
     messages_to_process = callGAPIpages(service=gmail.users().messages(),
       function='list', items='messages', page_message=page_message,
       userId='me', includeSpamTrash=True, q=options.gmail_search,
-      fields='nextPageToken,messages/id')
+      maxResults=500, fields='nextPageToken,messages/id')
     purge_count = len(messages_to_process)
     purged_messages = 0
     gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
@@ -1534,7 +1534,7 @@ otaBytesByService,quotaType')
     messages_to_process = callGAPIpages(service=gmail.users().messages(),
       function='list', items='messages', page_message=page_message,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
-      fields='nextPageToken,messages/id')
+      maxItems=500, fields='nextPageToken,messages/id')
     estimate_path = options.local_folder
     if not os.path.isdir(estimate_path):
       os.mkdir(estimate_path)
