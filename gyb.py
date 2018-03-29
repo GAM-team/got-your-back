@@ -405,7 +405,6 @@ def buildGAPIObject(api):
   http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
-    httplib2.debuglevel = 4
     extra_args['prettyPrint'] = True
   if os.path.isfile(getProgPath()+'extra-args.txt'):
     import configparser
@@ -448,7 +447,6 @@ def buildGAPIServiceObject(api, soft_errors=False):
   http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
-    httplib2.debuglevel = 4
     extra_args['prettyPrint'] = True
   if os.path.isfile(getProgPath()+'extra-args.txt'):
     import configparser
@@ -786,7 +784,8 @@ def doCheckServiceAccount():
       credentials.refresh(httplib2.Http())
       result = u'PASS'
     except httplib2.ServerNotFoundError as e:
-      systemErrorExit(4, e)
+      print(e)
+      sys.exit(4)
     except oauth2client.client.HttpAccessTokenRefreshError:
       result = u'FAIL'
       all_scopes_pass = False
@@ -1154,14 +1153,15 @@ def main(argv):
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
 
-  # SPLIT-MBOX
+  if options.debug:
+    httplib2.debuglevel = 4
   if options.action == 'create-project':
     doCreateProject()
     sys.exit(0)
   elif options.action == 'check-service-account':
     doCheckServiceAccount()
     sys.exit(0)
-  if options.action == 'split-mbox':
+  elif options.action == 'split-mbox':
     from_pattern = 'From '
     max_chunk_size = 100 * 1024 * 1024
     for path, subdirs, files in os.walk(options.local_folder):
