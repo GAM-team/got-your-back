@@ -17,6 +17,6 @@ exe = EXE(pyz,
           a.datas,
           name='gyb',
           debug=False,
-          strip=None,
-          upx=True,
+          strip=True,
+          upx=False,
           console=True )

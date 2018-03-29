@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.01'
+__version__ = '1.02'
 __license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
@@ -53,6 +53,7 @@ import email
 import hashlib
 import mailbox
 import re
+import string
 from itertools import islice, chain
 import base64
 import json
@@ -103,7 +104,7 @@ def SetupOptionParser(argv):
     help='Full email address of user or group to act against')
   action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
     'count', 'purge', 'purge-labels', 'estimate', 'quota', 'reindex', 'revoke',
-    'split-mbox']
+    'split-mbox', 'create-project', 'check-service-account']
   parser.add_argument('--action',
     choices=action_choices,
     dest='action',
@@ -568,6 +569,247 @@ def callGAPIpages(service, function, items='items',
         sys.stderr.write('\n')
       return all_pages
 
+VALIDEMAIL_PATTERN = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
+
+def getValidateLoginHint(login_hint):
+  if login_hint:
+    login_hint = login_hint.strip()
+    if VALIDEMAIL_PATTERN.match(login_hint):
+      return login_hint
+  while True:
+    login_hint = input('\nWhat is your G Suite admin email address? ').strip()
+    if VALIDEMAIL_PATTERN.match(login_hint):
+      return login_hint
+    print('Error: that is not a valid email address')
+
+def getCRMService(login_hint):
+  from oauth2client.contrib.dictionary_storage import DictionaryStorage
+  scope = 'https://www.googleapis.com/auth/cloud-platform'
+  client_id = '297408095146-fug707qsjv4ikron0hugpevbrjhkmsk7.apps.googleusercontent.com'
+  client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
+  flow = oauth2client.client.OAuth2WebServerFlow(client_id=client_id,
+                    client_secret=client_secret, scope=scope, redirect_uri=oauth2client.client.OOB_CALLBACK_URN,
+                    access_type=u'online', response_type=u'code', login_hint=login_hint)
+  storage_dict = {}
+  storage = DictionaryStorage(storage_dict, u'credentials')
+  flags = cmd_flags()
+  if os.path.isfile(getProgPath()+'nobrowser.txt'):
+    flags.noauth_local_webserver = True
+  disable_ssl_certificate_validation = False
+  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    disable_ssl_certificate_validation = True
+  http = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+  try:
+    credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
+  except httplib2.CertificateValidationUnsupported:
+    print('ERROR: Your Python installation does not support SSL.')
+    sys.exit(3)
+  http = credentials.authorize(httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation,
+                 cache=None))
+  return (googleapiclient.discovery.build('cloudresourcemanager', u'v1', http=http, cache_discovery=False), http)
+
+GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
+def enableProjectAPIs(httpObj, project_name, checkEnabled):
+  simplehttp = httplib2.Http()
+  s, c = simplehttp.request(GYB_PROJECT_APIS, 'GET')
+  if s.status < 200 or s.status > 299:
+    print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
+    sys.exit(0)
+  apis = c.decode("utf-8").splitlines()
+  serveman = googleapiclient.discovery.build('servicemanagement', 'v1', http=httpObj, cache_discovery=False)
+  if checkEnabled:
+    enabledServices = callGAPIpages(serveman.services(), 'list', 'services',
+                                    consumerId=project_name, fields='nextPageToken,services(serviceName)')
+    for enabled in enabledServices:
+      if 'serviceName' in enabled:
+        if enabled['serviceName'] in apis:
+          print(' API %s already enabled...' % enabled['serviceName'])
+          apis.remove(enabled['serviceName'])
+        else:
+          print(' API %s (non-GYB) is enabled (which is fine)' % enabled[u'serviceName'])
+  for api in apis:
+    while True:
+      print(' enabling API %s...' % api)
+      try:
+        callGAPI(serveman.services(), u'enable',
+                 throw_reasons=['failedPrecondition'],
+                 serviceName=api, body={u'consumerId': project_name})
+        break
+      except googleapiclient.errors.HttpError as e:
+        print('\nThere was an error enabling %s. Please resolve error as described below:' % api)
+        print
+        print('\n%s\n' % e)
+        print
+        input('Press enter once resolved and we will try enabling the API again.')
+
+def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=True):
+  try:
+    with open(os.path.expanduser(filename), mode) as f:
+      f.write(data)
+    return True
+  except IOError as e:
+    if continueOnError:
+      if displayError:
+        stderrErrorMsg(e)
+      return False
+    systemErrorExit(6, e)
+
+def doCreateProject():
+  service_account_file = 'oauth2service.json'
+  for a_file in [service_account_file]:
+    if os.path.exists(a_file):
+      print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
+      sys.exit(5)
+  login_hint = options.email
+  login_domain = login_hint[login_hint.find(u'@')+1:]
+  crm, httpObj = getCRMService(login_hint)
+  project_id = u'gyb-project'
+  for i in range(3):
+    project_id += u'-%s' % ''.join(random.choice(string.digits + string.ascii_lowercase) for i in range(3))
+  project_name = u'project:%s' % project_id
+  body = {u'projectId': project_id, u'name': u'Got Your Back Project'}
+  while True:
+    create_again = False
+    print('Creating project "%s"...' % body[u'name'])
+    create_operation = callGAPI(crm.projects(), u'create',
+                                body=body)
+    operation_name = create_operation[u'name']
+    time.sleep(5) # Google recommends always waiting at least 5 seconds
+    for i in range(1, 5):
+      print('Checking project status...')
+      status = callGAPI(crm.operations(), u'get',
+                        name=operation_name)
+      if u'error' in status:
+        if status[u'error'].get(u'message', u'') == u'No permission to create project in organization':
+          print('Hmm... Looks like you have no rights to your Google Cloud Organization.')
+          print('Attempting to fix that...')
+          getorg = callGAPI(crm.organizations(), u'search',
+                            body={u'filter': u'domain:%s' % login_domain})
+          try:
+            organization = getorg[u'organizations'][0][u'name']
+            print('Your organization name is %s' % organization)
+          except (KeyError, IndexError):
+            print('you have no rights to create projects for your organization and you don\'t seem to be a super admin! Sorry, there\'s nothing more I can do.')
+            sys.exit(3)
+          org_policy = callGAPI(crm.organizations(), u'getIamPolicy',
+                                resource=organization, body={})
+          if u'bindings' not in org_policy:
+            org_policy[u'bindings'] = []
+            print('Looks like no one has rights to your Google Cloud Organization. Attempting to give you create rights...')
+          else:
+            print('The following rights seem to exist:')
+            for a_policy in org_policy[u'bindings']:
+              if u'role' in a_policy:
+                print(' Role: %s' % a_policy[u'role'])
+              if u'members' in a_policy:
+                print(' Members:')
+                for member in a_policy[u'members']:
+                  print('  %s' % member)
+              print
+          my_role = u'roles/resourcemanager.projectCreator'
+          print('Giving %s the role of %s...' % (login_hint, my_role))
+          org_policy[u'bindings'].append({u'role': my_role, u'members': [u'user:%s' % login_hint]})
+          callGAPI(crm.organizations(), u'setIamPolicy',
+                   resource=organization, body={u'policy': org_policy})
+          create_again = True
+          break
+        try:
+          if status[u'error'][u'details'][0][u'violations'][0][u'description'] == u'Callers must accept Terms of Service':
+            print('''Please go to:
+https://console.cloud.google.com/start
+and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup, you can return here and press enter.''')
+            input()
+            create_again = True
+            break
+        except (IndexError, KeyError):
+          pass
+        print(status)
+        sys.exit(1)
+      if status.get(u'done', False):
+        break
+      sleep_time = i ** 2
+      print('Project still being created. Sleeping %s seconds' % sleep_time)
+      time.sleep(sleep_time)
+    if create_again:
+      continue
+    if not status.get(u'done', False):
+      print('Failed to create project: %s' % status)
+      sys.exit(1)
+    elif u'error' in status:
+      print(status[u'error'])
+      sys.exit(2)
+    break
+  disable_ssl_certificate_validation = False
+  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    disable_ssl_certificate_validation = True
+  enableProjectAPIs(httpObj, project_name, False)
+  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpObj, cache_discovery=False)
+  print('Creating Service Account')
+  service_account = callGAPI(iam.projects().serviceAccounts(), u'create',
+                             name=u'projects/%s' % project_id,
+                             body={u'accountId': project_id, u'serviceAccount': {u'displayName': u'GYB Project Service Account'}})
+  key = callGAPI(iam.projects().serviceAccounts().keys(), u'create',
+                 name=service_account['name'], body={'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE', 'keyAlgorithm': u'KEY_ALG_RSA_2048'})
+  oauth2service_data = base64.b64decode(key[u'privateKeyData'])
+  writeFile(service_account_file, oauth2service_data, continueOnError=False)
+  sa_url = 'https://console.developers.google.com/iam-admin/serviceaccounts/project?project=%s' % project_id
+  print('''Almost there! Now please go to:
+
+%s
+
+1. Click the 3 dots to the right of your service account.
+2. Choose Edit.
+3. Check the "Enable G Suite Domain-wide Delegation" box and click Save.
+''')
+  input('Press Enter when done...')
+  print('That\'s it! Your GYB Project is created and ready to use.')
+
+API_SCOPE_MAPPING = {
+  u'drive': ['https://www.googleapis.com/auth/drive.appdata',],
+  u'gmail': ['https://mail.google.com/',],
+  u'groupsmigration': ['https://www.googleapis.com/auth/apps.groups.migration',],
+}
+def doCheckServiceAccount():
+  all_scopes = []
+  for _, scopes in API_SCOPE_MAPPING.items():
+    for scope in scopes:
+      if scope not in all_scopes:
+        all_scopes.append(scope)
+  all_scopes.sort()
+  all_scopes_pass = True
+  for scope in all_scopes:
+    try:
+      credentials = oauth2client.service_account.ServiceAccountCredentials.from_json_keyfile_name(
+          'oauth2service.json', [scope])
+      credentials = credentials.create_delegated(options.email)
+      credentials.user_agent = getGYBVersion(' | ')
+      credentials.refresh(httplib2.Http())
+      result = u'PASS'
+    except httplib2.ServerNotFoundError as e:
+      systemErrorExit(4, e)
+    except oauth2client.client.HttpAccessTokenRefreshError:
+      result = u'FAIL'
+      all_scopes_pass = False
+    print(' Scope: {0:60} {1}'.format(scope, result))
+  if all_scopes_pass:
+    print('\nAll scopes passed!\nService account %s is fully authorized.' % credentials.client_id)
+    return
+  user_domain = options.email[options.email.find(u'@')+1:]
+  scopes_failed = '''SOME SCOPES FAILED! Please go to:
+
+https://admin.google.com/%s/AdminHome?#OGX:ManageOauthClients
+
+and grant Client name:
+
+%s
+
+Access to scopes:
+
+%s\n''' % (user_domain, credentials.client_id, ',\n'.join(all_scopes))
+  print('')
+  print(scopes_failed)  
+  sys.exit(3)
+
 def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
     try:
       sqlcur.execute('''
@@ -913,6 +1155,12 @@ def main(argv):
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
 
   # SPLIT-MBOX
+  if options.action == 'create-project':
+    doCreateProject()
+    sys.exit(0)
+  elif options.action == 'check-service-account':
+    doCheckServiceAccount()
+    sys.exit(0)
   if options.action == 'split-mbox':
     from_pattern = 'From '
     max_chunk_size = 100 * 1024 * 1024

@@ -18,5 +18,5 @@ exe = EXE(pyz,
           name='gyb.exe',
           debug=False,
           strip=None,
-          upx=True,
+          upx=False,
           console=True )
