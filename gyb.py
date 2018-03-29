@@ -969,7 +969,6 @@ def main(argv):
     gmail = buildGAPIObject('gmail')
   else:
     gmail = buildGAPIServiceObject('gmail')
-  batch_uri = gmail._rootDesc['rootUrl'] + gmail._rootDesc['batchPath']
   if not os.path.isdir(options.local_folder):
     if options.action in ['backup',]:
       os.mkdir(options.local_folder)
@@ -1036,7 +1035,7 @@ def main(argv):
     backup_count = len(messages_to_backup)
     print("GYB needs to backup %s messages" % backup_count)
     backed_up_messages = 0
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     for a_message in messages_to_backup:
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='raw',
@@ -1045,7 +1044,7 @@ def main(argv):
       backed_up_messages += 1
       if len(gbatch._order) == options.batch_size:
         callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
         rewrite_line("backed up %s of %s messages" %
           (backed_up_messages, backup_count))
@@ -1064,7 +1063,7 @@ def main(argv):
     sqlcur.executescript("""
        CREATE TEMP TABLE current_labels (label TEXT);
     """)
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     for a_message in messages_to_refresh:
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='minimal',
@@ -1073,7 +1072,7 @@ def main(argv):
       refreshed_messages += 1
       if len(gbatch._order) == options.batch_size:
         callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
         rewrite_line("refreshed %s of %s messages" %
           (refreshed_messages, refresh_count))
@@ -1120,7 +1119,7 @@ def main(argv):
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
     current = 0
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     max_batch_bytes = 8 * 1024 * 1024
     current_batch_bytes = 5000 # accounts for metadata
     largest_in_batch = 0
@@ -1185,7 +1184,7 @@ def main(argv):
         rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
         callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
         current_batch_bytes = 5000
         largest_in_batch = 0
@@ -1197,7 +1196,7 @@ def main(argv):
         rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
         callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
         current_batch_bytes = 5000
         largest_in_batch = 0
@@ -1233,7 +1232,7 @@ def main(argv):
     for a_message in messages_to_skip_results:
       messages_to_skip.append(a_message[0])
     current_batch_bytes = 5000
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     restore_serv = gmail.users().messages()
     if options.fast_restore:
       restore_func = 'insert'
@@ -1325,7 +1324,7 @@ def main(argv):
             rewrite_line("restoring %s messages (%s/%s)" %
               (len(gbatch._order), current, restore_count))
             callGAPI(gbatch, None, soft_errors=True)
-            gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+            gbatch = gmail.new_batch_http_request()
             sqlconn.commit()
             current_batch_bytes = 5000
             largest_in_batch = 0
@@ -1338,7 +1337,7 @@ def main(argv):
             rewrite_line("restoring %s messages (%s/%s)" %
               (len(gbatch._order), current, restore_count))
             callGAPI(gbatch, None, soft_errors=True)
-            gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+            gbatch = gmail.new_batch_http_request()
             sqlconn.commit()
             current_batch_bytes = 5000
             largest_in_batch = 0
@@ -1432,14 +1431,14 @@ def main(argv):
       maxResults=500, fields='nextPageToken,messages/id')
     purge_count = len(messages_to_process)
     purged_messages = 0
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     for a_message in messages_to_process:
       gbatch.add(gmail.users().messages().delete(userId='me',
         id=a_message['id']), callback=purged_message)
       purged_messages += 1
       if len(gbatch._order) == options.batch_size:
         callGAPI(gbatch, None, soft_errors=True)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         rewrite_line("purged %s of %s messages" %
           (purged_messages, purge_count))
     if len(gbatch._order) > 0:
@@ -1552,7 +1551,7 @@ otaBytesByService,quotaType')
     estimate_count = len(messages_to_estimate)
     print("GYB needs to estimate %s messages" % estimate_count)
     estimated_messages = 0
-    gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+    gbatch = gmail.new_batch_http_request()
     global message_size_estimate
     message_size_estimate = 0
     for a_message in messages_to_estimate:
@@ -1563,7 +1562,7 @@ otaBytesByService,quotaType')
       estimated_messages += 1
       if len(gbatch._order) == options.batch_size:
         callGAPI(gbatch, None)
-        gbatch = googleapiclient.http.BatchHttpRequest(batch_uri=batch_uri)
+        gbatch = gmail.new_batch_http_request()
         rewrite_line("Estimated size %s %s/%s messages" %
           (bytes_to_larger(message_size_estimate), estimated_messages,
           estimate_count))
