@@ -1558,7 +1558,7 @@ def main(argv):
               response = None
               exception = e
             restored_message(request_id=request_id, response=response,
-              exception=None)
+              exception=exception)
             rewrite_line(' restored single large message (%s/%s)' %
               (current, restore_count))
             continue
