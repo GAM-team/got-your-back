@@ -1781,7 +1781,7 @@ otaBytesByService,quotaType')
     messages_to_process = callGAPIpages(service=gmail.users().messages(),
       function='list', items='messages', page_message=page_message,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
-      maxItems=500, fields='nextPageToken,messages/id')
+      maxResults=500, fields='nextPageToken,messages/id')
     estimate_path = options.local_folder
     if not os.path.isdir(estimate_path):
       os.mkdir(estimate_path)
