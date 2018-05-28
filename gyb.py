@@ -185,6 +185,12 @@ method breaks Gmail deduplication and threading.')
     action='store_false',
     default=True,
     help='Optional: On backup, skips refreshing labels for existing message')
+  parser.add_argument('--delete-missing',
+    dest='delete_missing',
+    action='store_true',
+    default=False,
+    help='Optional: On backup, delete previously backed up emails if they \
+are no-longer returned from the search')
   parser.add_argument('--debug',
     action='store_true',
     dest='debug',
@@ -1236,6 +1242,23 @@ def refresh_message(request_id, response, exception):
                   WHERE message_num = uids.message_num)""",
                   ((response['id']),))
 
+def delete_message(message_id):
+    sqlcur.execute(
+      '''SELECT m.message_num, message_filename FROM messages m, uids u
+           WHERE uid = ? AND u.message_num = m.message_num''', (message_id,))
+    num, path = sqlcur.fetchall()[0]
+
+    try:
+      sqlcur.execute('DELETE FROM messages where message_num = ?', (num,))
+      sqlcur.execute('DELETE FROM labels where message_num = ?', (num,))
+      sqlcur.execute('DELETE FROM uids where message_num = ?', (num,))
+
+      os.remove(os.path.join(options.local_folder, path))
+      sqlconn.commit()
+    except:
+      sqlcur.execute('rollback')
+      raise
+
 def restored_message(request_id, response, exception):
   if exception is not None:
     try:
@@ -1416,6 +1439,7 @@ def main(argv):
     backup_path = options.local_folder
     if not os.path.isdir(backup_path):
       os.mkdir(backup_path)
+    messages_to_delete = set(c[0] for c in sqlconn.execute('SELECT uid FROM uids'))
     messages_to_backup = []
     messages_to_refresh = []
     #Determine which messages from the search we haven't processed before.
@@ -1426,6 +1450,7 @@ def main(argv):
         messages_to_refresh.append(message_num['id'])
       else:
         messages_to_backup.append(message_num['id'])
+      messages_to_delete.discard(message_num['id'])
     print("GYB already has a backup of %s messages" %
       (len(messages_to_process) - len(messages_to_backup)))
     backup_count = len(messages_to_backup)
@@ -1478,6 +1503,17 @@ def main(argv):
       rewrite_line("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
     print("\n")
+
+    if options.delete_missing:
+      delete_count = len(messages_to_delete)
+      deleted_messages = 0
+      print("GYB needs to delete %s messages" % delete_count)
+      for message_id in messages_to_delete:
+        delete_message(message_id)
+        deleted_messages += 1
+        rewrite_line("deleted %s of %s messages" %
+            (deleted_messages, delete_count))
+      print("\n")
 
   # RESTORE #
   elif options.action == 'restore':
