@@ -23,7 +23,7 @@ __contributors__ = ["Thomas Broyer (t.broyer@ltgt.net)",
     "Louis Nyffenegger",
     "Mark Pilgrim"]
 __license__ = "MIT"
-__version__ = "0.11.0"
+__version__ = '0.11.3'
 
 import re
 import sys
@@ -188,36 +188,33 @@ def urlnorm(uri):
 
 
 # Cache filename construction (original borrowed from Venus http://intertwingly.net/code/venus/)
-re_url_scheme    = re.compile(br'^\w+://')
-re_url_scheme_s  = re.compile(r'^\w+://')
-re_slash         = re.compile(br'[?/:|]+')
+re_url_scheme = re.compile(r'^\w+://')
+re_unsafe = re.compile(r'[^\w\-_.()=!]+', re.ASCII)
+
 
 def safename(filename):
     """Return a filename suitable for the cache.
-
     Strips dangerous and common characters to create a filename we
     can use to store the cache in.
     """
+    if isinstance(filename, bytes):
+        filename_bytes = filename
+        filename = filename.decode('utf-8')
+    else:
+        filename_bytes = filename.encode('utf-8')
+    filemd5 = _md5(filename_bytes).hexdigest()
+    filename = re_url_scheme.sub('', filename)
+    filename = re_unsafe.sub('', filename)
 
-    try:
-        if re_url_scheme_s.match(filename):
-            if isinstance(filename,bytes):
-                filename = filename.decode('utf-8')
-                filename = filename.encode('idna')
-            else:
-                filename = filename.encode('idna')
-    except UnicodeError:
-        pass
-    if isinstance(filename,str):
-        filename=filename.encode('utf-8')
-    filemd5 = _md5(filename).hexdigest().encode('utf-8')
-    filename = re_url_scheme.sub(b"", filename)
-    filename = re_slash.sub(b",", filename)
+    # limit length of filename (vital for Windows)
+    # https://github.com/httplib2/httplib2/pull/74
+    # C:\Users\    <username>    \AppData\Local\Temp\  <safe_filename>  ,   <md5>
+    #   9 chars + max 104 chars  +     20 chars      +       x       +  1  +  32  = max 259 chars
+    # Thus max safe filename x = 93 chars. Let it be 90 to make a round sum:
+    filename = filename[:90]
 
-    # limit length of filename
-    if len(filename)>200:
-        filename=filename[:200]
-    return b",".join((filename, filemd5)).decode('utf-8')
+    return ','.join((filename, filemd5))
+
 
 NORMALIZE_SPACE = re.compile(r'(?:\r\n)?[ \t]+')
 def _normalize_headers(headers):
@@ -804,6 +801,11 @@ class ProxyInfo(object):
       if hostname == '.' + skip_name:
         return True
     return False
+
+  def __repr__(self):
+    return (
+        '<ProxyInfo type={p.proxy_type} host:port={p.proxy_host}:{p.proxy_port} rdns={p.proxy_rdns}' +
+        ' user={p.proxy_user} headers={p.proxy_headers}>').format(p=self)
 
 
 def proxy_info_from_environment(method='http'):
