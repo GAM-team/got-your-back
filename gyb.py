@@ -1405,7 +1405,7 @@ def main(argv):
       if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
         # don't batch/raw >1mb messages, just do single
         rewrite_line('restoring %s message (%s/%s)' %
-          (humansize(b65_message_size), current, restore_count))
+          (humansize(b64_message_size), current, restore_count))
         # Note resumable=True is important here, it prevents errors on (bad)
         # messages that should be ASCII but contain extended chars.
         # What's that? No, no idea why
