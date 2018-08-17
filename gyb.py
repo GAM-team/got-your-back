@@ -30,11 +30,10 @@ __website__ = 'http://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, chunksize, reserved_labels, path_divider
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, path_divider
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
-chunksize = 1024 * 1024 * 30
 reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
   'sent', 'draft', 'chat', 'chats', 'migrated', 'todo', 'todos', 'buzz',
   'bin', 'allmail', 'drafts']
@@ -962,9 +961,12 @@ def getMessageIDs (sqlconn, backup_folder):
 def rebuildUIDTable(sqlconn):
   pass
 
-suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-def humansize(file_path):
-  nbytes = os.stat(file_path).st_size
+suffixes = ['b', 'kb', 'mb', 'gb', 'tb', 'pb']
+def humansize(myobject):
+  if isinstance(myobject, (str, bytes)):
+    nbytes = os.stat(myobject).st_size
+  else:
+    nbytes = myobject
   if nbytes == 0: return '0 B'
   i = 0
   while nbytes >= 1024 and i < len(suffixes)-1:
@@ -1402,13 +1404,13 @@ def main(argv):
       b64_message_size = (len(full_message)/3) * 4
       if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
         # don't batch/raw >1mb messages, just do single
-        rewrite_line('restoring single large message (%s/%s)' %
-          (current, restore_count))
+        rewrite_line('restoring %s message (%s/%s)' %
+          (humansize(b65_message_size), current, restore_count))
         # Note resumable=True is important here, it prevents errors on (bad)
         # messages that should be ASCII but contain extended chars.
         # What's that? No, no idea why
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-          mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+          mimetype='message/rfc822', resumable=True)
         try:
           response = callGAPI(service=restore_serv, function=restore_func,
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1591,9 +1593,9 @@ def main(argv):
           rewrite_line(" reading message %s... - %s%%" % (current, mbox_pct))
           if b64_message_size > 1 * 1024 * 1024:
             # don't batch/raw >1mb messages, just do single
-            rewrite_line(" restoring single large message %s - %s%%" % (current,mbox_pct))
+            rewrite_line(" restoring %s message %s - %s%%" % (humansize(b64_message_size),current,mbox_pct))
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-              mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+              mimetype='message/rfc822', resumable=True)
             try:
               response = callGAPI(service=restore_serv, function=restore_func,
                 userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1684,7 +1686,7 @@ def main(argv):
       f.close()
       media = googleapiclient.http.MediaFileUpload(
         os.path.join(options.local_folder, message_filename),
-        mimetype='message/rfc822', resumable=True, chunksize=chunksize)
+        mimetype='message/rfc822', resumable=True)
       try:
         callGAPI(service=gmig.archive(), function='insert',
           groupId=options.email, media_body=media, soft_errors=True)
