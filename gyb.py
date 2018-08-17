@@ -6,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
 """\n%s\n\nGot Your Back (GYB) is a command line tool which allows users to
 backup and restore their Gmail.
 
-For more information, see http://git.io/gyb/
+For more information, see https://git.io/gyb/
 """
 
 global __name__, __author__, __email__, __version__, __license__
@@ -25,8 +25,8 @@ __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
 __version__ = '1.1'
-__license__ = 'Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)'
-__website__ = 'http://git.io/gyb'
+__license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
+__website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
