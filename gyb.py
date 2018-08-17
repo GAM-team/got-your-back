@@ -1192,7 +1192,7 @@ def bytes_to_larger(myval):
 def main(argv):
   global options, gmail
   options = SetupOptionParser(argv)
-  doGYBCheckForUpdates()
+  doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
     sys.exit(0)
