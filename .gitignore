@@ -66,4 +66,7 @@ privatekey.p12
 # builds
 *.zip
 *.exe
+*.msi
 *.tar.xz
+*.wixobj
+*.wixpdb
