@@ -692,7 +692,7 @@ def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=Tr
     systemErrorExit(6, e)
 
 def doCreateProject():
-  service_account_file = 'oauth2service.json'
+  service_account_file = getProgPath()+'oauth2service.json'
   for a_file in [service_account_file]:
     if os.path.exists(a_file):
       print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
