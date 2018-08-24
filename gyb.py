@@ -1554,7 +1554,7 @@ def main(argv):
               mbox_fileid = mbox_from.split('@')[0]
               labels_str = vault_label_map.get(mbox_fileid, '')
             else:
-              labels_str = message.get_header('X-Gmail-Labels')
+              labels_str = message.get_header(b'X-Gmail-Labels')
             mybytes, encoding = email.header.decode_header(labels_str)[0]
             if encoding != None:
               try:
