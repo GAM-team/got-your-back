@@ -1000,7 +1000,8 @@ def initializeDB(sqlcur, sqlconn, email):
   sqlcur.executescript('''
    CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
                          message_filename TEXT, 
-                         message_internaldate TIMESTAMP);
+                         message_internaldate TIMESTAMP,
+                         rfc822_msgid TEXT);
    CREATE TABLE labels (message_num INTEGER, label TEXT);
    CREATE TABLE uids (message_num INTEGER, uid TEXT PRIMARY KEY);
    CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);
