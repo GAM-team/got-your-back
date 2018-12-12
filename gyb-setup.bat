@@ -41,7 +41,7 @@
 @echo(
 @set /p regularuser= "Please enter the email address of a regular G Suite user: "
 @echo Great! Checking service account scopes. This will fail the first time. Follow the steps to authorize and retry. It can take a few minutes for scopes to PASS after they've been authorized in the admin console.
-@gyb --email %regularuser% --check-service-account
+@gyb --email %regularuser% --action check-service-account
 @if not ERRORLEVEL 1 goto sadone
 @echo(
 @echo Service account authorization failed. Confirm you entered the scopes correctly in the admin console. It can take a few minutes for scopes to PASS after they are entered in the admin console so if you're sure you entered them correctly, go grab a coffee and then hit Y to try again. Say N to skip admin authorization.
