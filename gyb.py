@@ -809,7 +809,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
 1. Click the 3 dots to the right of your service account.
 2. Choose Edit.
 3. Check the "Enable G Suite Domain-wide Delegation" box and click Save.
-''')
+''' % sa_url)
   input('Press Enter when done...')
   print('That\'s it! Your GYB Project is created and ready to use.')
 
