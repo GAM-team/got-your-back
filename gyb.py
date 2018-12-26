@@ -1434,7 +1434,7 @@ def main(argv):
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
             deleted=options.vault, soft_errors=True, **restore_params)
           exception = None
-        except googleapiclient.errors.HttpError as e:
+        except (googleapiclient.errors.HttpError, googleapiclient.errors.MediaUploadSizeError) as e:
           response = None
           exception = e
         restored_message(request_id=str(message_num), response=response,
@@ -1621,7 +1621,7 @@ def main(argv):
               if response == None:
                 continue
               exception = None
-            except googleapiclient.errors.HttpError as e:
+            except (googleapiclient.errors.HttpError, googleapiclient.errors.MediaUploadSizeError) as e:
               response = None
               exception = e
             restored_message(request_id=request_id, response=response,
