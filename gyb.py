@@ -1151,7 +1151,7 @@ def backup_message(request_id, response, exception):
     message_date = time.gmtime(message_time)
     try:
       time_for_sqlite = datetime.datetime.fromtimestamp(message_time)
-    except (IOError, OverflowError):
+    except (OSError, IOError, OverflowError):
       time_for_sqlite = datetime.datetime.fromtimestamp(86400) # minimal value Win accepts
     message_rel_path = os.path.join(str(message_date.tm_year),
                                     str(message_date.tm_mon),
