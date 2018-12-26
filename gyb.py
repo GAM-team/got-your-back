@@ -129,6 +129,15 @@ Default is GYB-GMail-Backup-<email>',
 this label. For example, "--label_restored gyb-restored" will label all \
 uploaded messages with a gyb-restored label.',
     default=[])
+  parser.add_argument('--label-prefix',
+                      action='append',
+                      dest='label_prefix',
+                      help='Optional: On restore, all labels will additionally receive \
+  this prefix label. For example, "--label-prefix gyb-archive" will become main label of all \
+  uploaded labels with a gyb-prefix label. \
+  ATTENTION - This is not compatible with --label-strip \
+  ATTENTION - this will also create one INBOX and SENT specific label',
+                      default=[])
   parser.add_argument('--strip-labels',
     dest='strip_labels',
     action='store_true',
@@ -1398,7 +1407,13 @@ def main(argv):
           = ?', (message_num,))
         labels_results = sqlcur.fetchall()
         for l in labels_results:
-          labels.append(l[0])
+          if options.label_prefix:
+            if l[0].lower()!="unread":
+              labels.append(options.label_prefix[0] + "/" + l[0])
+            else:
+              labels.append(l[0])
+          else:
+            labels.append(l[0])
       if options.label_restored:
         for restore_label in options.label_restored:
           labels.append(restore_label)
