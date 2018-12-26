@@ -1002,7 +1002,10 @@ when authorizing the token in the browser." % auth_as)
   return False
 
 def rewrite_line(mystring):
-  print(' ' * 80, end='\r')
+  if not options.debug:
+    print(' ' * 80, end='\r')
+  else:
+    print()
   print(mystring, end='\r')
 
 def initializeDB(sqlcur, sqlconn, email):
@@ -1656,6 +1659,7 @@ def main(argv):
           callGAPI(gbatch, None, soft_errors=True)
           sqlconn.commit()
     print('\ndone!')
+    sqlconn.commit()
     sqlconn.execute('DETACH mbox_resume')
     sqlconn.commit()
 
