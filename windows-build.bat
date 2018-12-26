@@ -6,7 +6,7 @@ del /q /f gyb-%1-windows.msi
 del /q /f windows-gyb.wixobj
 del /q /f windows-gyb.wixpdb
 
-c:\python36\scripts\pyinstaller --clean -F --distpath=gyb windows-gyb.spec
+c:\python37\scripts\pyinstaller --clean -F --distpath=gyb windows-gyb.spec
 copy LICENSE gyb\
 copy license.rtf gyb\
 copy gyb-setup.bat gyb\
