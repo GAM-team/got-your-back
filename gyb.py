@@ -523,12 +523,19 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
   parameters = kwargs.copy()
   parameters.update(extra_args)
   for n in range(1, retries+1):
-    if function:
-      method = getattr(service, function)(**parameters)
-    else:
-      method = service
     try:
+      if function:
+        method = getattr(service, function)(**parameters)
+      else:
+        method = service
       return method.execute()
+    except googleapiclient.errors.MediaUploadSizeError as e:
+      sys.stderr.write('\nERROR: %s' % (e))
+      if soft_errors:
+        sys.stderr.write(' - Giving up.\n')
+        return
+      else:
+        sys.exit(int(http_status))
     except googleapiclient.errors.HttpError as e:
       try:
         error = json.loads(e.content.decode('utf-8'))
@@ -1628,7 +1635,7 @@ def main(argv):
               response = None
               exception = e
             restored_message(request_id=request_id, response=response,
-              exception=None)
+              exception=exception)
             rewrite_line(" restored single large message (%s)" % (current,))
             continue
           raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
