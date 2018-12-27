@@ -8,7 +8,7 @@ GYB installation script.
 OPTIONS:
    -h      show help.
    -d      Directory where gyb folder will be installed. Default is \$HOME/bin/
-   -a      Architecture to install (i386, x86_64, arm). Default is to detect your arch with "uname -m".
+   -a      Architecture to install (i686, x86_64, armv7l, aarch64). Default is to detect your arch with "uname -m".
    -o      OS we are running (linux, macos). Default is to detect your OS with "uname -s".
    -l      Just upgrade GYB to latest version. Skips project creation and auth.
    -p      Profile update (true, false). Should script add gyb command to environment. Default is true.
@@ -80,10 +80,11 @@ case $myos in
     myos="linux"
     case $myarch in
       x86_64) gybfile="linux-x86_64.tar.xz";;
-      #i?86) gybfile="linux-i686.tar.xz";;
-      #arm*) gybfile="linux-armv7l.tar.xz";;
+      i?86) gybfile="linux-i686.tar.xz";;
+      arm|armv7l) gybfile="linux-armv7l.tar.xz";;
+      arm64|aarch64) gybfile="linux-aarch64.tar.xz";;
       *)
-        echo_red "ERROR: this installer currently only supports x86_64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
+        echo_red "ERROR: this installer currently only supports x86_64, i686, armv7l and aarch64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
         exit
     esac
     ;;
