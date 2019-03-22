@@ -90,8 +90,8 @@ case $myos in
     ;;
   [Mm]ac[Oo][sS]|[Dd]arwin)
     osver=$(sw_vers -productVersion | awk -F'.' '{print $2}')
-    if (( $osver < 10 )); then
-      echo_red "ERROR: GYB currently requires MacOS 10.10 or newer. You are running MacOS 10.$osver. Please upgrade." 
+    if (( $osver < 14 )); then
+      echo_red "ERROR: GYB currently requires MacOS 10.14 or newer. You are running MacOS 10.$osver. Please upgrade." 
       exit
     else
       echo_green "Good, you're running MacOS 10.$osver..."

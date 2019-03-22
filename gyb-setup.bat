@@ -2,20 +2,6 @@
 @set /p adminemail= "Please enter your Google email address: "
 
 :createproject
-@echo(
-@set /p yn= "Are you a G Suite admin backup/restoring mail for your users? [y or n] "
-@if /I "%yn%"=="n" (
-@  echo(
-@  echo If you want to backup G Suite users, you can create an API project later by running:
-@  echo(
-@  echo gyb --action create-project --email %adminemail%
-@  goto alldone
-   )
-@if /I not "%yn%"=="y" (
-@  echo(
-@  echo Please answer y or n.
-@  goto createproject
-   )
 @gyb --action create-project --email %adminemail%
 @if not ERRORLEVEL 1 goto projectdone
 @echo(
@@ -25,7 +11,7 @@
 
 :saauth
 @echo(
-@set /p yn= "Are you ready to authorize GYB to backup/restore G Suite user mail? [y or n] "
+@set /p yn= "Are you a G Suite admin backing up user mail? [y or n] "
 @if /I "%yn%"=="n" (
 @  echo(
 @  echo You can authorize a service account later by running:
