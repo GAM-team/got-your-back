@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 #
 # Got Your Back
 #
@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.12'
+__version__ = '1.20'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -56,6 +56,7 @@ from itertools import islice, chain
 import base64
 import json
 import xml.etree.ElementTree as etree
+from urllib.parse import urlencode
 
 import httplib2
 import oauth2client.client
@@ -106,7 +107,7 @@ def SetupOptionParser(argv):
     help='Full email address of user or group to act against')
   action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
     'count', 'purge', 'purge-labels', 'estimate', 'quota', 'reindex', 'revoke',
-    'split-mbox', 'create-project', 'check-service-account']
+    'split-mbox', 'create-project', 'delete-projects', 'check-service-account']
   parser.add_argument('--action',
     choices=action_choices,
     dest='action',
@@ -215,8 +216,6 @@ def requestOAuthAccess():
   else:
     auth_as = options.email
   CLIENT_SECRETS = getProgPath()+'client_secrets.json'
-  if not os.path.exists(CLIENT_SECRETS) and hasattr(sys, '_MEIPASS'):
-    CLIENT_SECRETS = os.path.join(sys._MEIPASS, 'client_secrets.json')
   MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
 
@@ -378,7 +377,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
   try:
     (_, c) = simplehttp.request(check_url, u'GET', headers=headers)
     try:
-      release_data = json.loads(c)
+      release_data = json.loads(c.decode('utf-8'))
     except ValueError:
       _LatestVersionNotAvailable()
       return
@@ -650,18 +649,17 @@ def getCRMService(login_hint):
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
     disable_ssl_certificate_validation = True
   http = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-  try:
-    credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
-  except httplib2.CertificateValidationUnsupported:
-    print('ERROR: Your Python installation does not support SSL.')
-    sys.exit(3)
+  credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
   http = credentials.authorize(httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation,
                  cache=None))
   return (googleapiclient.discovery.build('cloudresourcemanager', u'v1', http=http, cache_discovery=False), http)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(httpObj, project_name, checkEnabled):
-  simplehttp = httplib2.Http()
+  disable_ssl_certificate_validation = False
+  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    disable_ssl_certificate_validation = True
+  simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   s, c = simplehttp.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
@@ -707,9 +705,130 @@ def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=Tr
       return False
     systemErrorExit(6, e)
 
+def _createClientSecretsOauth2service(httpObj, projectId):
+
+  def _checkClientAndSecret(simplehttp, client_id, client_secret):
+    url = u'https://www.googleapis.com/oauth2/v4/token'
+    post_data = {u'client_id': client_id, u'client_secret': client_secret,
+                 u'code': u'ThisIsAnInvalidCodeOnlyBeingUsedToTestIfClientAndSecretAreValid',
+                 u'redirect_uri': u'urn:ietf:wg:oauth:2.0:oob', u'grant_type': u'authorization_code'}
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    _, content = simplehttp.request(url, u'POST', urlencode(post_data), headers=headers)
+    try:
+      content = json.loads(content.decode('utf-8'))
+    except ValueError:
+      print('Unknown error: %s' % content)
+      return False
+    if not u'error' in content or not u'error_description' in content:
+      print('Unknown error: %s' % content)
+      return False
+    if content[u'error'] == u'invalid_grant':
+      return True
+    if content[u'error_description'] == 'The OAuth client was not found.':
+      print('Ooops!!\n\n%s\n\nIs not a valid client ID. Please make sure you are following the directions exactly and that there are no extra spaces in your client ID.' % client_id)
+      return False
+    if content[u'error_description'] == u'Unauthorized':
+      print('Ooops!!\n\n%s\n\nIs not a valid client secret. Please make sure you are following the directions exactly and that there are no extra spaces in your client secret.' % client_secret)
+      return False
+    print('Unknown error: %s' % content)
+    return False
+
+  console_credentials_url = u'https://console.developers.google.com/apis/credentials/consent?createClient&project=%s' % projectId
+  while True:
+    print('''Please go to:
+
+%s
+
+1. Enter "GYB" for "Application name".
+2. Leave other fields blank. Click "Save" button.
+3. Choose "Other". Enter a desired value for "Name". Click the blue "Create" button.
+4. Copy your "client ID" value.
+''' % console_credentials_url)
+# If you use Firefox to copy the Client ID and Secret, the data has leading and trailing newlines
+# The first input will get the leading newline, thus we have to issue another input to get the data
+# If the newlines are not present, the data is correctly read with the first input
+    client_id = input(u'Enter your Client ID: ').strip()
+    if not client_id:
+      client_id = input().strip()
+    print('\nNow go back to your browser and copy your client secret.')
+    client_secret = input(u'Enter your Client Secret: ').strip()
+    if not client_secret:
+      client_secret = input().strip()
+    disable_ssl_certificate_validation = False
+    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+      disable_ssl_certificate_validation = True 
+    simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation) 
+    client_valid = _checkClientAndSecret(simplehttp, client_id, client_secret)
+    if client_valid:
+      break
+    print()
+  cs_data = u'''{
+    "installed": {
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "client_id": "%s",
+        "client_secret": "%s",
+        "project_id": "%s",
+        "redirect_uris": [
+            "urn:ietf:wg:oauth:2.0:oob",
+            "http://localhost"
+`        ],
+        "token_uri": "https://accounts.google.com/o/oauth2/token"
+    }
+}''' % (client_id, client_secret, projectId)
+  client_secrets_file = getProgPath()+'client_secrets.json'
+  writeFile(client_secrets_file, cs_data, continueOnError=False)
+
+PROJECTID_PATTERN = re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$')
+PROJECTID_FORMAT_REQUIRED = u'[a-z][a-z0-9-]{4,28}[a-z0-9]'
+def _getLoginHintProjects(printShowCmd):
+  login_hint = options.email
+  pfilter = options.gmail_search
+  if not pfilter:
+    pfilter = u'current' if not printShowCmd else u'id:gyb-project-*'
+  elif printShowCmd and pfilter.lower() == u'all':
+    pfilter = None
+  elif pfilter.lower() == u'gyb':
+    pfilter = u'id:gyb-project-*'
+  elif PROJECTID_PATTERN.match(pfilter):
+    pfilter = u'id:{0}'.format(pfilter)
+  else:
+    print('ERROR: delete-projects action requires --email and a project --search argument')
+    sys.exit(3)
+  login_hint = getValidateLoginHint(login_hint)
+  crm, httpObj = getCRMService(login_hint)
+  client_secrets_file = getProgPath()+'client_secrets.json'
+  if pfilter == u'current':
+    cs_data = readFile(client_secrets_file, mode=u'rb', continueOnError=True, displayError=True, encoding=None)
+    if not cs_data:
+      systemErrorExit(14, u'Your client secrets file:\n\n%s\n\nis missing. Please recreate the file.' % client_secrets_file)
+    try:
+      cs_json = json.loads(cs_data)
+      projects = [{u'projectId': cs_json[u'installed'][u'project_id']}]
+    except (ValueError, IndexError, KeyError):
+      print('The format of your client secrets file:\n\n%s\n\nis incorrect. Please recreate the file.' % client_secrets_file)
+  else:
+    projects = _getProjects(crm, pfilter)
+  return (crm, httpObj, login_hint, projects)
+
+def _getProjects(crm, pfilter):
+  return callGAPIpages(crm.projects(), u'list', u'projects', filter=pfilter)
+
+def doDelProjects():
+  crm, _, login_hint, projects = _getLoginHintProjects(False)
+  count = len(projects)
+  print('User: {0}, Delete {1} Projects'.format(login_hint, count))
+  i = 0
+  for project in projects:
+    i += 1
+    projectId = project[u'projectId']
+    callGAPI(crm.projects(), u'delete', projectId=projectId, soft_errors=True)
+    print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
+
 def doCreateProject():
   service_account_file = getProgPath()+'oauth2service.json'
-  for a_file in [service_account_file]:
+  client_secrets_file = getProgPath()+'client_secrets.json'
+  for a_file in [service_account_file, client_secrets_file]:
     if os.path.exists(a_file):
       print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
       sys.exit(5)
@@ -808,6 +927,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
                  name=service_account['name'], body={'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE', 'keyAlgorithm': u'KEY_ALG_RSA_2048'})
   oauth2service_data = base64.b64decode(key[u'privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
+  _createClientSecretsOauth2service(httpObj, project_id)
   sa_url = 'https://console.developers.google.com/iam-admin/serviceaccounts/project?project=%s' % project_id
   print('''Almost there! Now please go to:
 
@@ -1225,6 +1345,9 @@ def main(argv):
     httplib2.debuglevel = 4
   if options.action == 'create-project':
     doCreateProject()
+    sys.exit(0)
+  elif options.action == 'delete-projects':
+    doDelProjects()
     sys.exit(0)
   elif options.action == 'check-service-account':
     doCheckServiceAccount()

@@ -1,19 +1,13 @@
-"""
-iri2uri
+# -*- coding: utf-8 -*-
+"""Converts an IRI to a URI."""
 
-Converts an IRI to a URI.
-
-"""
 __author__ = "Joe Gregorio (joe@bitworking.org)"
 __copyright__ = "Copyright 2006, Joe Gregorio"
 __contributors__ = []
 __version__ = "1.0.0"
 __license__ = "MIT"
-__history__ = """
-"""
 
 import urllib.parse
-
 
 # Convert an IRI to a URI following the rules in RFC 3987
 #
@@ -50,6 +44,7 @@ escape_range = [
     (0x100000, 0x10FFFD),
 ]
 
+
 def encode(c):
     retval = c
     i = ord(c)
@@ -57,7 +52,7 @@ def encode(c):
         if i < low:
             break
         if i >= low and i <= high:
-            retval = "".join(["%%%2X" % o for o in c.encode('utf-8')])
+            retval = "".join(["%%%2X" % o for o in c.encode("utf-8")])
             break
     return retval
 
@@ -66,9 +61,9 @@ def iri2uri(uri):
     """Convert an IRI to a URI. Note that IRIs must be
     passed in a unicode strings. That is, do not utf-8 encode
     the IRI before passing it into the function."""
-    if isinstance(uri ,str):
+    if isinstance(uri, str):
         (scheme, authority, path, query, fragment) = urllib.parse.urlsplit(uri)
-        authority = authority.encode('idna').decode('utf-8')
+        authority = authority.encode("idna").decode("utf-8")
         # For each character in 'ucschar' or 'iprivate'
         #  1. encode as utf-8
         #  2. then %-encode each octet of that utf-8
@@ -76,11 +71,11 @@ def iri2uri(uri):
         uri = "".join([encode(c) for c in uri])
     return uri
 
+
 if __name__ == "__main__":
     import unittest
 
     class Test(unittest.TestCase):
-
         def test_uris(self):
             """Test that URIs are invariant under the transformation."""
             invariant = [
@@ -91,20 +86,39 @@ if __name__ == "__main__":
                 "news:comp.infosystems.www.servers.unix",
                 "tel:+1-816-555-1212",
                 "telnet://192.0.2.16:80/",
-                "urn:oasis:names:specification:docbook:dtd:xml:4.1.2" ]
+                "urn:oasis:names:specification:docbook:dtd:xml:4.1.2",
+            ]
             for uri in invariant:
                 self.assertEqual(uri, iri2uri(uri))
 
         def test_iri(self):
-            """ Test that the right type of escaping is done for each part of the URI."""
-            self.assertEqual("http://xn--o3h.com/%E2%98%84", iri2uri("http://\N{COMET}.com/\N{COMET}"))
-            self.assertEqual("http://bitworking.org/?fred=%E2%98%84", iri2uri("http://bitworking.org/?fred=\N{COMET}"))
-            self.assertEqual("http://bitworking.org/#%E2%98%84", iri2uri("http://bitworking.org/#\N{COMET}"))
+            """Test that the right type of escaping is done for each part of the URI."""
+            self.assertEqual(
+                "http://xn--o3h.com/%E2%98%84",
+                iri2uri("http://\N{COMET}.com/\N{COMET}"),
+            )
+            self.assertEqual(
+                "http://bitworking.org/?fred=%E2%98%84",
+                iri2uri("http://bitworking.org/?fred=\N{COMET}"),
+            )
+            self.assertEqual(
+                "http://bitworking.org/#%E2%98%84",
+                iri2uri("http://bitworking.org/#\N{COMET}"),
+            )
             self.assertEqual("#%E2%98%84", iri2uri("#\N{COMET}"))
-            self.assertEqual("/fred?bar=%E2%98%9A#%E2%98%84", iri2uri("/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}"))
-            self.assertEqual("/fred?bar=%E2%98%9A#%E2%98%84", iri2uri(iri2uri("/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}")))
-            self.assertNotEqual("/fred?bar=%E2%98%9A#%E2%98%84", iri2uri("/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}".encode('utf-8')))
+            self.assertEqual(
+                "/fred?bar=%E2%98%9A#%E2%98%84",
+                iri2uri("/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}"),
+            )
+            self.assertEqual(
+                "/fred?bar=%E2%98%9A#%E2%98%84",
+                iri2uri(iri2uri("/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}")),
+            )
+            self.assertNotEqual(
+                "/fred?bar=%E2%98%9A#%E2%98%84",
+                iri2uri(
+                    "/fred?bar=\N{BLACK LEFT POINTING INDEX}#\N{COMET}".encode("utf-8")
+                ),
+            )
 
     unittest.main()
-
-

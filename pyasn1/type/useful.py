@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2017, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import datetime
@@ -104,7 +104,7 @@ class TimeMixIn(object):
                 text, _, ms = string.partition(text, ',')
 
             try:
-                ms = int(ms) * 10000
+                ms = int(ms) * 1000
 
             except ValueError:
                 raise error.PyAsn1Error('bad sub-second time specification %s' % self)
@@ -142,7 +142,7 @@ class TimeMixIn(object):
         """
         text = dt.strftime(cls._yearsDigits == 4 and '%Y%m%d%H%M%S' or '%y%m%d%H%M%S')
         if cls._hasSubsecond:
-            text += '.%d' % (dt.microsecond // 10000)
+            text += '.%d' % (dt.microsecond // 1000)
 
         if dt.utcoffset():
             seconds = dt.utcoffset().seconds
