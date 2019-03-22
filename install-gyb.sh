@@ -233,27 +233,15 @@ fi
 
 project_created=false
 while true; do
-  read -p "GYB is now installed. Are you a G Suite Admin backing up user mail and do you want to create a Google API project for GYB? (yes or no) " yn
-  case $yn in
-    [Yy]*)
-      "$target_dir/gyb/gyb" --action create-project --email $adminuser
-      rc=$?
-      if (( $rc == 0 )); then
-        echo_green "Project creation complete."
-        project_created=true
-        break
-      else
-        echo_red "Project creation failed. Trying again. Say N to skip project creation."
-      fi
-      ;;
-    [Nn]*)
-      echo -e "\nYou can create an API project later by running:\n\ngyb --action create-project --email $adminuser\n"
-      break
-      ;;
-    *)
-      echo_red "Please answer yes or no."
-      ;;
-  esac
+  "$target_dir/gyb/gyb" --action create-project --email $adminuser
+  rc=$?
+  if (( $rc == 0 )); then
+    echo_green "Project creation complete."
+    project_created=true
+    break
+  else
+    echo_red "Project creation failed. Trying again."
+  fi
 done
 
 admin_authorized=false
