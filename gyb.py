@@ -217,16 +217,18 @@ def requestOAuthAccess():
     auth_as = options.email
   CLIENT_SECRETS = getProgPath()+'client_secrets.json'
   MISSING_CLIENT_SECRETS_MESSAGE = """
-WARNING: Please configure OAuth 2.0
+WARNING: Please configure a project
 
 To make GYB run you will need to populate the client_secrets.json file
 found at:
 
    %s
 
-with information from the APIs Console https://console.developers.google.com.
+Try running:
 
-""" % (CLIENT_SECRETS)
+%s --action create-project --email %s
+
+""" % (CLIENT_SECRETS, sys.argv[0], options.email)
   cfgFile = '%s%s.cfg' % (getProgPath(), auth_as)
   storage = oauth2client.file.Storage(cfgFile)
   credentials = storage.get()
