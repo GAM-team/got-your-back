@@ -771,10 +771,7 @@ def _createClientSecretsOauth2service(httpObj, projectId):
         "client_id": "%s",
         "client_secret": "%s",
         "project_id": "%s",
-        "redirect_uris": [
-            "urn:ietf:wg:oauth:2.0:oob",
-            "http://localhost"
-`        ],
+        "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"],
         "token_uri": "https://accounts.google.com/o/oauth2/token"
     }
 }''' % (client_id, client_secret, projectId)
