@@ -1,4 +1,7 @@
 if: tag IS blank
+env:
+  - ARCH=x86_64
+    WIX_ARCH=x64
 matrix:
   include:
   - os: linux
@@ -10,17 +13,21 @@ matrix:
     osx_image: xcode10.1
   - os: windows
     language: shell
+  - os: windows
+    language: shell
+    env:
+      - CINST_ARGS=--forcex86
+      - ARCH=x86
+      - WIX_ARCH=x86
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     powershell Install-WindowsFeature Net-Framework-Core;
-    cinst python3;
+    cinst $CINST_ARGS python3;
     export PATH=$PATH:/c/Python37/scripts;
     cinst -y wixtoolset;
   elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew upgrade python3;
-
-
     export PATH=/usr/local/opt/python/libexec/bin:$PATH;
   fi
 - pip install pyinstaller
@@ -33,12 +40,12 @@ install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     cp gyb-setup.bat gyb;
     cp license.rtf gyb;
-    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.zip;
-    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 windows-gyb.wxs;
-    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-$TRAVIS_OS_NAME.msi || true;
+    GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip;
+    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch $WIX_ARCH windows-gyb.wxs;
+    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$ARCH.msi || true;
     rm *.wixpdb;
   else
-    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.tar.xz;
+    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME-$ARCH.tar.xz;
     tar cfJ $GYB_ARCHIVE gyb/;
   fi
 
