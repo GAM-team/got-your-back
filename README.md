@@ -1,6 +1,7 @@
 GYB
 ============================
-Got Your Back (GYB) is a command line tool for backing up your Gmail messages to your local computer. It uses Gmail's API over HTTPS.[![Build Status](https://travis-ci.org/jay0lee/got-your-back.svg?branch=master)](https://travis-ci.org/jay0lee/got-your-back)
+Got Your Back (GYB) is a command line tool for backing up your Gmail messages to your local computer. It uses Gmail's API over HTTPS.
+[![Build Status](https://travis-ci.org/jay0lee/got-your-back.svg?branch=master)](https://travis-ci.org/jay0lee/got-your-back)
 # Quick Start
 ## Linux / MacOS
 Open a terminal and run:
