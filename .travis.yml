@@ -8,12 +8,12 @@ matrix:
   - os: osx
     language: generic
     osx_image: xcode10.1
-  - os: windows
-    language: shell
     addons:
       homebrew:
         packages:
           python@3
+  - os: windows
+    language: shell
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
