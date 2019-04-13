@@ -1,10 +1,10 @@
 if: tag IS blank
-language: python
-python: '3.7'
 matrix:
   include:
   - os: linux
     dist: xenial
+    language: python
+    python: "3.7.3"
   - os: osx
     language: generic
     osx_image: xcode9.2
@@ -17,11 +17,9 @@ before_install:
     cinst python3;
     cinst -y wixtoolset;
   elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew uninstall --ignore-dependencies python;
-    brew update;
     brew install python3;
   fi
-- pip3 install pyinstaller
+- pip install pyinstaller
 
 install:
 - pyinstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
