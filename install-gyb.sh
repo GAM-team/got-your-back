@@ -79,7 +79,7 @@ case $myos in
   [lL]inux)
     myos="linux"
     case $myarch in
-      x86_64) gybfile="linux-x86_64.tar.xz";;
+      x86_64) gybfile="linux.tar.xz";;
       i?86) gybfile="linux-i686.tar.xz";;
       arm|armv7l) gybfile="linux-armv7l.tar.xz";;
       arm64|aarch64) gybfile="linux-aarch64.tar.xz";;
