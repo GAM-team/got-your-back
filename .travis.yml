@@ -6,15 +6,22 @@ matrix:
   - os: linux
     dist: xenial
   - os: osx
-    osx_image: xcode10.1
+    language: generic
+    osx_image: xcode9.2
   - os: windows
+    language: shell
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     powershell Install-WindowsFeature Net-Framework-Core;
+    cinst python3;
     cinst -y wixtoolset;
+  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    brew uninstall --ignore-dependencies python;
+    brew update;
+    brew install python3;
   fi
-- pip install pyinstaller
+- pip3 install pyinstaller
 
 install:
 - pyinstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
