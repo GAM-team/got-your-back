@@ -1,13 +1,13 @@
 if: tag IS blank
 language: python
-python: "3.7"
+python: '3.7'
 matrix:
   include:
-    - os: linux
-      dist: xenial
-    - os: osx
-      osx_image: xcode10.1
-    - os: windows
+  - os: linux
+    dist: xenial
+  - os: osx
+    osx_image: xcode10.1
+  - os: windows
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
@@ -24,8 +24,7 @@ install:
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     cp gyb-setup.bat gyb;
     GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.zip;
-    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn;
-    /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 gyb.wxs;
+    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 gyb.wxs;
     /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll gyb.wixobj -o gyb-$GYBVERSION-$TRAVIS_OS_NAME.msi || true;
     rm *.wixpdb;
   else
@@ -41,12 +40,12 @@ before_deploy:
 
 deploy:
   provider: releases
-  api_key:
-  secure: ""
+  draft: true
   file_glob: true
   overwrite: true
-  file: gyb-$GYBVERSION-*
   skip_cleanup: true
-  draft: true
+  api_key:
+    secure: QFIqvSfIVtk6AUOfBXXHlSJh7vA09fBpg09A3F7URYXd5baAshVVnKEh3fiRftQccgCAn7H4npjRfo7uxWDr3lD1l7KbvD6LbwjSFeF1X1gD1+d6q7V8umGMgWowQEZnbbYeNxoPwEs0y/0MWyAGsWO/HD6z96PcqhYLsBUVVRsw9KUt5d5m92xTFzLWyoyE29x6dRg8kRoYbxHKaOBpzLkZiADWF3OawuSa/nhxji6uKN846gutfsaWRC/+v9mz7Z2zjAbSmo/J34cloEbSCCsDRjBNuOTptnrkxaA/g/xW/IQIMuNMzZkcDAsUYArK53u3ib4nJaOcxn7L+QmADp9Cp7puxZPKuYuMeEZOqmZ9L/F2U5BE+3vQnlbVB9aNP1NGQmwGkMqkSx0bbSch+ar0v+lOILPv3rnOZstTkzOcRuf3I+uPeCb9hL4oX69XuF9FeMl2H+Js2JhR52R54OjGJhwfZsSD1QbvjtZih3a5k+dPS2qCRnn8xzLX8wOVGqWLJpxBdE3gXMEexEtWx2h0m0uW+qyls0+RuywNCnukGygkCL3WDLHt3t9TyxbsBGvtlusV+wPVanUnVfFptvn8K2RY5fpVoWUmmGd6pjH9vMag0kfsHUVYmHPcC1nE0isBuzYpH8W0Hfnk78LqfxVHwhzMHVLo2OhhIre0gY4=
+  file: gyb-$GYBVERSION-*
   on:
     repo: jay0lee/got-your-back
