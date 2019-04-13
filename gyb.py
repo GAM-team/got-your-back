@@ -390,7 +390,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     if isinstance(release_data, list):
       release_data = release_data[0] # only care about latest release
     if not isinstance(release_data, dict) or u'tag_name' not in release_data:
-      _gamLatestVersionNotAvailable()
+      _LatestVersionNotAvailable()
       return
     latest_version = release_data[u'tag_name']
     if latest_version[0].lower() == u'v':
@@ -1955,7 +1955,7 @@ otaBytesByService,quotaType')
       disable_ssl_certificate_validation = True
     http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-    if os.path.isfile(getProgPath()+'debug.gam'):
+    if options.debug:
       httplib2.debuglevel = 4
     sys.stdout.write('This authorizaton token will self-destruct in 3...')
     sys.stdout.flush()
