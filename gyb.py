@@ -36,7 +36,7 @@ allLabelIds = dict()
 allLabels = dict()
 reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
   'sent', 'draft', 'chat', 'chats', 'migrated', 'todo', 'todos', 'buzz',
-  'bin', 'allmail', 'drafts']
+  'bin', 'allmail', 'drafts', 'archived']
 
 import argparse
 import sys
@@ -1716,7 +1716,7 @@ def main(argv):
                 labels_str = mybytes.decode(encoding)
               except UnicodeDecodeError:
                 pass
-            labels = labels_str.split(',')
+            labels = labels_str.rstrip().split(',')
           cased_labels = []
           for label in labels:
             if label == '' or label == None:
