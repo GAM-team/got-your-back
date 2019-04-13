@@ -1716,13 +1716,14 @@ def main(argv):
                 labels_str = mybytes.decode(encoding)
               except UnicodeDecodeError:
                 pass
-            labels = labels_str.rstrip().split(',')
+            labels = labels_str.strip().split(',')
           cased_labels = []
           for label in labels:
             if label == '' or label == None:
               labels.remove(label)
               continue
-            elif label == '^OPENED':
+            label = label.strip()
+            if label == '^OPENED':
               labels.remove(label)
               continue
             elif label == '^DELETED':
@@ -1806,6 +1807,8 @@ def main(argv):
       gmig = buildGAPIObject('groupsmigration')
     else:
       gmig = buildGAPIServiceObject('groupsmigration')
+    max_message_size = gmig._rootDesc['resources']['archive']['methods']['insert']['mediaUpload']['maxSize']
+    print('Groups supports restore of messages up to %s' % max_message_size)
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1850,8 +1853,8 @@ def main(argv):
         callGAPI(service=gmig.archive(), function='insert',
           groupId=options.email, media_body=media, soft_errors=True)
       except googleapiclient.errors.MediaUploadSizeError as e:
-        print('\n ERROR: Message is to large for groups (16mb limit). \
-          Skipping...')
+        print('\n ERROR: Message is to large for groups (%smb limit). \
+          Skipping...' % max_message_size)
         continue
       sqlconn.execute(
          'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
