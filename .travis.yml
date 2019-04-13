@@ -8,10 +8,6 @@ matrix:
   - os: osx
     language: generic
     osx_image: xcode10.1
-    addons:
-      homebrew:
-        packages:
-          python3
   - os: windows
     language: shell
 
@@ -21,6 +17,10 @@ before_install:
     cinst python3;
     export PATH=$PATH:/c/Python37/scripts;
     cinst -y wixtoolset;
+  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    brew uninstall --ignore-dependencies python;
+    brew update;
+    brew install python3;
   fi
 - pip install pyinstaller
 
