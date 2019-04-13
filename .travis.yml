@@ -1,0 +1,52 @@
+if: tag IS blank
+language: python
+python: "3.7"
+matrix:
+  include:
+    - os: linux
+      dist: xenial
+    - os: osx
+      osx_image: xcode10.1
+    - os: windows
+
+before_install:
+- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+    powershell Install-WindowsFeature Net-Framework-Core;
+    cinst -y wixtoolset;
+  fi
+- pip install pyinstaller
+
+install:
+- pyinstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
+- gyb/gyb --version
+- export GYBVERSION=`gyb/gyb --short-version`
+- cp LICENSE gyb
+- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+    cp gyb-setup.bat gyb;
+    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.zip;
+    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn;
+    /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 gyb.wxs;
+    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll gyb.wixobj -o gyb-$GYBVERSION-$TRAVIS_OS_NAME.msi || true;
+    rm *.wixpdb;
+  else
+    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.tar.xz;
+    tar cfJ $GYB_ARCHIVE gyb/;
+  fi
+
+script:
+- gyb/gyb --version
+
+before_deploy:
+- export TRAVIS_TAG="preview"
+
+deploy:
+  provider: releases
+  api_key:
+  secure: ""
+  file_glob: true
+  overwrite: true
+  file: gyb-$GYBVERSION-*
+  skip_cleanup: true
+  draft: true
+  on:
+    repo: jay0lee/got-your-back

@@ -194,6 +194,10 @@ method breaks Gmail deduplication and threading.')
     action='store_true',
     dest='version',
     help='print GYB version and quit')
+  parser.add_argument('--short-version',
+    action='store_true',
+    dest='shortversion',
+    help='Just print version and quit')
   parser.add_argument('--help',
     action='help',
     help='Display this message.')
@@ -1336,6 +1340,9 @@ def main(argv):
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
+    sys.exit(0)
+  if options.shortversion:
+    sys.stdout.write(__version__)
     sys.exit(0)
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
