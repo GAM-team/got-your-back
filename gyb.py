@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.21'
+__version__ = '1.22'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -784,12 +784,12 @@ def _createClientSecretsOauth2service(httpObj, projectId):
 
 PROJECTID_PATTERN = re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$')
 PROJECTID_FORMAT_REQUIRED = u'[a-z][a-z0-9-]{4,28}[a-z0-9]'
-def _getLoginHintProjects(printShowCmd):
+def _getLoginHintProjects():
   login_hint = options.email
   pfilter = options.gmail_search
   if not pfilter:
-    pfilter = u'current' if not printShowCmd else u'id:gyb-project-*'
-  elif printShowCmd and pfilter.lower() == u'all':
+    pfilter = u'current'
+  elif pfilter.lower() == u'all':
     pfilter = None
   elif pfilter.lower() == u'gyb':
     pfilter = u'id:gyb-project-*'
@@ -818,7 +818,7 @@ def _getProjects(crm, pfilter):
   return callGAPIpages(crm.projects(), u'list', u'projects', filter=pfilter)
 
 def doDelProjects():
-  crm, _, login_hint, projects = _getLoginHintProjects(False)
+  crm, _, login_hint, projects = _getLoginHintProjects()
   count = len(projects)
   print('User: {0}, Delete {1} Projects'.format(login_hint, count))
   i = 0
@@ -958,8 +958,9 @@ def doCheckServiceAccount():
   all_scopes_pass = True
   for scope in all_scopes:
     try:
+      oauth2service_file = getProgPath()+'oauth2service.json'
       credentials = oauth2client.service_account.ServiceAccountCredentials.from_json_keyfile_name(
-          'oauth2service.json', [scope])
+          oauth2service_file, [scope])
       credentials = credentials.create_delegated(options.email)
       credentials.user_agent = getGYBVersion(' | ')
       credentials.refresh(httplib2.Http())
