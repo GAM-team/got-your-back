@@ -18,7 +18,9 @@ before_install:
     export PATH=$PATH:/c/Python37/scripts;
     cinst -y wixtoolset;
   elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew upgrade python;
+    brew update;
+    brew uninstall python;
+    brew install python3;
   fi
 - pip install pyinstaller
 
@@ -29,9 +31,10 @@ install:
 - cp LICENSE gyb
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     cp gyb-setup.bat gyb;
+    cp license.rtf gyb;
     GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.zip;
-    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 gyb.wxs;
-    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll gyb.wixobj -o gyb-$GYBVERSION-$TRAVIS_OS_NAME.msi || true;
+    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 windows-gyb.wxs;
+    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-$TRAVIS_OS_NAME.msi || true;
     rm *.wixpdb;
   else
     GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME.tar.xz;

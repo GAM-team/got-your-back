@@ -9,7 +9,7 @@ OPTIONS:
    -h      show help.
    -d      Directory where gyb folder will be installed. Default is \$HOME/bin/
    -a      Architecture to install (i686, x86_64, armv7l, aarch64). Default is to detect your arch with "uname -m".
-   -o      OS we are running (linux, macos). Default is to detect your OS with "uname -s".
+   -o      OS we are running (linux, osx). Default is to detect your OS with "uname -s".
    -l      Just upgrade GYB to latest version. Skips project creation and auth.
    -p      Profile update (true, false). Should script add gyb command to environment. Default is true.
    -u      Admin user email address to use with GYB. Default is to prompt.
@@ -96,8 +96,8 @@ case $myos in
     else
       echo_green "Good, you're running MacOS 10.$osver..."
     fi
-    myos="macos"
-    gybfile="macos.tar.xz"
+    myos="osx"
+    gybfile="osx.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
@@ -203,7 +203,7 @@ if [ "$update_profile" = true ]; then
   alias_line="export PATH=$PATH:$target_dir/gyb"
   if [ "$myos" == "linux" ]; then
     update_profile "$HOME/.bashrc" || update_profile "$HOME/.bash_profile"
-  elif [ "$myos" == "macos" ]; then
+  elif [ "$myos" == "osx" ]; then
     update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
   fi
 else
