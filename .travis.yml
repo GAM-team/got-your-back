@@ -21,7 +21,7 @@ before_install:
     brew uninstall --ignore-dependencies python;
     brew update;
     brew install python3;
-    export PATH=/usr/local/opt/python/libexec/bin:$PATH
+    export PATH=/usr/local/opt/python/libexec/bin:$PATH;
   fi
 - pip install pyinstaller
 
