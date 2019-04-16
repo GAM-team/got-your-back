@@ -27,16 +27,7 @@ before_install:
 - export gyb_user_file="$gyb_user.cfg"
 - echo "This job will use $gyb_user"
 - tar xvvf cfgs.tar $gyb_user_file
-- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-    echo "Here";
-    powershell Install-WindowsFeature Net-Framework-Core;
-    cinst $CINST_ARGS python3;
-    export PATH=$PATH:/c/Python37/scripts;
-    cinst -y wixtoolset;
-  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew upgrade python3;
-    export PATH=/usr/local/opt/python/libexec/bin:$PATH;
-  fi
+- source travis/$TRAVIS_OS_NAME-$ARCH.sh
 - pip install pyinstaller
 
 install:
