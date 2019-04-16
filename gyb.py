@@ -2049,6 +2049,12 @@ if __name__ == '__main__':
     sys.exit(3)
   try:
     main(sys.argv[1:])
+  except MemoryError:
+    print('''ERROR: GYB ran out of memory during %s. Try the following:
+
+1) Use a 64-bit version of GYB. It has access to more memory.
+2) Add "--memory-limit 100" argument to GYB to reduce memory usage.''' % options.action)
+    sys.exit(5)
   except KeyboardInterrupt:
     try:
       sqlconn.commit()
