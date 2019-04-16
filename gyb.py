@@ -1484,7 +1484,8 @@ def main(argv):
         callGAPI(gbatch, None, soft_errors=True)
         gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
-        request_size = message_sizes[a_message]
+        if options.memory_limit:
+          request_size = message_sizes[a_message]
         rewrite_line("backed up %s of %s messages" %
           (backed_up_messages, backup_count))
       gbatch.add(gmail.users().messages().get(userId='me',
