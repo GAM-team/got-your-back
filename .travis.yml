@@ -20,23 +20,23 @@ matrix:
     - WIX_ARCH=x86
 before_install:
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-9@pdl.jaylee.us.cfg.enc -out gyb-travis-9@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-9@pdl.jaylee.us.cfg.enc -out gyb-travis-9@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-8@pdl.jaylee.us.cfg.enc -out gyb-travis-8@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-8@pdl.jaylee.us.cfg.enc -out gyb-travis-8@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-7@pdl.jaylee.us.cfg.enc -out gyb-travis-7@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-7@pdl.jaylee.us.cfg.enc -out gyb-travis-7@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-6@pdl.jaylee.us.cfg.enc -out gyb-travis-6@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-6@pdl.jaylee.us.cfg.enc -out gyb-travis-6@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-5@pdl.jaylee.us.cfg.enc -out gyb-travis-5@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-5@pdl.jaylee.us.cfg.enc -out gyb-travis-5@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-4@pdl.jaylee.us.cfg.enc -out gyb-travis-4@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-4@pdl.jaylee.us.cfg.enc -out gyb-travis-4@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-3@pdl.jaylee.us.cfg.enc -out gyb-travis-3@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-3@pdl.jaylee.us.cfg.enc -out gyb-travis-3@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-2@pdl.jaylee.us.cfg.enc -out gyb-travis-2@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-2@pdl.jaylee.us.cfg.enc -out gyb-travis-2@pdl.jaylee.us.cfg -d
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in gyb-travis-1@pdl.jaylee.us.cfg.enc -out gyb-travis-1@pdl.jaylee.us.cfg -d
+  -in travis/gyb-travis-1@pdl.jaylee.us.cfg.enc -out gyb-travis-1@pdl.jaylee.us.cfg -d
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - echo "This job will use $gyb_user"
@@ -60,7 +60,7 @@ install:
 script:
 - mkdir gyb-test
 - cp -rf gyb/* gyb-test/
-- mv gyb-travis@pdl.jaylee.us.cfg gyb-test
+- mv $gyb_user.cfg gyb-test
 - gyb-test/gyb --version
 - gyb-test/gyb --action count --email $gyb_user
 - gyb-test/gyb --action quota --email $gyb_user
