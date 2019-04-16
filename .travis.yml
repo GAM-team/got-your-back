@@ -27,7 +27,7 @@ before_install:
 - export gyb_user_file="$gyb_user.cfg"
 - echo "This job will use $gyb_user"
 - tar xvvf cfgs.tar $gyb_user_file
-- source travis/$TRAVIS_OS_NAME-$ARCH.sh
+- source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 - pip install pyinstaller
 
 install:
