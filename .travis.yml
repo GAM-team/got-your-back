@@ -23,7 +23,7 @@ before_install:
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - echo "This job will use $gyb_user"
 - openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv
-  -in travis/gyb-travis-$jid@pdl.jaylee.us.cfg.enc -out gyb-travis-$jid@pdl.jaylee.us.cfg -d
+  -in travis/$gyb_user.cfg.enc -out $gyb_user.cfg -d
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell Install-WindowsFeature
   Net-Framework-Core; cinst $CINST_ARGS python3; export PATH=$PATH:/c/Python37/scripts;
   cinst -y wixtoolset; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python3;
