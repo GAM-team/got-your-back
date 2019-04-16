@@ -1,13 +1,12 @@
 if: tag IS blank
 env:
-  - ARCH=x86_64
-    WIX_ARCH=x64
+- ARCH=x86_64 WIX_ARCH=x64
 matrix:
   include:
   - os: linux
     dist: xenial
     language: python
-    python: "3.7.3"
+    python: 3.7.3
   - os: osx
     language: generic
     osx_image: xcode10.1
@@ -16,11 +15,13 @@ matrix:
   - os: windows
     language: shell
     env:
-      - CINST_ARGS=--forcex86
-      - ARCH=x86
-      - WIX_ARCH=x86
+    - CINST_ARGS=--forcex86
+    - ARCH=x86
+    - WIX_ARCH=x86
 
 before_install:
+- openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv
+  -in gyb-travis@pdl.jaylee.us.cfg.enc -out gyb-travis@pdl.jaylee.us.cfg -d
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     powershell Install-WindowsFeature Net-Framework-Core;
     cinst $CINST_ARGS python3;
@@ -41,7 +42,8 @@ install:
     cp gyb-setup.bat gyb;
     cp license.rtf gyb;
     GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip;
-    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch $WIX_ARCH windows-gyb.wxs;
+    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn;
+    /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch $WIX_ARCH windows-gyb.wxs;
     /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$ARCH.msi || true;
     rm *.wixpdb;
   else
@@ -51,7 +53,9 @@ install:
 
 script:
 - gyb/gyb --version
-
+  gyb/gyb --action count --email gyb-travis@pdl.jaylee.us
+  gyb/gyb --action quota --email gyb-travis@pdl.jaylee.us
+  gyb/gyb --action estimate --email gyb-travis@pdl.jaylee.us
 before_deploy:
 - export TRAVIS_TAG="preview"
 
