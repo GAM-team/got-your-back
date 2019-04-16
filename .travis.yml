@@ -18,50 +18,39 @@ matrix:
     - CINST_ARGS=--forcex86
     - ARCH=x86
     - WIX_ARCH=x86
-
 before_install:
+- jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv
-  -in gyb-travis@pdl.jaylee.us.cfg.enc -out gyb-travis@pdl.jaylee.us.cfg -d
-- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-    powershell Install-WindowsFeature Net-Framework-Core;
-    cinst $CINST_ARGS python3;
-    export PATH=$PATH:/c/Python37/scripts;
-    cinst -y wixtoolset;
-  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew upgrade python3;
-    export PATH=/usr/local/opt/python/libexec/bin:$PATH;
-  fi
+  -in travis/gyb-travis-$jid@pdl.jaylee.us.cfg.enc -out gyb-travis-$jid@pdl.jaylee.us.cfg -d
+- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell Install-WindowsFeature
+  Net-Framework-Core; cinst $CINST_ARGS python3; export PATH=$PATH:/c/Python37/scripts;
+  cinst -y wixtoolset; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python3;
+  export PATH=/usr/local/opt/python/libexec/bin:$PATH; fi
 - pip install pyinstaller
-
 install:
 - pyinstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
 - gyb/gyb --version
 - export GYBVERSION=`gyb/gyb --short-version`
 - cp LICENSE gyb
-- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-    cp gyb-setup.bat gyb;
-    cp license.rtf gyb;
-    GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip;
-    /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn;
-    /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch $WIX_ARCH windows-gyb.wxs;
-    /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$ARCH.msi || true;
-    rm *.wixpdb;
-  else
-    GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME-$ARCH.tar.xz;
-    tar cfJ $GYB_ARCHIVE gyb/;
-  fi
-
+- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cp gyb-setup.bat gyb; cp license.rtf
+  gyb; GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip; /c/Program\ Files/7-Zip/7z.exe
+  a -tzip $GYB_ARCHIVE gyb -xr!.svn; /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe
+  -arch $WIX_ARCH windows-gyb.wxs; /c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe
+  -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj
+  -o gyb-$GYBVERSION-windows-$ARCH.msi || true; rm *.wixpdb; else GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME-$ARCH.tar.xz;
+  tar cfJ $GYB_ARCHIVE gyb/; fi
 script:
-- mv gyb-travis@pdl.jaylee.us.cfg gyb
-- gyb/gyb --version
-- gyb/gyb --action count --email gyb-travis@pdl.jaylee.us
-- gyb/gyb --action quota --email gyb-travis@pdl.jaylee.us
-- gyb/gyb --action estimate --email gyb-travis@pdl.jaylee.us
-- rm gyb/*.cfg
-
+- mkdir gyb-test
+- cp -rf gyb/* gyb-test/
+- mv gyb-travis@pdl.jaylee.us.cfg gyb-test
+- gyb_user="gyb-travis-$jid@pdl.jaylee.us"
+- gyb-test/gyb --version
+- gyb-test/gyb --action count --email $gyb_user
+- gyb-test/gyb --action quota --email $gyb_user
+- gyb-test/gyb --action estimate --email $gyb_user
+- rm -rf gyb-test
 before_deploy:
 - export TRAVIS_TAG="preview"
-
 deploy:
   provider: releases
   draft: true
