@@ -19,11 +19,27 @@ matrix:
     - ARCH=x86
     - WIX_ARCH=x86
 before_install:
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-9@pdl.jaylee.us.cfg.enc -out gyb-travis-9@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-8@pdl.jaylee.us.cfg.enc -out gyb-travis-8@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-7@pdl.jaylee.us.cfg.enc -out gyb-travis-7@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-6@pdl.jaylee.us.cfg.enc -out gyb-travis-6@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-5@pdl.jaylee.us.cfg.enc -out gyb-travis-5@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-4@pdl.jaylee.us.cfg.enc -out gyb-travis-4@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-3@pdl.jaylee.us.cfg.enc -out gyb-travis-3@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-2@pdl.jaylee.us.cfg.enc -out gyb-travis-2@pdl.jaylee.us.cfg -d
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
+  -in gyb-travis-1@pdl.jaylee.us.cfg.enc -out gyb-travis-1@pdl.jaylee.us.cfg -d
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - echo "This job will use $gyb_user"
-- openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv
-  -in travis/gyb-travis-8@pdl.jaylee.us.cfg.enc -out gyb-travis-8@pdl.jaylee.us.cfg -d
 - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell Install-WindowsFeature
   Net-Framework-Core; cinst $CINST_ARGS python3; export PATH=$PATH:/c/Python37/scripts;
   cinst -y wixtoolset; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade python3;
