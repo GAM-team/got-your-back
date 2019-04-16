@@ -1,0 +1,387 @@
+Delivered-To: gyb-travis-1@pdl.jaylee.us
+Received: by 2002:a17:90a:178d:0:0:0:0 with SMTP id q13csp4699881pja;
+        Tue, 16 Apr 2019 14:48:22 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqy+t6HCz0xG+euEXUuCT0qFUujpHUy1+cJXpDRvcIsH6/tNBE8cl9MbGwiFb4ssXOGFdSun
+X-Received: by 2002:a5d:6706:: with SMTP id o6mr1468705wru.36.1555451301850;
+        Tue, 16 Apr 2019 14:48:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1555451301; cv=none;
+        d=google.com; s=arc-20160816;
+        b=Qoybg20RS2Rnl6BPq5WrrrUHxobc0RtoVH0geOw4Bfr5yYDTKSoO3/POGLKfaXd7zl
+         /GdtXYUC40jxRTk8UkzncHhRfPohkUMu5Qk3+tzvPdE9cho9S3dOCkMe8CvPvu0ZuYMo
+         4/TlT2TpMGNoRwJ1/wgee/jtKIFls3pi8TyPbqDbP6XrbvDega1lafAuLPblxN47cPks
+         siekV6r3UYLe2pHpRsJOfXVWEu5cuRbkXhrIR64UVS9UGAjTqYik+ibxl1pjpM1VvdGQ
+         fAPaL34CicWO5E1AbLo4r1B9h0/eNdcIs/Ed4M7WRivzHfpF2aBiZ9e096oWfqUUndnk
+         T6+w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=date:message-id:from:in-reply-to:references:subject:to;
+        bh=PBLiX5Z1jKtE2Cr7EVTWOfJ8OVIIGmv68kRek9QjgPg=;
+        b=saQQBwinhXod6lI4wPbtDTnwFt722OvV3+JLPNgGI5YzgHOfQivu8GdZrrAoWwzsMu
+         VZWlm21301iD3r/7y5JiJvIF1IZH0huAribpjJ6ghv8qT0k57qy59S8oAfp+Eq0RP+M0
+         0RLJx6fglx5OUvnW0sbP8mWlzHnQYx1RqV/pE0dhxQhqAVD/7jehgxoZkryY9JCA1A5/
+         CwZM7GinmWKuq28eNzRcjz7gwXJKpLXKGOiKzs3L0xxR17Ft+unDVAwlb1J/wbYG+nOj
+         RHwYJwQ0S2yUqHpZ1fQUG5Z7LpUsIw/rQ/8ojI1mYWHlcvL6m5DT5reSm0Yvm4rI7Jag
+         BXNQ==
+ARC-Authentication-Results: i=1; mx.google.com;
+       spf=pass (google.com: manual fallback record for domain of debian-user-request@lists.debian.org designates 82.195.75.100 as permitted sender) smtp.mailfrom=debian-user-request@lists.debian.org
+Return-Path: <debian-user-request@lists.debian.org>
+Received: from bendel.debian.org (bendel.debian.org. [82.195.75.100])
+        by mx.google.com with ESMTPS id k128si412560wma.64.2019.04.16.14.48.21
+        for <gyb-travis-1@pdl.jaylee.us>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 16 Apr 2019 14:48:21 -0700 (PDT)
+Received-SPF: pass (google.com: manual fallback record for domain of debian-user-request@lists.debian.org designates 82.195.75.100 as permitted sender) client-ip=82.195.75.100;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: manual fallback record for domain of debian-user-request@lists.debian.org designates 82.195.75.100 as permitted sender) smtp.mailfrom=debian-user-request@lists.debian.org
+Received: by bendel.debian.org (Postfix, from userid 38)
+	id 775B8204F3; Tue, 16 Apr 2019 21:48:21 +0000 (UTC)
+To: gyb-travis-1@pdl.jaylee.us
+Subject: Re: subscribe gyb-travis-1@pdl.jaylee.us
+References: <20190416214723.D0860204C1@bendel.debian.org> <20190416214727.BD804204C1@bendel.debian.org> <CAM8C-xwzZ9=qaYFZxOeUJniKqowMCFsDduU-4YX3=rY43rQJ-A@mail.gmail.com>
+In-Reply-To: <CAM8C-xwzZ9=qaYFZxOeUJniKqowMCFsDduU-4YX3=rY43rQJ-A@mail.gmail.com>
+X-Loop: debian-user@lists.debian.org
+From: SmartList <debian-user-request@lists.debian.org>
+Message-Id: <20190416214821.775B8204F3@bendel.debian.org>
+Date: Tue, 16 Apr 2019 21:48:21 +0000 (UTC)
+X-Gm-Spam: 0
+X-Gm-Phishy: 0
+
+You have added to the subscriber list of:
+
+	debian-user@lists.debian.org
+
+the following mail address:
+
+	gyb-travis-1@pdl.jaylee.us
+
+By default, copies of your own submissions will be returned.
+
+For more information about Debian mailing lists
+(such as the code of conduct), please see
+	https://www.debian.org/MailingLists/
+
+In particular, please note that our mailing lists are public forums -- all
+mails sent to them will be archived publically, you may not post copyrighted
+texts without a license etc.
+See https://www.debian.org/MailingLists/disclaimer for more information.
+
+To unsubscribe from this list, send "unsubscribe" in the message subject to:
+	<listname>-REQUEST@lists.debian.org
+and you will be removed after your confirmation reply has been received.
+
+If the wrong address has been subscribed and you seem to be unable to fix
+it yourself, please forward this whole message to listmaster@lists.debian.org
+You can and should add any comments you see fit, but keep the full quote
+so that it is possible to diagnose the error.
+
+To post a message onto the mailing list, please send your email to
+<listname>@lists.debian.org. Please ensure that -request is not present in the
+address you are emailing or you will reach the control bot rather than the list.
+
+Please DO NOT reply to this particular e-mail. Send a new message
+addressed to listmaster@lists.debian.org instead, if you must.
+
+Transcript of the subscription request follows:
+-- 
+>From gyb-travis-1@pdl.jaylee.us  Tue Apr 16 21:48:21 2019
+>Return-Path: <gyb-travis-1@pdl.jaylee.us>
+>X-Original-To: lists-debian-user-request@bendel.debian.org
+>Delivered-To: lists-debian-user-request@bendel.debian.org
+>Received: from localhost (localhost [127.0.0.1])
+>	by bendel.debian.org (Postfix) with ESMTP id 4E81F204F6
+>	for <lists-debian-user-request@bendel.debian.org>; Tue, 16 Apr 2019 21:48:21 +0000 (UTC)
+>X-Virus-Scanned: at lists.debian.org with policy bank request
+>X-Spam-Flag: NO
+>X-Spam-Score: 3.92
+>X-Spam-Level: ***
+>X-Spam-Status: No, score=3.92 tagged_above=-10000 required=5.3
+>	tests=[BAYES_00=-2, CR_SYSTEM8=3, DIGITS_LETTERS=1, DKIM_SIGNED=0.1,
+>	DKIM_VALID=-0.1, DKIM_VALID_AU=-0.1, FVGT_m_MULTI_ODD=0.02,
+>	HTML_MESSAGE=2, RCVD_IN_DNSWL_NONE=-0.0001, SUBENDNUM=2,
+>	SUBSCONFIRM=-2] autolearn=no autolearn_force=no
+>Received: from bendel.debian.org ([127.0.0.1])
+>	by localhost (lists.debian.org [127.0.0.1]) (amavisd-new, port 2525)
+>	with ESMTP id YYIc0Xyn3a71
+>	for <lists-debian-user-request@bendel.debian.org>;
+>	Tue, 16 Apr 2019 21:48:16 +0000 (UTC)
+>X-policyd-weight:  NOT_IN_SBL_XBL_SPAMHAUS=-1.5 CL_IP_EQ_HELO_IP=-2 (check from: .jaylee. - helo: .mail-pf1-x42d.google. - helo-domain: .google.)  FROM/MX_MATCHES_HELO(DOMAIN)=-2; rate: -5.5
+>Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+>	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+>	(Client CN "smtp.gmail.com", Issuer "GTS CA 1O1" (not verified))
+>	by bendel.debian.org (Postfix) with ESMTPS id 3F004204F3
+>	for <debian-user-request@lists.debian.org>; Tue, 16 Apr 2019 21:48:16 +0000 (UTC)
+>Received: by mail-pf1-x42d.google.com with SMTP id 188so11039559pfd.8
+>        for <debian-user-request@lists.debian.org>; Tue, 16 Apr 2019 14:48:16 -0700 (PDT)
+>DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+>        d=pdl.jaylee.us; s=google;
+>        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+>        bh=xzLJiJwHYr3d3QlnSyrF6PKxQYD3LnL69ecgfqK+rvM=;
+>        b=ewH6vg4R9tXPodrIgLgJixrkY02UWqkqjyc5mWePVWeCk64PPCm8+y/4ItxYZVx3Ta
+>         ToW1+osmE/hbCAfiWSz6RBKXFPpxPr3OJ+ZMNgII4caiTfrDzSrFNesDfTBH/rWGqRba
+>         C7oDXiAGeStdAEwrZb1ze8ilxRr8fu4+moMvm56r2EFwloBWitT5nvDr5fa3gn6ZOnIT
+>         d14trwk3kdHihlBroI/ZDFx3o5LUhH/juVQO44gcfBp/QK0DA7RzOTS/s74gHFMc46FO
+>         i6M2edV9TdMmn82lQ/Hi1WnYud9vThPUlJZ+OTpdklUnuudhoBg5EZUlKFmWvcjrCKt2
+>         8Teg==
+>X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+>        d=1e100.net; s=20161025;
+>        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+>         :message-id:subject:to;
+>        bh=xzLJiJwHYr3d3QlnSyrF6PKxQYD3LnL69ecgfqK+rvM=;
+>        b=LaEuHbHQR7ASOtbaOvWNgnUtn/8I5dYqAmGBCZz1fZR5qfOwQWg1mEEKpDMEFv0pa/
+>         wC8DLUbVVzzoOy10QBilCVqkZ+KM1j9ZAvfDXeuWFBoXn8QSoat3sRr5+H/DBDXAw7wN
+>         b6x9SEQwvAD/AcGUGVKZLX05Y3KKk+FuGesudOMGy4BeZ8czyw9ELZia/hntZ+HDUrI9
+>         JzMSWd3R3LXN4XJSKlScwd5tti/2xUHdG+Hc2/v3bFxXd3DD9XP29MwjVvemkkeidXuT
+>         u63JYTBYUWauJtB7P0S76XQBvm2QOLJQOnHbeSqTBMiWKKWxY4PrcJEtNITdeYH4xDgm
+>         OtVA==
+>X-Gm-Message-State: APjAAAVfMiD4SH/c3AptICICUtfwu+xwhmAriO6oVcK8QmX47gDzqtFc
+>	fIWBxeJbJDvV/t8G69dL0k/UfYMY8WE2+2kgF0q7JtPyFLZkmdBcW3+c5SWjWFgYvnpOwY9McjP
+>	s8nYBM4AsGyY1vs624MnGs3dBcAaSCCLlpqevbYxZMbZF4MBtCxuC
+>X-Google-Smtp-Source: APXvYqyBYL2LwU3w9/NlkV+lTimNhEduPk3wYHzn2mU8lqOACzBN+rZ5o1VM/QAqV85KLAv8VuvkVR1ZNekBHp+RBOY=
+>X-Received: by 2002:a63:7444:: with SMTP id e4mr79959795pgn.261.1555451292505;
+> Tue, 16 Apr 2019 14:48:12 -0700 (PDT)
+>MIME-Version: 1.0
+>References: <20190416214723.D0860204C1@bendel.debian.org> <20190416214727.BD804204C1@bendel.debian.org>
+>From: GYB Travis <gyb-travis-1@pdl.jaylee.us>
+>Date: Tue, 16 Apr 2019 17:47:58 -0400
+>Message-ID: <CAM8C-xwzZ9=qaYFZxOeUJniKqowMCFsDduU-4YX3=rY43rQJ-A@mail.gmail.com>
+>To: SmartList <debian-user-request@lists.debian.org>
+>Content-Type: multipart/alternative; boundary="000000000000c16ee30586acb980"
+>X-Gm-Spam: 0
+>X-Gm-Phishy: 0
+>X-Rc-Virus: 2007-09-13_01
+>X-Rc-Spam: 2008-11-04_01
+>X-Diagnostic: Tried to confirm subscription
+>X-Diagnostic: subscribing gyb-travis-1@pdl.jaylee.us
+>Subject: subscribe gyb-travis-1@pdl.jaylee.us
+>
+>--000000000000c16ee30586acb980
+>Content-Type: text/plain; charset="UTF-8"
+>
+>On Tue, Apr 16, 2019 at 5:47 PM SmartList <
+>debian-user-request@lists.debian.org> wrote:
+>
+>> It has been requested that the following address:
+>>
+>>        gyb-travis-1@pdl.jaylee.us
+>>
+>> should be added to the debian-user mailing list.
+>>
+>> The address has NOT yet been subscribed to the mailing list.
+>> To subscribe you need to confirm the subscription
+>> request by sending an email to the address:
+>>
+>>         debian-user-request@lists.debian.org
+>>
+>> with the Subject string:
+>>
+>>          CONFIRM s1904162147276305
+>>
+>> With a reasonable good email program a reply to this
+>> message should be sufficient
+>>
+>> Do NOT remove or edit the CONFIRM ... text within the Subject header.
+>> If it is removed or changed, the confirmation will fail!
+>>
+>> The address listed above will be (un)subscribed as soon as your
+>> confirmation
+>> message is received.
+>>
+>> If the above address is incorrect, please don't send in the confirm message
+>> listed above. Instead, send a new (un)subscribe request with the Subject:
+>>
+>>    subscribe correct-address@correct-domain
+>>
+>>                   or
+>>
+>>    unsubscribe correct-address@correct-domain
+>>
+>> and wait for a new confirmation message.
+>>
+>> If you are unable to subscribe to our lists through this mechanism,
+>> please contact us at listmaster@lists.debian.org
+>>
+>> For more information about Debian mailing lists, please see
+>>         https://www.debian.org/MailingLists/
+>>
+>> In the event that you did not send a request to (un)subscribe,
+>> a copy of the (un)subscription request that follows below
+>> may help you discover who sent the request.
+>> --
+>>
+>> >From gyb-travis-1@pdl.jaylee.us  Tue Apr 16 21:47:27 2019
+>> >Return-Path: <gyb-travis-1@pdl.jaylee.us>
+>> >X-Original-To: lists-debian-user-request@bendel.debian.org
+>> >Delivered-To: lists-debian-user-request@bendel.debian.org
+>> >Received: from localhost (localhost [127.0.0.1])
+>> >       by bendel.debian.org (Postfix) with ESMTP id 934B2204F3
+>> >       for <lists-debian-user-request@bendel.debian.org>; Tue, 16 Apr
+>> 2019 21:47:27 +0000 (UTC)
+>> >X-Virus-Scanned: at lists.debian.org with policy bank request
+>> >X-Spam-Flag: NO
+>> >X-Spam-Score: -0.999
+>> >X-Spam-Level:
+>> >X-Spam-Status: No, score=-0.999 tagged_above=-10000 required=5.3
+>> >       tests=[ALL_TRUSTED=-1, BAYES_00=-2, OUR_MTA_MSGID=2,
+>> >       RCVD_FROM_UNCONF_HOST=2, TVD_SPACE_RATIO=0.001, WEBSUBS=-2]
+>> >       autolearn=no autolearn_force=no
+>> >Received: from bendel.debian.org ([127.0.0.1])
+>> >       by localhost (lists.debian.org [127.0.0.1]) (amavisd-new, port
+>> 2525)
+>> >       with ESMTP id PIxzsAVXzD6N
+>> >       for <lists-debian-user-request@bendel.debian.org>;
+>> >       Tue, 16 Apr 2019 21:47:23 +0000 (UTC)
+>> >Received: from localhost.localdomain (localhost [IPv6:::1])
+>> >       by bendel.debian.org (Postfix) with ESMTP id D0860204C1
+>> >       for <debian-user-REQUEST@lists.debian.org>; Tue, 16 Apr 2019
+>> 21:47:23 +0000 (UTC)
+>> >From: gyb-travis-1@pdl.jaylee.us
+>> >To: debian-user-REQUEST@lists.debian.org
+>> >Errors-To: listmaster@lists.debian.org
+>> >Sender: gyb-travis-1@pdl.jaylee.us
+>> >Reply-To: gyb-travis-1@pdl.jaylee.us
+>> >Subject: subscribe gyb-travis-1@pdl.jaylee.us
+>> >X-Remote-IP: 2600:1017:b417:a0b8:21ae:8d47:ae6d:5dcb
+>> >Message-Id: <20190416214723.D0860204C1@bendel.debian.org>
+>> >Date: Tue, 16 Apr 2019 21:47:23 +0000 (UTC)
+>> >X-Rc-Virus: 2007-09-13_01
+>> >X-Rc-Spam: 2008-11-04_01
+>> >
+>> >subscribe gyb-travis-1@pdl.jaylee.us
+>> >
+>>
+>
+>--000000000000c16ee30586acb980
+>Content-Type: text/html; charset="UTF-8"
+>Content-Transfer-Encoding: quoted-printable
+>
+><div dir=3D"ltr"><br></div><br><div class=3D"gmail_quote"><div dir=3D"ltr" =
+>class=3D"gmail_attr">On Tue, Apr 16, 2019 at 5:47 PM SmartList &lt;<a href=
+>=3D"mailto:debian-user-request@lists.debian.org">debian-user-request@lists.=
+>debian.org</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" style=
+>=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding=
+>-left:1ex">It has been requested that the following address:<br>
+><br>
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0<a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" ta=
+>rget=3D"_blank">gyb-travis-1@pdl.jaylee.us</a><br>
+><br>
+>should be added to the debian-user mailing list.<br>
+><br>
+>The address has NOT yet been subscribed to the mailing list.<br>
+>To subscribe you need to confirm the subscription<br>
+>request by sending an email to the address:<br>
+><br>
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 <a href=3D"mailto:debian-user-request@lists.deb=
+>ian.org" target=3D"_blank">debian-user-request@lists.debian.org</a><br>
+><br>
+>with the Subject string:<br>
+><br>
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0CONFIRM s1904162147276305<br>
+><br>
+>With a reasonable good email program a reply to this<br>
+>message should be sufficient<br>
+><br>
+>Do NOT remove or edit the CONFIRM ... text within the Subject header.<br>
+>If it is removed or changed, the confirmation will fail!<br>
+><br>
+>The address listed above will be (un)subscribed as soon as your confirmatio=
+>n<br>
+>message is received.<br>
+><br>
+>If the above address is incorrect, please don&#39;t send in the confirm mes=
+>sage<br>
+>listed above. Instead, send a new (un)subscribe request with the Subject:<b=
+>r>
+><br>
+>=C2=A0 =C2=A0subscribe correct-address@correct-domain <br>
+><br>
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 or<br>
+><br>
+>=C2=A0 =C2=A0unsubscribe correct-address@correct-domain<br>
+><br>
+>and wait for a new confirmation message.<br>
+><br>
+>If you are unable to subscribe to our lists through this mechanism,<br>
+>please contact us at <a href=3D"mailto:listmaster@lists.debian.org" target=
+>=3D"_blank">listmaster@lists.debian.org</a><br>
+><br>
+>For more information about Debian mailing lists, please see<br>
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 <a href=3D"https://www.debian.org/MailingLists/=
+>" rel=3D"noreferrer" target=3D"_blank">https://www.debian.org/MailingLists/=
+></a><br>
+><br>
+>In the event that you did not send a request to (un)subscribe,<br>
+>a copy of the (un)subscription request that follows below<br>
+>may help you discover who sent the request.<br>
+>-- <br>
+><br>
+>&gt;From <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=3D"_blank">gy=
+>b-travis-1@pdl.jaylee.us</a>=C2=A0 Tue Apr 16 21:47:27 2019<br>
+>&gt;Return-Path: &lt;<a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=
+>=3D"_blank">gyb-travis-1@pdl.jaylee.us</a>&gt;<br>
+>&gt;X-Original-To: <a href=3D"mailto:lists-debian-user-request@bendel.debia=
+>n.org" target=3D"_blank">lists-debian-user-request@bendel.debian.org</a><br=
+>>
+>&gt;Delivered-To: <a href=3D"mailto:lists-debian-user-request@bendel.debian=
+>.org" target=3D"_blank">lists-debian-user-request@bendel.debian.org</a><br>
+>&gt;Received: from localhost (localhost [127.0.0.1])<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0by <a href=3D"http://bendel.debian.org" rel=
+>=3D"noreferrer" target=3D"_blank">bendel.debian.org</a> (Postfix) with ESMT=
+>P id 934B2204F3<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0for &lt;<a href=3D"mailto:lists-debian-user-=
+>request@bendel.debian.org" target=3D"_blank">lists-debian-user-request@bend=
+>el.debian.org</a>&gt;; Tue, 16 Apr 2019 21:47:27 +0000 (UTC)<br>
+>&gt;X-Virus-Scanned: at <a href=3D"http://lists.debian.org" rel=3D"noreferr=
+>er" target=3D"_blank">lists.debian.org</a> with policy bank request<br>
+>&gt;X-Spam-Flag: NO<br>
+>&gt;X-Spam-Score: -0.999<br>
+>&gt;X-Spam-Level:<br>
+>&gt;X-Spam-Status: No, score=3D-0.999 tagged_above=3D-10000 required=3D5.3<=
+>br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0tests=3D[ALL_TRUSTED=3D-1, BAYES_00=3D-2, OU=
+>R_MTA_MSGID=3D2,<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0RCVD_FROM_UNCONF_HOST=3D2, TVD_SPACE_RATIO=
+>=3D0.001, WEBSUBS=3D-2]<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0autolearn=3Dno autolearn_force=3Dno<br>
+>&gt;Received: from <a href=3D"http://bendel.debian.org" rel=3D"noreferrer" =
+>target=3D"_blank">bendel.debian.org</a> ([127.0.0.1])<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0by localhost (<a href=3D"http://lists.debian=
+>.org" rel=3D"noreferrer" target=3D"_blank">lists.debian.org</a> [127.0.0.1]=
+>) (amavisd-new, port 2525)<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0with ESMTP id PIxzsAVXzD6N<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0for &lt;<a href=3D"mailto:lists-debian-user-=
+>request@bendel.debian.org" target=3D"_blank">lists-debian-user-request@bend=
+>el.debian.org</a>&gt;;<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0Tue, 16 Apr 2019 21:47:23 +0000 (UTC)<br>
+>&gt;Received: from localhost.localdomain (localhost [IPv6:::1])<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0by <a href=3D"http://bendel.debian.org" rel=
+>=3D"noreferrer" target=3D"_blank">bendel.debian.org</a> (Postfix) with ESMT=
+>P id D0860204C1<br>
+>&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0for &lt;<a href=3D"mailto:debian-user-REQUES=
+>T@lists.debian.org" target=3D"_blank">debian-user-REQUEST@lists.debian.org<=
+>/a>&gt;; Tue, 16 Apr 2019 21:47:23 +0000 (UTC)<br>
+>&gt;From: <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=3D"_blank">g=
+>yb-travis-1@pdl.jaylee.us</a><br>
+>&gt;To: <a href=3D"mailto:debian-user-REQUEST@lists.debian.org" target=3D"_=
+>blank">debian-user-REQUEST@lists.debian.org</a><br>
+>&gt;Errors-To: <a href=3D"mailto:listmaster@lists.debian.org" target=3D"_bl=
+>ank">listmaster@lists.debian.org</a><br>
+>&gt;Sender: <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=3D"_blank"=
+>>gyb-travis-1@pdl.jaylee.us</a><br>
+>&gt;Reply-To: <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=3D"_blan=
+>k">gyb-travis-1@pdl.jaylee.us</a><br>
+>&gt;Subject: subscribe <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=
+>=3D"_blank">gyb-travis-1@pdl.jaylee.us</a><br>
+>&gt;X-Remote-IP: 2600:1017:b417:a0b8:21ae:8d47:ae6d:5dcb<br>
+>&gt;Message-Id: &lt;<a href=3D"mailto:20190416214723.D0860204C1@bendel.debi=
+>an.org" target=3D"_blank">20190416214723.D0860204C1@bendel.debian.org</a>&g=
+>t;<br>
+>&gt;Date: Tue, 16 Apr 2019 21:47:23 +0000 (UTC)<br>
+>&gt;X-Rc-Virus: 2007-09-13_01<br>
+>&gt;X-Rc-Spam: 2008-11-04_01<br>
+>&gt;<br>
+>&gt;subscribe <a href=3D"mailto:gyb-travis-1@pdl.jaylee.us" target=3D"_blan=
+>k">gyb-travis-1@pdl.jaylee.us</a><br>
+>&gt;<br>
+></blockquote></div>
+>
+>--000000000000c16ee30586acb980--
+>

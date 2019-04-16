@@ -1,0 +1,81 @@
+Delivered-To: gyb-travis-1@pdl.jaylee.us
+Received: by 2002:a17:90a:178d:0:0:0:0 with SMTP id q13csp4693389pja;
+        Tue, 16 Apr 2019 14:40:08 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqyyzqD2OBnqJ92FXNSNmSqjXuMWaKcOJkNAwvD410/gsReAo/tIHDw4R9rknkMxhxvH+mVQ
+X-Received: by 2002:ac8:4295:: with SMTP id o21mr56625583qtl.101.1555450808223;
+        Tue, 16 Apr 2019 14:40:08 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1555450808; cv=none;
+        d=google.com; s=arc-20160816;
+        b=hGQYB2icBeUPEO+/fGWHmt8ep7QKFV2gQ27yYOPwrJeZ0JACVZuhF+V5BNj5EY1Sh1
+         TIWyvCCeUw2neD/qM/J1l86FE6dTep3/s19A4t4fhEUiNa1DQdUC24UnhXB2rQ6RF3RH
+         LilaxBWN2ocOtvglLPwupb/rLmf5zrLJi6UOMcUnfSGCHwTOz2gvQeInwZYENoQiSqfS
+         HOXIQKuLUhqxmY78jOQ7oKmcWEt4AEaSo10IM8zaX0ynNFuZjQDyqnLnGJDMG2xw6gJ6
+         WxHs2RKoSdSl6A4GXkAHqqNcS3kzJeGd6ozT7xPCy6++ZSOiOEvOsOntbfoHoViASJGT
+         7SUw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
+        h=sender:errors-to:list-id:precedence:date:message-id:auto-submitted
+         :reply-to:subject:to:from:content-transfer-encoding:mime-version;
+        bh=scrWoXZu7G5/Lc0bo+IcQdGHhZ34DQpslqGC/VM237I=;
+        b=Vz/Nnxqt02pKpFrCCVIGz0/qmCf+de1AZrTWUAO5EBDffLfiDBBoVWD4eZNedZFe2R
+         5+H6Y512hLhLDzAZRUXb2xuQBokRlwP7pATn4jRYSBL/uiPvoZjSlLWebtBBoC0gJ4YX
+         9HFjH842EONKlbsb4jvPPcY1ytmth+PJ1ctcl/GHc6oxX+OzHs0Lqe/7kFFLgv+IBYs8
+         86lO6lrJ+JTbEI1sPHcz+OUEMXli3LlBMW3izRdMeEoHIwl0ahUeuml6SAdOOCLxlSR4
+         467ekOyFgAhq0JnU4AW+0oggmyOdOgq1dpSk/uRiTszh8UiXpqHU+RBkxer0MXdl/DaZ
+         9PsA==
+ARC-Authentication-Results: i=1; mx.google.com;
+       spf=neutral (google.com: 91.189.94.19 is neither permitted nor denied by best guess record for domain of ubuntu-users-bounces@lists.ubuntu.com) smtp.mailfrom=ubuntu-users-bounces@lists.ubuntu.com
+Return-Path: <ubuntu-users-bounces@lists.ubuntu.com>
+Received: from huckleberry.canonical.com (huckleberry.canonical.com. [91.189.94.19])
+        by mx.google.com with ESMTPS id f22si1540813qkg.223.2019.04.16.14.40.07
+        for <gyb-travis-1@pdl.jaylee.us>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 16 Apr 2019 14:40:08 -0700 (PDT)
+Received-SPF: neutral (google.com: 91.189.94.19 is neither permitted nor denied by best guess record for domain of ubuntu-users-bounces@lists.ubuntu.com) client-ip=91.189.94.19;
+Authentication-Results: mx.google.com;
+       spf=neutral (google.com: 91.189.94.19 is neither permitted nor denied by best guess record for domain of ubuntu-users-bounces@lists.ubuntu.com) smtp.mailfrom=ubuntu-users-bounces@lists.ubuntu.com
+Received: from localhost ([127.0.0.1] helo=huckleberry.canonical.com)
+	by huckleberry.canonical.com with esmtp (Exim 4.86_2)
+	(envelope-from <ubuntu-users-bounces@lists.ubuntu.com>)
+	id 1hGVoF-0006M2-3q
+	for gyb-travis-1@pdl.jaylee.us; Tue, 16 Apr 2019 21:40:07 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+From: ubuntu-users-request@lists.ubuntu.com
+To: gyb-travis-1@pdl.jaylee.us
+Subject: confirm 9d191d43e136c088b494e074b428dd538be06326
+Reply-To: ubuntu-users-request@lists.ubuntu.com
+Auto-Submitted: auto-generated
+Message-ID: <mailman.0.1555450806.24429.ubuntu-users@lists.ubuntu.com>
+Date: Tue, 16 Apr 2019 21:40:06 +0000
+Precedence: bulk
+X-BeenThere: ubuntu-users@lists.ubuntu.com
+X-Mailman-Version: 2.1.20
+List-Id: "Ubuntu user technical support,
+ not for general discussions" <ubuntu-users.lists.ubuntu.com>
+X-List-Administrivia: yes
+Errors-To: ubuntu-users-bounces@lists.ubuntu.com
+Sender: "ubuntu-users" <ubuntu-users-bounces@lists.ubuntu.com>
+X-Gm-Spam: 0
+X-Gm-Phishy: 0
+
+TWFpbGluZyBsaXN0IHN1YnNjcmlwdGlvbiBjb25maXJtYXRpb24gbm90aWNlIGZvciBtYWlsaW5n
+IGxpc3QKdWJ1bnR1LXVzZXJzCgpXZSBoYXZlIHJlY2VpdmVkIGEgcmVxdWVzdCBmcm9tIDE3NC4y
+MDIuMTEuMTA0IGZvciBzdWJzY3JpcHRpb24gb2YKeW91ciBlbWFpbCBhZGRyZXNzLCAiZ3liLXRy
+YXZpcy0xQHBkbC5qYXlsZWUudXMiLCB0byB0aGUKdWJ1bnR1LXVzZXJzQGxpc3RzLnVidW50dS5j
+b20gbWFpbGluZyBsaXN0LiAgVG8gY29uZmlybSB0aGF0IHlvdSB3YW50CnRvIGJlIGFkZGVkIHRv
+IHRoaXMgbWFpbGluZyBsaXN0LCBzaW1wbHkgcmVwbHkgdG8gdGhpcyBtZXNzYWdlLAprZWVwaW5n
+IHRoZSBTdWJqZWN0OiBoZWFkZXIgaW50YWN0LiAgT3IgdmlzaXQgdGhpcyB3ZWIgcGFnZToKCiAg
+ICBodHRwczovL2xpc3RzLnVidW50dS5jb20vbWFpbG1hbi9jb25maXJtL3VidW50dS11c2Vycy85
+ZDE5MWQ0M2UxMzZjMDg4YjQ5NGUwNzRiNDI4ZGQ1MzhiZTA2MzI2CgoKT3IgaW5jbHVkZSB0aGUg
+Zm9sbG93aW5nIGxpbmUgLS0gYW5kIG9ubHkgdGhlIGZvbGxvd2luZyBsaW5lIC0tIGluIGEKbWVz
+c2FnZSB0byB1YnVudHUtdXNlcnMtcmVxdWVzdEBsaXN0cy51YnVudHUuY29tOgoKICAgIGNvbmZp
+cm0gOWQxOTFkNDNlMTM2YzA4OGI0OTRlMDc0YjQyOGRkNTM4YmUwNjMyNgoKTm90ZSB0aGF0IHNp
+bXBseSBzZW5kaW5nIGEgYHJlcGx5JyB0byB0aGlzIG1lc3NhZ2Ugc2hvdWxkIHdvcmsgZnJvbQpt
+b3N0IG1haWwgcmVhZGVycywgc2luY2UgdGhhdCB1c3VhbGx5IGxlYXZlcyB0aGUgU3ViamVjdDog
+bGluZSBpbiB0aGUKcmlnaHQgZm9ybSAoYWRkaXRpb25hbCAiUmU6IiB0ZXh0IGluIHRoZSBTdWJq
+ZWN0OiBpcyBva2F5KS4KCklmIHlvdSBkbyBub3Qgd2lzaCB0byBiZSBzdWJzY3JpYmVkIHRvIHRo
+aXMgbGlzdCwgcGxlYXNlIHNpbXBseQpkaXNyZWdhcmQgdGhpcyBtZXNzYWdlLiAgSWYgeW91IHRo
+aW5rIHlvdSBhcmUgYmVpbmcgbWFsaWNpb3VzbHkKc3Vic2NyaWJlZCB0byB0aGUgbGlzdCwgb3Ig
+aGF2ZSBhbnkgb3RoZXIgcXVlc3Rpb25zLCBzZW5kIHRoZW0gdG8KdWJ1bnR1LXVzZXJzLW93bmVy
+QGxpc3RzLnVidW50dS5jb20uCg==

@@ -48,9 +48,13 @@ script:
 - cp -rf gyb/* gyb-test/
 - mv $gyb_user_file gyb-test
 - gyb-test/gyb --version
+  gyb-test/gyb --action purge --email $gyb_user
+  gyb-test/gyb --action purge-labels --email $gyb_user
+  gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
 - gyb-test/gyb --action count --email $gyb_user
 - gyb-test/gyb --action quota --email $gyb_user
 - gyb-test/gyb --action estimate --email $gyb_user
+  gyb-test/gyb --action backup --email $gyb_user
 - rm -rf gyb-test
 before_deploy:
 - export TRAVIS_TAG="preview"
