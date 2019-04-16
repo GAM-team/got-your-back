@@ -53,9 +53,10 @@ install:
 
 script:
 - gyb/gyb --version
-  gyb/gyb --action count --email gyb-travis@pdl.jaylee.us
-  gyb/gyb --action quota --email gyb-travis@pdl.jaylee.us
-  gyb/gyb --action estimate --email gyb-travis@pdl.jaylee.us
+- gyb/gyb --action count --email gyb-travis@pdl.jaylee.us
+- gyb/gyb --action quota --email gyb-travis@pdl.jaylee.us
+- gyb/gyb --action estimate --email gyb-travis@pdl.jaylee.us
+
 before_deploy:
 - export TRAVIS_TAG="preview"
 
