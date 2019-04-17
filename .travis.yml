@@ -13,7 +13,7 @@ matrix:
     osx_image: xcode10.1
   - os: windows
     language: shell
-    env
+    env:
     - WIX_ARCH=x64
   - os: windows
     language: shell
