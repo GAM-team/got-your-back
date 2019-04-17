@@ -1,17 +1,22 @@
 if: tag IS blank
-env:
-- ARCH=x86_64 WIX_ARCH=x64
+
 matrix:
   include:
   - os: linux
     dist: xenial
     language: python
     python: 3.7.3
+    env: ARCH=x86_64
   - os: osx
     language: generic
     osx_image: xcode10.1
+    env: ARCH=x86_64
   - os: windows
     language: shell
+    env:
+      - ARCH=x86_64
+      - CINST_ARGS=""
+      - WIX_ARCH=x64
   - os: windows
     language: shell
     env:
