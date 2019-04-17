@@ -6,23 +6,25 @@ matrix:
     dist: xenial
     language: python
     python: 3.7.3
-    env: ARCH=x86_64
+    env:
+      ARCH=x86_64
   - os: osx
     language: generic
     osx_image: xcode10.1
-    env: ARCH=x86_64
+    env:
+      ARCH=x86_64
   - os: windows
     language: shell
     env:
-      - ARCH=x86_64
-      - CINST_ARGS=""
-      - WIX_ARCH=x64
+      ARCH=x86_64
+      CINST_ARGS=""
+      WIX_ARCH=x64
   - os: windows
     language: shell
     env:
-    - CINST_ARGS=--forcex86
-    - ARCH=x86
-    - WIX_ARCH=x86
+      CINST_ARGS=--forcex86
+      ARCH=x86
+      WIX_ARCH=x86
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
