@@ -27,9 +27,8 @@ matrix:
       WIX_ARCH=x86
 
 before_install:
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv -in travis/cfgs.tar.enc -out cfgs.tar -d
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
-- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
-  -in travis/cfgs.tar.enc -out cfgs.tar -d
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - export gyb_user_file="$gyb_user.cfg"
@@ -68,8 +67,10 @@ script:
 - gyb-test/gyb --action estimate --email $gyb_user
 - gyb-test/gyb --action backup --email $gyb_user
 - rm -rf gyb-test
+
 before_deploy:
 - export TRAVIS_TAG="preview"
+
 deploy:
   provider: releases
   draft: true
