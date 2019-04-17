@@ -51,7 +51,6 @@ install:
 script:
 - mkdir gyb-test
 - cp -rf gyb/* gyb-test/
-- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv -in travis/cfgs.tar.enc -out cfgs.tar -d
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - export gyb_user_file="$gyb_user.cfg"
