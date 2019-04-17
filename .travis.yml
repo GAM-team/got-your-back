@@ -4,6 +4,7 @@ env:
 matrix:
   include:
   - os: linux
+    dist: xenial
     language: python
     python: 3.7.3
   - os: osx
@@ -19,6 +20,7 @@ matrix:
     - WIX_ARCH=x86
 
 before_install:
+- source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 - openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv
   -in travis/cfgs.tar.enc -out cfgs.tar -d
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
@@ -26,7 +28,6 @@ before_install:
 - export gyb_user_file="$gyb_user.cfg"
 - echo "This job will use $gyb_user"
 - tar xvvf cfgs.tar $gyb_user_file
-- source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 - pip install pyinstaller
 
 install:
