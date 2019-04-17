@@ -1,4 +1,7 @@
 if: tag IS blank
+env:
+ - ARCH=x86_64
+
 matrix:
   include:
   - os: linux
@@ -10,9 +13,8 @@ matrix:
     osx_image: xcode10.1
   - os: windows
     language: shell
-    env:
-    - ARCH=x86_64
-    - WIXARCH=x86_64
+    env
+    - WIX_ARCH=x64
   - os: windows
     language: shell
     env:
@@ -21,6 +23,7 @@ matrix:
     - WIX_ARCH=x86
 
 before_install:
+- openssl aes-256-cbc -K $encrypted_87a6e6daad88_key -iv $encrypted_87a6e6daad88_iv -in travis/cfgs.tar.enc -out cfgs.tar -d
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
