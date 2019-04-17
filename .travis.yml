@@ -53,7 +53,7 @@ script:
 - cp -rf gyb/* gyb-test/
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
-- export gyb_user_file="~/gyb-test/$gyb_user.cfg"
+- export gyb_user_file="gyb-test/$gyb_user.cfg"
 - cat travis/cfg_template.json | python travis/svars-write.py &> /dev/null
 - echo "This job will use $gyb_user"
 - gyb-test/gyb --version
