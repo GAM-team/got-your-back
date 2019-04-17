@@ -1,5 +1,6 @@
 if: tag IS blank
 env:
+ - WIX_ARCH=x64
  - ARCH=x86_64
 
 matrix:
@@ -13,8 +14,6 @@ matrix:
     osx_image: xcode10.1
   - os: windows
     language: shell
-    env:
-    - WIX_ARCH=x64
   - os: windows
     language: shell
     env:
