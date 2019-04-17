@@ -4,7 +4,6 @@ env:
 matrix:
   include:
   - os: linux
-    dist: xenial
     language: python
     python: 3.7.3
   - os: osx
