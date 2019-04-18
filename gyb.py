@@ -663,7 +663,9 @@ def getCRMService(login_hint):
   credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
   http = credentials.authorize(httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation,
                  cache=None))
-  return (googleapiclient.discovery.build('cloudresourcemanager', u'v1', http=http, cache_discovery=False), http)
+  return (googleapiclient.discovery.build('cloudresourcemanager', u'v1',
+      http=http, cache_discovery=False,
+      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI), http)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(httpObj, project_name, checkEnabled):
@@ -676,7 +678,9 @@ def enableProjectAPIs(httpObj, project_name, checkEnabled):
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
-  serveman = googleapiclient.discovery.build('servicemanagement', 'v1', http=httpObj, cache_discovery=False)
+  serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
+          http=httpObj, cache_discovery=False,
+          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   if checkEnabled:
     enabledServices = callGAPIpages(serveman.services(), 'list', 'services',
                                     consumerId=project_name, fields='nextPageToken,services(serviceName)')
@@ -926,7 +930,9 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
   if os.path.isfile(getProgPath()+'noverifyssl.txt'):
     disable_ssl_certificate_validation = True
   enableProjectAPIs(httpObj, project_name, False)
-  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpObj, cache_discovery=False)
+  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpObj,
+          cache_discovery=False,
+          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
   service_account = callGAPI(iam.projects().serviceAccounts(), u'create',
                              name=u'projects/%s' % project_id,
@@ -1943,6 +1949,7 @@ def main(argv):
   # PURGE-LABELS #
   elif options.action == 'purge-labels':
     pattern = options.gmail_search
+    safe_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     if pattern == '-is:chat':
       pattern = '.*'
     pattern = re.compile(pattern)
@@ -1952,7 +1959,11 @@ def main(argv):
       if label_result['type'] == 'system' or not \
         pattern.search(label_result['name']):
         continue
-      rewrite_line('Deleting label %s' % label_result['name'])
+      try:
+        rewrite_line('Deleting label %s' % label_result['name'])
+      except UnicodeEncodeError:
+        printable_name = ''.join(c for c in label_result['name'] if c in safe_chars)
+        rewrite_line('Deleting label %s' % printable_name)
       callGAPI(service=gmail.users().labels(), function='delete',
         userId='me', id=label_result['id'], soft_errors=True)
     print('\n')
