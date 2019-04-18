@@ -1409,8 +1409,8 @@ def main(argv):
   if not os.path.isdir(options.local_folder):
     if options.action in ['backup',]:
       os.mkdir(options.local_folder)
-    elif options.action in ['restore', 'restore-group']:
-      print('Error: Folder %s does not exist. Cannot restore.'
+    elif options.action in ['restore', 'restore-group', 'restore-mbox']:
+      print('ERROR: Folder %s does not exist. Cannot restore.'
         % options.local_folder)
       sys.exit(3)
 
