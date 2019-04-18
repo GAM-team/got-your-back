@@ -63,6 +63,7 @@ script:
 - cp -rf gyb/* gyb-test/
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
+- export gyb_group="gyb-travis-group-$jid@pdl.jaylee.us"
 - export gyb_user_file="gyb-test/$gyb_user.cfg"
 - cat travis/cfg_template.json | python travis/svars-write.py &> /dev/null
 - echo "This job will use $gyb_user"
@@ -70,6 +71,10 @@ script:
 - gyb-test/gyb --action purge --email $gyb_user
 - gyb-test/gyb --action purge-labels --email $gyb_user
 - gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
+- gyb-test/gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
+- gyb-test/gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --fast-restore
+  gyb-test/gyb --action restore-mbox --local-folder travis/sample/google-takeout --email $gyb_user
+- gyb-test/gyb --action restore-mbox --local-folder travis/sample/vault-export-mbox --email $gyb_user
 - gyb-test/gyb --action count --email $gyb_user
 - gyb-test/gyb --action quota --email $gyb_user
 - gyb-test/gyb --action estimate --email $gyb_user

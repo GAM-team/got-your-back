@@ -1,0 +1,915 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<Root DataInterchangeType='Update' Description='Test'>
+	<Batch name='New batch'>
+		<Documents>
+			<Document DocID='ACD7onrGd+i1Z5eglzCWf4NPmUUrVImg9t2BDhRhESYBtU5m4XGqyVt2drH2d10RXG0cpk9FgkxSkC3VHAcITt18XhZ31PqRnUdpKMa/KdiHvBZxud3m4e+wLSRS0QIad6ee5O006N53JQuCMbDCTfNmTyn/TWgTZ6rDCmF1hdzcPOxpREJJ/5+clvFk0prQ9i6xuTd24F0bP3wWPZBpJhBXaHbgECc2VVCKUPXPrt32DaFzF6yiaeiRynA7onXeibgYeVIFBFqXsfXqHgHoUmBbAE3C6xl2hA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='peter@bsqt.homeip.net Peter Silva'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T17:00:19.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T17:00:40.389-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630926631156851975-69497506-4572-48b2-8318-0e9943d18493.mbox' FileSize='11209' Hash='9c8e48e178ebfbc6390d8ec9a8a05458'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrvEf0TxtPuQgtm0xSh+/QnKxJdDjzGNpnz9OycvSO88D1/cULLkWLcH72vEBZH5DytR5XetNSdEA6+XU04ZlFFLS1eUXY9Mkrjd+lX90kzrZdl6Di01vpyN+il7kJXf8mi+YsQDwq+ZV+KIG2FBoiGoZPGLMK2xATkEo/6jowA5/1WPReuPHEJ/RXeZS+rF0nEG3BR/bpiChN3S8AE1dF2/dTYNbKMW3R7B8nokPhRSH94lRSMIjs7Zi8ON3ve2iBK6Dsge20tat2zGtf+kSbtHT+0Iw=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mjonsson1986@gmail.com'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='the ubuntu-audio dev ppa'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T22:26:35.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T22:26:51.011-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630947152485254228-1efcb9dd-c13e-4faa-94e6-8d847ca95904.mbox' FileSize='9048' Hash='af6817308795dac5b8ca4f4d13d374bc'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7ono6HXYmmvDqvSEbHIl+y8ulUqy7AuCUzXvAxip+aygp+/axa6huyJEVHzVTr5oMl6WOeZ16g6+B+hGXOQmCeH4N5k3WK0KOXhKF2+kUjwGkp5aONDF2aFQFUjFSCrg60lL44TQhpf6KsyP7WNR2xEtynuUkql7hEA70Hpgb5Sbkn+6Y//p37GqkUJ0XVYjVbXs2PkiRMADBPvYqQ9z8htD3MW3l1+cDi3Q95GBBM7xtenU6A+ZCr37r4q/m0KjRzN6PXZszPXCf1k033uqi4CqS3WamIQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T16:31:37.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T16:31:59.500-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630924826935999439-9a3f84e4-829c-487e-a318-95f5993cbded.mbox' FileSize='7589' Hash='7b158b29c299d50e879ddd612b7f298b'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrUPirfGjFpWUMFlxWIdzV6a+KYLgjW1xIGhi2Bqxt0BQsiyP/vgKLGB4cCRdrlup5RhBw+h38gc9I5esDFC5RtT1UGAijr9vb/JcUEtJ1wy+b/+IpEX0nZkjopJ8BXBdbIw7kqscZEQue+xpNM2Gr73h9E8cVO7I2HxwrTmTX4W2lXi/Zf5p8gKihLUFfbAaSIbegjsKcEfNMVYxu/2zhc4pW1/JYhIXspaI4dlckq5AoqMKrcQjpgLj10yicgzgUhjoGx2phE6H70uY3wf+E+Ui2DDg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='jrnorris@gmail.com Jared Norris'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T22:07:55.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T22:08:39.788-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631036605692121267-d6c6977b-c69a-4451-9f2c-48454c4ddb5b.mbox' FileSize='9996' Hash='f1140775bf68f6da988d7f211792e3a9'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqh60KZ/E1njqkLmTi4Jl4AHGI6lk5M8ryYN/RRY9IbIgTRuuVsNChUNdqlV3epUeJAdMZ8ultVtfmSlMEJ6VkXgGm+4X8pr3IVDKedhfG+XyLDobRd7p7hAV/uWT+HbN2IC7bUC87x/u+E9rEx9nI3jBSeo8p0PPETfPw/Ikha8w7MUAUM91p5Uk/r/58zxMqIrGwOX8eQEV+kcy1lgVi+dbjwxAKg6+kMabcx/NFd4r7/VbtmEtmBEksZT1G74pcTFb3EThxyVIQs0o+LWHs+9xVFQg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ralf Mardorf via ubuntu-users'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='silver.bullet@zoho.com Ralf Mardorf'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: the ubuntu-audio dev ppa'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T23:25:09.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T23:25:25.043-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630950837924569957-039a3394-88fe-497f-93f8-3bcd4a696e65.mbox' FileSize='7991' Hash='4423195552aa6729a01e0a02a1ef6faa'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoGviQy82u7swf/FmXs1zLtlM8w2IB8+uCIyrfONMfXWHhMLLGeEptXhHUfZD3u5bVOtxTZFQ4SoUraBp7dvnkmmGOfFLSZETfarmXuizZKJWdftuIGbEeovog9Vyki+9SvR5C81AX4OFqP7AifWSBoej9V2YawJ1suZBcIaFH4lmsqmRLyLRJyP2o7BNaS9NXCXbAEAsro35n8kaL4zVV4Qye4AgUd33M0MiKtTTaRYn2p0j97++VLePtjL1QOCDa0kmwpV98H0I8/1G4liTv/cSRF2g=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='feoh@feoh.org Christopher Patti'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='clanlaw@gmail.com Colin Law,ubuntu-users@lists.ubuntu.com Grizzly via ubuntu-users'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T09:30:46.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T09:31:07.941-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631079543060092487-337ca282-bdc9-419b-a0d8-015f66244f6d.mbox' FileSize='10332' Hash='172f7605381cd0fdd1d530f8adb15063'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoDiAdSfdlxCfdFFgZDlqKOCAkWVO+vHjFpKM4hq11Y4N5qGITllZhnqlv4AC2tE2dwekhFU8vBgDnokXHfJtv9NY84bhMTYjar/nkHUbDCPIFr9bEp72th/GByNZrar7f5dojt0NfHK86H57OJoLTJR5zRmRgNmiK7ouKl5AQnoc6Ve2Tofq8bu7xaGiZL6XluFLdaZXLqfO8GniVyukPFoWmaM6j4/F/FO5mWW3LoJHHBDH2F8dQKNA5PzckbjrNMKk5jwVodKMtXPppyEg+KhYFLHA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='wadesmart@gmail.com Wade Smart'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T16:53:23.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T16:53:44.897-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630926195892480627-ca1b1385-656a-44bb-8eb8-29a064931910.mbox' FileSize='9035' Hash='83fe6c17af2320ab6d53c8eaba3e526b'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onomvNjvkjWl9WRAm263UD8yrpjIso24EcMASe0sEsrnuj75IoAWXYHBufOkZS/Qgpe5nwq+6EyHlZ2xDF53mvtr2uVyBCL36jiY1SLozP6vdZ02d1mpD5VTWVZKK+ApN027Vv5IW4Nmml2dAna/h54c+hobXAY+ol7aX/M7NeTv3e/x/lhMc+SgoyD/dawy7suyo6iJB8ZHvDaV4iApDYiRKd+5pqqyaFsmq0/z3HjpdU4v4mKfrYep0hTyMZ8/7AmHdEXGB/8UF2NJM7ieYpdLsFK5ag=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ralf Mardorf via ubuntu-users'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='silver.bullet@zoho.com Ralf Mardorf'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-18T02:29:29.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-18T02:29:44.938-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631143628691860060-d2eaeeed-d68a-4e8c-b3b4-16f398e30e1e.mbox' FileSize='7155' Hash='0dab1120e5ddaea8fd44cd2da8a863a3'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrfFEz/SzoTmWVSILLm7s5ENz8r61g4PayvFf1n7s88tpousH8yoqGjNAdowJy0ityOvWYmRQ5kF8mbjw9sduBHmJu1pjFf/AXbp1DJ9MAOAMZsgbVx5aQGvXrNdPxie1p5FVMenngYWqxlBzssvjMI3l7YTekr2tUSzuvvWfd6WTjriAMVHJ6knLn1IoK1AvQGZeJS8wLdXpdHTbPkdgvlEnWMEExGOnz3DZj5HsSbeDdFQMZ9ZEIqOteNgs+pUVQSZktAAu7q1O2oMzlDoN8R9TXC9g=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='joe@jretrading.com Joe'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='ke1th3216@gmail.com'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T00:12:10.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T00:12:30.814-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631044397508170541-03c961c7-71b2-4740-ad30-f6b4e408a843.mbox' FileSize='8306' Hash='80a7702ae4f1808a67f35cbeb12ecd34'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onq+wGuGG1SUzUu62Gq+uy1TGeVNHI2tWTB6GGXMVThgGwc4uCm0gscZszpGRbl7WzTBxEamCkJMRPGdw7VpyDx1oJFqlOc2lMFHg2V8lcn4+ZcBeYUd2AC+Whg73ywHows+WOax/zIobvmuY1wx2baAU/L0DbP2ex29W57thGAMxDyPTnhJ33uxUo53MHftxJtkBb0lZeyrKig+BPIyu5UekpKKvG94LovsIVxAIniVDORdMjzm/JwPJ4NKq/uHobjdAIlPwenmeN/PJDZVcchZtceqdg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T17:49:55.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T17:50:11.184-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631020343500226466-266b6c73-c343-44ee-9e78-ce29839a6654.mbox' FileSize='7393' Hash='7e2befc9c2eb8a6eb29629dc2d468a33'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrO+jny94O/xDeTb531wRKmGSzNKVuvAm9i1X0+i7q3b6rLYkKPhByOQ1NzT2u3IsradLuz+/yOjXiOW2dvOif5ESivh/HPBJd4kdcwk0IPPkS99xZtfHSDpjBs2WJPZJH9kSA1DX1XwEtrzeJGJ9VItpnH4A5Le3KmBWI6ccjgLUZfIEeqoO4kJ1lzmf4QQvPtDcPZZX1LzYhZcxGABTDFUTHd7RNII1hViEeEORFlHYgFVMBtKUSM6ghAIMwhsCPkvBV+2QAaLemhD7o4+LWjqt74sA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='saint@eng.it Gian Uberto Lauri'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='andy@strugglers.net Andy Smith'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='debian-user@lists.debian.org debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T03:41:59.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T03:42:21.739-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630967002947113328-59d82a9d-be38-498c-a43b-88371b00c95e.mbox' FileSize='12172' Hash='b80c2f492a221c476defe106bdbfbf28'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqZL8t3JvYXdswCYi+vkZw9xl1wttusQWaqJ+F0JRIwRuMRabrd8+TLw6iITUlb0KjUAchbcxx+JllbAy8VgqSxnCYhZ+/w4iuDTMLs//Hmo+24LUwcr1sO0LQB8OZ/sw040UbaA7IkFdkJYp92Gt7IQQWGzqc8D0K/hKPLeacMtioKEFejEVaFfBKXqog7RRnzHwG/ilRSwxxatbT8RmG5ginqj8nGhT79iOTgpAXMm8PGK9HM31BLuOcSOkt/Qt8iWK3hk/BJ0rscMrsR5ZIwTsqwzg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com,heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T05:16:56.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T05:17:16.230-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631063571111232042-c0480054-54b7-4e75-8d8c-8d7b23c4be2e.mbox' FileSize='9290' Hash='e8b9aec2a5fea3e328009d9e737aff5e'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onr23GfYETrsNsc40N646bk0Q6ZO5DeLU4zbsekAsydyPuz5zXKl0XmXrfZUWwWISV4dfLRp8gEB2PCKwyAqhjLW5K4sekRrgq0aljIqnZNbkkMRloK2Pxqwi3lsKJgdbCHlAlzhskTh93VPYY5rWikmcM7wCr1dy5LgAAcw55ragHRmqeGFRUCPJ53W0Rj4hKh0nxO6eO1pSZC58FGTU1kKTtT0vjc9luOcWgBR2PWyLsO/PL52N3wtgWBymZ42Nc0oQ3um2a65mNrCocOzq3aur0LdyA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='gheskett@shentel.net Gene Heskett'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T11:57:38.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T11:58:02.553-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630998188569848652-0b051abb-7b42-4e58-8391-840d2e88eecb.mbox' FileSize='9305' Hash='f1ac55e149d82d2df4bb3e3a68d941c7'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpyXtaCnOOBx4VYnpsIBY9XRAVgVcReRatybZ7n/MxkgaHMh48d9X6aE+T/VD91ktW0MDeVB4rT+ROAcnvcx7jWZNkevw3EiTs7me1FJQDptlbspPQNpK3aQB8eWIbhVQPYz7MsYiDhO02ehD2a8Grv9JfJQbJaau/TnhCJ9p3CvvZ6iNEbxGG1L8LzncfpV8ub73pNjpC6YXVd/vwyi0uQs5qS/sw1lsrWiN4yizVeUYmw15dhlVgo88pomO3HR9kaCsalhRBRvNnerT6iBI8RCiUc3Q=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-15T17:10:17.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-15T17:10:33.726-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630927253311253312-3488a999-a2c6-49bd-95ea-6894016744d6.mbox' FileSize='6870' Hash='bf7db5726c2661c373dc3ecea529365d'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpIiK9VOYDK8r3tS5g5eijSzGEeCHhYjx3djYFePj5dPutrB99A+2s6LgU+cGbPS55khFMPqkaAA+JdcVp9HBwbgwkY7KY7pRXMzNN4QIBLIfZDPEWWAQWe/8hM9xuiJY3tpYJs3XjqQT8CUO1pbKsEKmZbMnBi6sxthRfSWtaayucWekbqGXxKVBICAWSBv8HrLBHFqPyVqqrDd54JaEG0b15Er/MmXf2klzqTS38XEhOubFm8gE9a7rZaEFAHL4yheJEttbik2gINFkoJXaNsag6cbQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='kauer@biplane.com.au Karl Auer'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T07:47:20.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T07:47:32.763-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630982428976130059-859a8ff3-3ec2-4a84-ba77-6f36758f84f1.mbox' FileSize='8233' Hash='97def5a28ce5b13bb5b6f7e8833d4381'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpXSBY8vfLvpywAYfFy37UsZFwVl7T4aT6OE3I8X7ilmjRcjc+Ir05oLI9sfmy+Xe2qieD4esEOTZiXF8auVLy9NgXFfjWq7hDKSN50fQo3M81/buAsdYCsBKBPZnS9Ukb7uBUaRGQZScWsBjsXqm5StE2I0JXl9DZUQOpdhdd6Z8kiY7ADbuxPqK3iHy596zBpFQX964aefKfoGNcjc+NNT0uZkPan+CPJGlfzPva3tS9LyyeqMLKmhJXDlu05FXtZP1THKX4YsYWryLkpmBP9PZfT4g=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='saint@eng.it Gian Uberto Lauri'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='debian-user@lists.debian.org debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T08:31:28.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T09:04:11.197-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630987250474312244-5fbb0959-8f91-42ac-863d-650ed4fe9dcd.mbox' FileSize='12408' Hash='e7b3459a45927d708b3e19a61e6b1cd6'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrBFoqhUptjWnaHc9TGu3oOaFBzuKVJzW+DRia27MOu+k5W3j0XngtjB2bI2a/drga+MezYREHDDP8u71NoRTcEJiJbDW40KzgxhAAiyA+LRbLfR19go5NsJflHd+59Fi2FYWsdKUjSGSOKvKYNcibvVNFVNqgjs0+1tmX4LX/LcNBgH5ZxXoXLxQrvAQW6ZlO94ozrViBJWYVH1WNNP8oSNBz8Gtb/gIMs4xk265JfOcRQINzpt9nRSOzeQb2auHI1uxFTyPE45/ISMEvir9hau3NefA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='bret.busby@gmail.com Bret Busby'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T09:06:33.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T09:06:45.850-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630987412823099220-b21e707d-1382-4abc-906b-cafbe0f1f1ef.mbox' FileSize='12925' Hash='730963082dbbf6450a390ada663725a0'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqba1pEdar0Kx6vxT2vL41tMDa1heeevdPeCd8BtQ0ewSl6QlhWovRJwSfnVn1gKiAdhzlVqD//Ul1xueGSOstEcADP86i5nUcIkBuKHVJFAb1aQXC39RYMs0vIWJADs4tPXyas8RpvLam8yxm7B3yeE3sG/hCNzyQppH6/5IZGY3Yu+o2WeQ6qSBENgyXvnJeVmq3CbjyS8+x0gxgfR+zHu2fnWzQPykDRQ1L5dRcg/9ixbQf1PDFAUr1boXKl2XfLlkkrGpOd+yS08+4aDnOxts+fyA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T17:37:02.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T17:37:23.035-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631019537870290810-9d73a0fd-9e9a-49ce-a254-ea2ac735b455.mbox' FileSize='6998' Hash='cdf5b583d97d2fb4afa84313f50110a3'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7ono/t6GuCEA1liufGqfcNRQ7fTMecBvyw8l7VIMpLsRQPbFcoonKtrQXDmTE5aHyuharKYYJlSIORAaO2VixF5ze7hF3sBLwyaKYZKTqhlZh63NS4aQdDM1tqZt+uPFOSYhsczFqC5pCc5eUpe3njNnGZgiy/B8+PJrwn6JBRnTQfMrHKOmi1tBORZDuOS8rfhNqurb7hwi0zruJoxK8r2c2d3sV+w0PYsakyWhqkSGyxGOPqsMoYiGkvyE5znTcqvWWu2+LRrqz4nswl6B2NXrrUGOiVQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T21:31:46.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T21:32:06.560-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631034305482332266-08a1b6d5-519e-46af-87ca-a8b862448c62.mbox' FileSize='7731' Hash='9d6767d86f7745f0cf13163d7baab9d7'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqAF4CLB3gqgVLIOQ+og+NkLoWLVH9I6Wp4pS2HUq1xJg9ppu3GVyfvxwYS+JitiZK7Y3GQ1iQ30QXltyN70r2NekO53WDuN72Y9t5If1Osahsza2cyQTXrqG4gvMnH7Irbk9qQl0r+kwzqu0KD2zlxqOWjPoKXZ4Etn22lCVaBySWUkBJKAFNPwnf2je5DKiYEHJohrKvdzjmoOG0TaIhZI4NPZ47Sbjbh30RnHJ4+5ivfx5t9eItmV+TLI5NVpRdt5JTQBjdZdiSRjnFIjo5XMwMd3Q=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='bret.busby@gmail.com Bret Busby'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T07:25:38.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T07:25:52.124-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630981064543012917-942ef36d-ad89-4a09-a50b-7d769899fabf.mbox' FileSize='9244' Hash='7826595312a2dd2f5e489bfad2b6df2e'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onr+DKVf/FEmMrj71fI2ymhDUjFZWfaXomTtIMxLzhV2958JH9JGGUYssYcB8K9VLWxb1XwXQG3w25NZHO2hPDsAhE98ocEOTVAZKzDlyaHhj4wZ+k3562FOdpz6XJGSmr93qePWfsA6H2DxEc/7yXG6kzycOiRNC95uWOAEjIucJsHoF/Dx2sG3UxPjl11U05p9LYwum/ljY4WydGTGXSNIqryZoPvhIzc/a2TR6MGIU0xzTyXfmCa++dxpN720GZ9HLi3y+8NNKAuO4y1J4y1OpUbYcg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T10:36:27.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T10:36:47.776-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630993077181313371-84b3abed-010b-414c-b6d4-b39ef51c0f8c.mbox' FileSize='10079' Hash='0105e2f27242c959ccba602077907683'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrNUR5rvQMWo6ZOCC2y7tZHwdeYDfYnWAE0cXZJR3W7U5KcOjTW23UjwyIjCXdqmrFNVOVay8l9uZ6hF+Vai+Wx7WFDKzNfxqrEqLqRkndW4SzksPC4yVP5msTYoWd2F2zzF1W08zZ6IhIS9wOZwnTv00LV+1REIHsi9Ovz5Vm9WerRmL7ms/R2ZYzTLINqMh302TZg1W1/w7fZWp6AgL1CUTiilBvSFzoM/I8C9/g790J/+St7RCPGRiniO2otkGZc7rI1wAPLn3F8Yit86dPBP5jdiw=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ralf Mardorf via ubuntu-users'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='silver.bullet@zoho.com Ralf Mardorf'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-18T02:26:25.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-18T02:26:38.980-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631143433846669559-aea32b23-955b-4ada-8ab9-908b287269f8.mbox' FileSize='6959' Hash='a96035a6b93a5e9a9f4c43f4cf3b1740'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpuLOjhhG0+8/TSzJ5sFulJDc0u4QB1yZMZKahedgwNRi72xi1lihSpYPEEvQ0U6OPhD1WOSVH4GC2MxOtkExdBcuJaPfADA9c+7h+1suUSKr80rvY5PJsaU8PIosT9pVjI42nYamxkCIF4Xz4T+R8nyYa/U7NJ3Uu2YFamx4V7bVt3ZJehNVWfTFlBy/FTYSiAnGxeYSzC4jlBukhkMjd7e6jBgPFxgYNEJVEVn14tqqHdj32M8vH8NxzXhsRZ2vdZaochptAS5LnOfaFRNaGWcnrKTg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ke1th3216@gmail.com Keith Bainbridge'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome as the default desktop'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T21:18:33.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T21:36:16.306-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631125164513751082-ecf45e10-6b61-4501-84e6-4f5c395f7b69.mbox' FileSize='11747' Hash='5739939c7786ae250dfc23ff6f7944fa'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoEnj0F1qut7DLvhbWLKdeiJdDPlcqPn/0PBDFw12p5voOBUF5gdxolAc+8Q2guIHaKS1R7cNnUGfRfYCn4+6Z+zYijMxgF9zm2I2g2Nug3mMEDUmpW4r4GvH5qC2xwLqgzdbjzQYj5/iOlaFXAIcLVg4Ovkdij/8AcuLI61penBpbLShAt4Z8XXsypWvdZSp58JVOqsiF0ntgxzfy6MDZt3ZM+qcqhBsmJa/+1dkqFu8jguV4laR+rXfFyHhZiX8zscNEK1dpwzy+Q3oDg7kfH3SjY6Q=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='sea7kenp@gmail.com Kenneth Parker'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org Debian Users'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T08:59:33.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T09:00:08.068-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631077592316519531-91f7fed5-1d6d-4187-8c11-14221dd641a7.mbox' FileSize='10951' Hash='207be359954b83d45c54a359dd7e4e3f'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onptW9mAPQ/mVyWVS2td4IVwzED5wpZnkXAq6UBLq3EJHZr9RmRROOC2KvCLU4f/caQX1wMMDR4KrZHxJ9CNfDrpamtneP8zvk39IpKJ2q05mAt4z3WPwg4P3uM4WsSrl2BkAoLS/r89SKLHrhBClcuyEuzwLYfvGiyCHth1ZqhMWGTagfy1f1Sk6T1Eo98xe+yZRfFvEggPgZurB0wGiA9v3sJv57wJ/lZaiVIaJHp+JHypbRwLxeWnRaOu0uuiPEOWRt2feANtYcruZePhcncrf5tpJQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='soyeomul@red-october.yw.doraji.xyz 황병희'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T08:12:43.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T08:13:34.395-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631074663438254871-0ffaf35d-cb1b-46df-a356-a476161c7d9c.mbox' FileSize='6805' Hash='5010cae96e74fbc159c3b290e7b8c662'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoW+DaNaRKRg6RggpLAbDc70xzkOdiEEI+3VJhF9QhQvO+r2UpuuXDAlD3X7r050A86CiQLBt1nXkcZfejcxEarpoyGEYnVG5dsjlX7KAQPxnQPrNXQgxwmv3vwxroRybwQOisArzVGqbwA3Z2mwlCWNG+gs+1h8pQhCZTLoyMSLNG+RJ/8vHj7/Kkv4ojpOYmsiZDFP6EBy3IZtt87KugtEFrNQXddqBkbSH7nZnD0t+MT1j6lSJstpc5RSEkR8jBBoTxOW1Q3IIVtYjT4zHr/SMKm/A=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='saint@eng.it Gian Uberto Lauri'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='debian-user@lists.debian.org debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T05:35:29.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T06:09:09.408-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630976238806806558-5512e2e1-ce2c-4364-9c9b-1f4709e47790.mbox' FileSize='14427' Hash='ebef676bb7b88fe79ade8edb4844d2f7'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpngVWaiNpKo5IADiqmht7jQfVkoIh7DS6g3SLontW6CfJeQBo9Xu6TDBIcVreYsQQJE+hCYoVyGK3uMpzw63om8nF1KDGHjuRGxBOsPRc9ctsNqQ2BbGjGA/C0ttjgZj7WRfi8DZyGFdo1P69I5XgwhrsnjFcT8DAWBRA9vf+VvYrvvqlgvmpXwnY6VR14QTKYQCkdDLYc4Okwa4jy2Yne+baIPFQVPDpEFYcctsFsWu8jz0R2/U9i5dG0SkFNz7BTETI66eHxj1z0WHY4FlMMPi6LRg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='gheskett@shentel.net Gene Heskett'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T12:14:03.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T12:14:37.788-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630999232492175002-a3540b39-1691-413f-872f-e08b8e45ab0e.mbox' FileSize='8096' Hash='06493554634a6eebdbd2e7fadef65804'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqzTAmwkIqgryh+DWRhyc+cW/89DHWwiA/dD78u7DDN83XEgY1RH/y5RVcjPYmKvs7F+q2Sl6Ololu44FJUviT+0aZfVShbrjok9matfq0DVbrS1xLi1JT4id94p4pPNGMQmf5TMJWneb0fAAhqffd3J3XC1k6K3KimbWk70PiAiKP8PXStV0o/sMJkgkZdOyAI67c15JE0ZAv26egUHv+XIDZ1hUtEYUYWVRCdWTeIVJc7fFWMbimVTXEX6rSHqeSXvw/oWN4QqQpBYd9utraYRLYq8w=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='kauer@biplane.com.au Karl Auer'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T19:10:44.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T19:28:56.022-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631026556592807430-9d3d485a-b024-44ba-817a-65c2e484a3cc.mbox' FileSize='7241' Hash='876b40112dc0b76938168cca742ee485'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onq/8ue9iS4nA48u7RMmJdzz5zpGjiYUCHe7IrdExX+GwwyfHY9dgybMbmaIpnlZh6DZ/ObVXQcBfJYAXp6TavJQIDkdnw6NsAH7axBZ4V2X1OX+Q1jLqHFDcqo5qEszFziO8yC0Pq5gccW3Lb5E+EbixHQZqOGuwzLQz61RAgQUU9tzBjUKoB990N4gaN0UfuhqKu/EJqNNVP60dExPtNkSRokskMceZlvG5A7l20JOYIbsAT6AEpXgRFTjyO8ApEFMj+piRUAPya+RLe5Emdl7F+Jtrw=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='clanlaw@gmail.com Colin Law'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T00:43:29.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T00:44:07.581-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631046386041019952-d46199bb-45af-4389-a3ad-de61c0887245.mbox' FileSize='8451' Hash='2424da4dbf7f70908aa4a22dd1ceeaa9'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoMzyLtjU4b4RUTYwkxAKnRsOgMuIELi1sLyxYW7lh0KHVOEZFGXmOzxqKYtKg1/ZhkZk1yzCwsd9lN+FP5uApM/ytf/K+B2EzvkSwGMs0QJEEkZv8wDotMOw4lzmC/BcHmbN7EGPESm9OfSuKprxT4ygH17tJSJSiIkAZrSudBljlWHzXdqVFaq5r7io0MT76Dq/4sgCKtN08uFPB2+dDAOegN9Xo+r8fsN4u3jMuIxwgcY4qbAvNdU8Qu6qlWi7grnu3F7CE2x+nNQYW7hI5LKQWxBA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com,heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T18:27:19.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T18:27:32.121-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631022693508541585-201bf2cc-17cc-42e6-bd31-f3c452b2bc6d.mbox' FileSize='8280' Hash='e7945bd079d6bd51ff30ad66eec59eec'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoUyQTBYiGUgoFOI5pCCdtxTuR1r2iFQqWk89IACruNdj9ytjjDEH9aVFoTBOT/OuDN5iMT4xmu8XFB6wk/e9mYxsx6x7qPC+rWR7QhV0OaEqXK+SB2Pt6SdBjex7AWSVFV976lSUOA5ZdWsFdWqgfndHdlgWeqrIlYrvzTGne7O9RQ0cf47eCtLB4xvbzzfFpZ8avB9nB4OomkJzfN5/6KPJZt4Jw9p2SqneiAszZtpkn5/W+YBk30MVokfj6QsHNmTc3d4W6PuRaGoo/85JKGWHbQEA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='kauer@biplane.com.au Karl Auer'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T20:28:55.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T20:29:19.090-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631030355502886346-26abb4e6-5020-4b3e-a4f8-63c001951599.mbox' FileSize='7042' Hash='376d82748cb630421207d8af81790397'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onp9xWh0NCKFnPlUvfiB3iDSw84e0omV2incyTkjAStFgMIfHQy5jTS1wlsHe0ZwVLu5DEL+2fiJQ1X58tJh+PpdZ3YZapix5OH8KPXdd6QUr2uAaxSs+LaHW10OKHjSU+/UX7pTzw1BEr7ln6jaJmkR/HqFf23RnSlQD/fOGLEZMNlonrHQRLvMT28E8jQFGYFYLKbEY5WatoHlVX2F1Pnr2t3R7c7ONqJMoZw30DAlUA+e9sza3Na25xU0LjMUAFPY4112RE/ZG4AQQExoK6S2XOxvNQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='steveeq1@gmail.com Steve Quezadas'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Has anyone dual booted windows with ubuntu 18.04?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T22:11:30.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T22:11:54.360-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631127406712956288-3d71bf3c-416b-401b-8145-3bace622105b.mbox' FileSize='8133' Hash='7ebc96ca7a9502fa8bbdf925c347fdc2'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onp9E298/enzpNrmKRei4q5rEruJcjiV2/7bSRe3OECq+Ta1G8mTtfQSKXMblbpCPVv01r24tfuJ1NKwikyp/nb6fg/L57UmP3HuNPgNtl+qNKqHcu8DCm7rOrCFovtZ6kAmDfZXMoxU6fd2VM1cI2HUSCksh0ETJfkv+egTFi7rQTF1IORT6ZdPJc1ONYv3XDZGWwwSReor2p61YzqKFafj09VSP4iaN/7KGAU2dYw9YuBpQh0uPq+f1pida90eIBwdJy4xfoh7eSSjHrgmWST/Y5W5sA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='kauer@biplane.com.au Karl Auer'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T19:02:06.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T19:14:30.223-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631025648787303103-a001d0c4-3780-4a35-8064-3ce15128bf6c.mbox' FileSize='6825' Hash='eeced106e02211d3c0922d2d26cf69c5'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoT+5qtH5Iz+NPj9m0ejlsV2eHC26P4iRXFH5EOeySIOwThlsX4CS3zgX3/KAdXgHBVMQYn4dg58/HBX5g0JnN5dCt+D27n+65OkBx0n6tcan1tIQAAGnUfnvlSQKpfRf0xvINO9URf5pmWYtAYn8UyZxUg59ylRFLJ6ZBV9/EPzOSjxe2xWmIjlL2g52+A8guAKJ/Fi2nxolAlaT57RrIYLiU2OfNV/XC5zFuwCjuruUI+Aqyz9FcBoNPwmRNuTuzg598SkmFy4+0rsNCQAB+Hg37NuA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='lproven@gmail.com Liam Proven'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: 18.04 HWE stack causes Thinkpad button problems'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T09:56:35.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T09:56:57.134-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630990570406282383-403f3afc-9bbc-4c5f-a7bf-2e220558e043.mbox' FileSize='8221' Hash='b6d49f930fdcd6c865b8417d7818eef6'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoc7Z8zVsN0OEeiggjVvM2W1xEc1+FUVKWT01bvflnumkRTbBpvJ/e6p2IvZ0nZFjdh8FYHHCpArt2fybjBUlanBgIGldMhx5INxd/lK9GY5nb5W1gUkQ1W3qSvg1VtLYrSQtH3qtu4R2PoDGiJqPOVZwGCMVx0NVN3P6bMSldD6LUiDJ3llHsrbinBxxmMwD94ihpWe4KeWwO50rzjHw2uS0LjLHootKcSJf/Y9QiSYiJIThHT95LNvG9sFwYABdaoAIgBXBLHLMlhpcqpdAIBXBlwNQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='phil_lor@bigpond.com Phil'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T19:38:01.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T19:38:19.473-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631027147171602673-7f413f29-ba9e-487d-8381-5997dffdd823.mbox' FileSize='7292' Hash='fcda918a933d1fb0c09b05b04df08ec9'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrCinefES8XZnwMoqSUrj/3fEKcw2xE/rgSsy5FT2tlIew0WHPH1QzxrB08w3PEBWBx6FMirU5EVqjrspGQkgpwNZ7gtlUZbu0rnsTyE46JM+rAdjNDglUSEz5lcCgDVJf7wg63U0tp/b4/3JY607PuwcCEXKdAZjAyA3cFh+dZXbv4rkbFMkjKR93wFyydI0mJZT2Qc7AQ+yNnpjyVqZ2tNAShQ3fg34H9uDvXmn4v2j/AOLEzb4Zd/aXIWEP9JEa1xK1ja6/ALK42L5wP7k4nstlNVA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Grizzly via ubuntu-users'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='Real_Grizz_Adams@yahoo.co.uk Grizzly'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: Has anyone dual booted windows with ubuntu 18.04?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T22:32:57.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T22:33:13.148-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631128747647501948-e9a5afc8-735b-4b64-9475-4c8cfb61aa61.mbox' FileSize='8110' Hash='b518882e1c73db3b21145f3608f7cb45'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqLYD3gEPUl0GDerXP+1X8QbsfokWoSW4aWbjx+46pVosS7PxIxArfEALJZ6tf357FQP84k4jcjRllSwK7vSnhS5ZeEiThWl+Uga0oTqgzDyqC8FFPjpPmzFWvBIVFj2k02uaSG5dTN3GcU/rpJIalTAZnt6KL2RMv4iWyWFdQqy5Zae/TKJxoQMy/1i404hYPzdobXc49XrsZsr5XRpYZIRyXE+hbxAzcLXlHZeWZx4fHNfCdoAg0Nrhmf0IszsUSO8IJ6Xx9HLZ3EB4ALB2JtamifdA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions,heller@deepsoft.com Robert Heller'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T08:00:04.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T08:00:13.825-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630983226498139823-23ecbef2-87ee-4f2f-b235-376bb0acd3bf.mbox' FileSize='9019' Hash='bf4a42b5fea9f4fcf9501ff3a6f9a82b'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqK0hDkm6ISHYw5pGAMrQfmIMid1Mc4QDqr9CGbD2oeX6J+9QDpS3ZH7hCJ4MF8mIeMEHa3/l566d0y5snq+iZyB8BmOhPlK7FzxOZBhlnGVpYGY4XFZDvWHymqk2TcL2v9d7DgCibIjKK0esz8VMxn6IlE1GYjnjoKO69wL3b+0nN3G4KWO0cb550qsDvLFWFb0wW5aj/de/JXEFgqJEYZJEvp+T+GoKtM8CnMvMZx51bINKHJFJUmrSYCy9ZkBG+sndqNTL74ENlG4zW3SnQ/6cb5cQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='saint@eng.it Gian Uberto Lauri'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='debian-user@lists.debian.org debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T03:38:38.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T03:39:02.119-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630966793549740047-b611e9c1-24ad-45e6-8f31-b6792852e9c2.mbox' FileSize='12915' Hash='e136d8224daf6ac586916931925f9252'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrag1q19J1F6eMQ/sUPDd0Lp3hyDgYKiXhW95mH/R6Avj29pSq6oRBnv0SCFV2QtOLE6cHBcaRiak1Tx1/aCdQaH4vRpiyEteHxFSs7C/f4n4vCtj9oogwfiIc2DmY+cm11Du86ZiudRYpiGc8q58CRYztbDYxyTHgfrz9fV834OBzciZJoFtQno3CbBL72gs5oiBrAxFkiKjPfOK3CNeuod3zNilAxHVyNpmZABGko9MVPtciKr0EjOvcSIdc1ujW8Mahax6ZFEMJ6FlVFxqCFQGaRNg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='clanlaw@gmail.com Colin Law'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='feoh@feoh.org Christopher Patti,ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T14:00:45.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T14:01:24.191-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631096546514450799-a8358cba-aefb-46a4-bf18-f01b68771940.mbox' FileSize='9923' Hash='cf49b253323d39059d5927068d47d4fd'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onoeVM7qGrvMjxfkLOWiSPeqnOdB6EqIlSrd4ZW+ek14/M1Lc1L22AQoWYOyBTRqXaB5QUbKb0hoM2NPenwBT+gcXTcKOkaS3pNNBr0Ob21yWD18KA224p7/BlwlQXJ7e0YuU8FfuAC5JFGgaUH7YaHGYaP50AZWF4x9WO+hFU6T09+JBMmojg+AV0GF/wDMve8HsMKUnwDKctKqJDf45aDSDNlGqQCVfX3Ai/7MB6a+g+8OfSESr3E2nNobl/1ZT/EpZQIHoiQaM3S+DKeuKLwsGpLACw=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='ke1th3216@gmail.com Keith Bainbridge'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T20:58:34.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T21:15:15.044-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631033245120325601-ac7f270f-2b88-419a-b233-34f8af2e5ec5.mbox' FileSize='10284' Hash='3f085e9d778c93dd9e4111386091c93d'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqTud9lLCDwBsGaMKFrrnXs5lQReKEm7/pUH1AAec23sKHe+7MfxSABKEdRn74maylOAyLw1GDJd+a5g6NQUXbS2zs1Ys9e3GbV1eL7S4TJ+Pmr8Me4WwzjDqjhGtzkhWRNAWGBaI8Te/JOSjr7uTW7RAA/picpdiR/ER3+OakfaoVYEEl9go47k6JqI2n6a0lKKD1AHIA10JSrE+p3c2Z5DGxczGHU+Qs+HQ8lAnVsJWtoPnVlhvR0CLED1g3BjvzQVpIOhDnCtjlqiIjHG2e29hW3Lg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='bret.busby@gmail.com Bret Busby'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T09:15:13.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T09:15:21.423-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630987953041453204-1708982f-201d-41cf-8e81-04cbe10e09f0.mbox' FileSize='8204' Hash='9ad025576f1ece9664299af7573aa45c'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqGi6LS6OFdtXERk66arBctWooMWKpWPYI+DoxiBf//WchuDjnSA3F/GDSF5MYQhiTT9WlTq6iQAr+7HFI/8UyMUAEMCHReBCYb/dbZVkEL+MTBgLUvfMvGvLL2ZguwK7cwEAZ7PCVFzP7SSK816womRXS5jVJh8nTeIllMvVq3MeHCdPUJoZ/MczJHJLMM9X/v562Fmq7XedacRJhZTE4ddCeWGdj1sbcL2rRsZ9Kimw2dIFr3dp6wXRwCK03kjQ6uS4U2RQo9XmzJiv3rZue6LCouzg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='bret.busby@gmail.com Bret Busby'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: Has anyone dual booted windows with ubuntu 18.04?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-18T02:08:01.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-18T02:08:14.047-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631142274906483388-a1ff1320-4704-49a7-a313-5713c1f66990.mbox' FileSize='8913' Hash='e697503caaa4c53345d0760dc1a9ee78'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrroHCylpFEwvMKJ0ayU4ZsIXbMNMLcaVoakzo4cHROljy/KpMdcgwGENglJc6nHN25UONDNrb7o17iOoBpmVOm6KPmS+3ROucYVriI358x/41hhJmFXaU6ap8P9RwGIzEqmLIYYDlvR7WvIgFqFEXlz8NYg4WnH7dFhuoClP6yBeZz6hn9mZ9Wwj++RFQCpV7Xta0dDIGbzlDvpURUxic2XTgctIqg5zq+18I6Pe+afuwxH7D2GO1lRal72lV8zOaK5RtiOIDi7FpByuTMKv9M+ndckA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='wadesmart@gmail.com Wade Smart'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com Ubuntu user technical support, not for general discussions'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: OT: Ethernet to wireless converts'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T07:49:01.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T07:49:19.289-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630982540548958923-7515ceb2-45e9-4bfe-a009-f4e5b8a48218.mbox' FileSize='9907' Hash='fb08d228e43987792591c711af012de7'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onocBVp0+VOy+wA7ehJKTCpRY1g2ESwU6wGPsWxAtTT9onGUK0wBzunadupAhX5unzPOEm/nOO9r4SKrI+ijPKjvR4IU5Q7KI3/ZrFpzXQY6ylP1sAfPx6j7v27oGOyvcHq9eejUgCUH8BO8UadzBVGesmTV+JrrqGnxE9/fIPZNnMxvOGcvGiGtfKgIl3Ie6tFlwdJOSMarU+4BwaEKVEOWgpkrVIxyJ2zmpFTwa+rNNhXasr+fKPOr24EeFvPfM8nWFcyGPe0vBLwCjcHIeRLisU7RWA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='mailinglists@mattcrews.com Matthew Crews'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T11:22:53.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T11:23:11.242-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630995995783610079-ca39b6cd-a6c7-4316-8033-0de8d7e9349a.mbox' FileSize='10174' Hash='c4a48c671276b6b6ec1110790f21b2e9'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onq77jG+PTQ7q2Ub8s5mBejY5pHVJF0l/vyZN8p0MaO8lj82aeIBQfm/jr1OUSt3s8RZhVS2aCD1PKWZy3rojAgCYuDjNT3dW09QpC9tpDTUFpR+5Mp1d+DxPSWz3nq0SGa1xDvUUuIiKEQ/endZNBYjvf/U/VmTjHCFyLrqcRF4s2RKnH9ZEhk8ginsV0xAeQggad0Utf6w5H8To5AwPjt3fuGS2WkrLtlpc16y/rI08/8a+cdFYvO8BsFirRYJ8RaU5JH2TSSRyKcxvK5Nb4HfO5x2Ug=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='feoh@feoh.org Christopher Patti'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='ubuntu-users@lists.ubuntu.com'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='What&apos;s the best way to test mainline Ubuntu without destroying my Kubuntu install?'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T15:08:57.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T15:09:13.409-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631010216807480702-b47e2f56-a689-483b-b946-dcee3cedd3ff.mbox' FileSize='9090' Hash='e1ac2350a17c20665dd64847185fa132'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onqpTfAALjj9goN+JZdB2T69Cp8ReZPXjhY7cp5HLu8XemRxckpwh8gqtXe2csjMsa3cgerpqN80s1KGJXgpsKZLpI5u837j7FclUIXUloDIlDQeJwLDgO5ICXggE/6zEFsaMQ/F/1xGCzvYjBKRIBoftiIa+q69MCGnAGg8aIvbA0r5cyaSMzniJavdxf5zPb3LBzvGZCNpjlUcHQvMzS3I4llIeDOVvhgz5UkZGPDIdY98KTkuc/FBSe99VX9PnbWvBXl/BzvgLdQraY9gkgnMNdHDdg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='saint@eng.it Gian Uberto Lauri'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='recoverym4n@enotuniq.net Reco'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue='mailinglists@mattcrews.com Matthew Crews,debian-user@lists.debian.org debian-user@lists.debian.org'/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T00:11:52.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T00:12:06.881-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631044372502339589-0aec7275-5aa8-4203-83e7-354c2191223e.mbox' FileSize='11656' Hash='a63c6ee8682a5c8384d6a43e80189bc2'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpCwcdEoQgoJ5nFEaVrbOjrn3DD+F6Gq3BEZaWl0LSRe3oYGSDt5xHmq9YOERNqTNEKVzNVHbM+c2uCVitR9b6MQ9FyuByVm/62W+utimQE4IoWXbw7K21mvkFq4XOLiCM9kNrInPxHNm5xurvVayBRlYBVcJJcyo2e/qbOqflahqhWZyd6vc/tL1y//hr9jHptPiz21kbjBM6YI9YThWIvQsnNIo7wz+xaB/LtioU5Tg32m9wIPJvTr78dfGpCF5/hzznFmK+nU/y/dgqn1jNY/VqI/w=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mattcrews@mattcrews.com Matthew Crews'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T10:53:40.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T10:54:08.521-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630994168594978914-a8f598b8-41df-47e2-9d54-e6a82de75386.mbox' FileSize='14220' Hash='426996b5d75f4879d6754f0db38f5ce1'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpTmDZ1ohR6oKvM3jn72sLD0skQppLFwb0j20TsiVaU319zLg9VbujMXQ/MDH1viMUJsRZuEsitiz5kw4ZhdUXVidhyrau8lDowBz9Zk4Mwq+HXIFN1vgrYZTVR8eUNbdlTObfYV8iflwnS5VJMundDlsgKyf3Y4x45BDmub47RrTgbB2P+a/IZP/nDhFl1lgGk5VMCyVef0Eh/Y3zy0rXP5wxToyMdiN3wK72ouBcJ1/6Tu7JlLA6CD+UVEkfVi4zmhFGphpCCpESffSJSnBuS7XTCzA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mailinglists@mattcrews.com Matthew Crews'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T09:54:00.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T09:54:23.634-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630990409502624799-d8aafb0f-00f9-4cce-9897-163b55cd91d4.mbox' FileSize='13513' Hash='4b5f75cd6d19fab87c176b8152347bb3'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrpWQ9OhcjgVRWAa1WaP8EsQRv+VcPGqK+MPlt8oSZ7SkFY3vz15eLnQ2hnh37yBoHnFg2F7xV8JABz1rprAE7eJDo+ahlhFw+IJc0u5IUCNOa6AdrlAO/oUPJbO5d8vOMIKuV87l57LW7LX+grY7EHmx7tVLsNlLp74FUfEMn8p2VD7tBtZxle/FbA7zZOJBdjXEZZmchJp5aLUIVipIcpuwbbJsL3BY/YnnSchKUCIy/CUvcQwGknHoVp0l75nArHZ1PkrqSoc5T4aA89qeEydi4qQA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mailer-daemon@googlemail.com Mail Delivery Subsystem'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='me+caf_=me=jaylee.us@u.jaylee.us'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Delivery Status Notification (Failure)'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T18:27:34.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T18:27:34.938-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631022696210257251-7cc2c10a-7e2d-4630-bccd-9189930176b7.mbox' FileSize='24658' Hash='2a3588552fcf778e5ec3b2d63cc81d42'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onrSShNWf2k/yWb+oJ19lUJnTBjLiActIcLLbxIEc1OVMVXB/fY0Ec1CC/lXWUvGV0ggf3YWwe2ImbAkIJIf3f2SZY5qArgQR/GIyKPDxJ4TyDIdCFFfZQfSTGsVArq15TDWKBIIljQ1iAh+55LjsMj4tASePU44U8XCkrYM6nz+nUh4PU2VabPu2DO6teSiyj/usUX9v2gAKcAbpjE2yRWvhtNDJPuGduntlnVid21BkDVygWPfPnYYneeEzHT3ifeqtFIOwfs796th5PoPCbg8HPCwRg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='stse+debian@fsing.rootsland.net Stephan Seitz'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T11:13:31.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T11:21:25.414-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630995884766667995-e3ca0e24-0341-4df9-9b4c-6c1a57390c17.mbox' FileSize='8792' Hash='0329eab6f92dfeb3e46820f97751b6b4'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpX6YT49aEFOSLgPBkCTj/Mziz1GIKCz2wLoJPcnNzpp847amw3TlSlXL/pLG7m98MpG6DKBPQqJo5ajZHVMxMxIfCj3UOh4iUPR8VhCtKF7i8dw42hDp96wBi5yogAavz9V0cxwezxwOfcafzn1/nlW1h7I+dL0tV5qCuW0L3jRgaMgRD3uZ9EeyoMVkJ6Dstyu92l8h01U9/lF+x7kKxzROhHP2kqYD2tptL8YGrLJRJjMbhqOUYV+XjpFAHTx+KnFHAs7SbN1YfJWRH5UbpYEEFxFg=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mailer-daemon@googlemail.com Mail Delivery Subsystem'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='me+caf_=me=jaylee.us@u.jaylee.us'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Delivery Status Notification (Failure)'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T08:00:15.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T08:00:15.957-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630983228944824595-04aa8c75-063f-46c9-96e9-2266162da5e2.mbox' FileSize='25228' Hash='5d4829730fb739452ea6f0e911ab7fcc'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onpWOHMr7LVJoNYMUeWaUxzsDhSi5qVWqCUusOTVul7/Nj8UiPRH700QzTSNjxhrMnBRzlTRUrJZAgMA8Xsi1267TDJBwQYlvMwvYVi3YYO7k1Vs4LH1xvhoC3ueUSTF1RdnSqkqrINEICh8ldDuxUT2lAqEa8nG3akUgsfVqvge8j3rX8fu0HIbKMRyp8v3g+rIEa6kzaHKIwE9XRRF6l5/rSHOyC1A06PTHL+gy7m04qWj4hRtEAaDMcEkrRQGj9ZYOR7bCOZOJRx+xuhbs4haSGryaA=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mailer-daemon@googlemail.com Mail Delivery Subsystem'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='me+caf_=me=jaylee.us@u.jaylee.us'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Delivery Status Notification (Failure)'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-17T05:17:18.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-17T05:17:18.537-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1631063573495435113-3e8c3d97-479f-4718-a1c9-9419d08fbda3.mbox' FileSize='25712' Hash='4ab1fb8be217e1a61b76a800d9dcc5c8'/>
+					</File>
+				</Files>
+			</Document>
+			<Document DocID='ACD7onq0jN2OefW7i3HNP3XG3c3tOMqJ2Ett8boydRWMKm0ZVj611dw/9I4g/kpYdOVAxDchqHw7789uXu1ai4ibr/piualOAlG02Di0PiH8PUGFPLNf2uK+oQOSd0eguwE6V2DiNDWRWNNIg6Uiq5PzTRdNU+DLtbHNRai61kQ2151pNesn6K3A4zr+YYO63rJXO6Ee/+9tNhqOpLpusfsGO7vX4C3cRggrmbAb3HchmR56QQv8AZTFhj8WSdYG6PNxUBFdGxtH/c85sx9Uu+9v1bTlSE7NrQ=='>
+				<Tags>
+					<Tag TagName='#From' TagDataType='Text' TagValue='mailinglists@mattcrews.com Matthew Crews'/>
+					<Tag TagName='#To' TagDataType='Text' TagValue='debian-user@lists.debian.org'/>
+					<Tag TagName='#CC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#BCC' TagDataType='Text' TagValue=''/>
+					<Tag TagName='#Subject' TagDataType='Text' TagValue='Re: A call to drop gnome'/>
+					<Tag TagName='Labels' TagDataType='Text' TagValue='^INBOX,^UNREAD,ubuntu'/>
+					<Tag TagName='#DateSent' TagDataType='DateTime' TagValue='2019-04-16T10:54:18.000-07:00'/>
+					<Tag TagName='#DateReceived' TagDataType='DateTime' TagValue='2019-04-16T10:54:39.110-07:00'/>
+				</Tags>
+				<Files>
+					<File FileType='Native'>
+						<ExternalFile FileName='1630994200096428393-2830893f-0047-4544-b79a-d185057afd12.mbox' FileSize='14287' Hash='3c0bee2c3cf0b51d35855b8e583f3d8b'/>
+					</File>
+				</Files>
+			</Document>
+		</Documents>
+		<CustomBatchInfo>
+			<Query>
+				<UserQuery>( ubuntu ) AND ( sent_after:2019-04-15 ) AND ( sent_before:2019-04-19 )</UserQuery>
+				<TimeZone>GMT+0:00</TimeZone>
+				<Custodians>me@u.jaylee.us</Custodians>
+			</Query>
+		</CustomBatchInfo>
+	</Batch>
+</Root>
