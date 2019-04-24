@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.24'
+__version__ = '1.25'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -1465,7 +1465,7 @@ def main(argv):
       os.mkdir(backup_path)
     messages_to_backup = []
     messages_to_refresh = []
-    #Determine which messages from the search we haven't processed before.
+    # Determine which messages from the search we haven't processed before.
     print("GYB needs to examine %s messages" % len(messages_to_process))
     for message_num in messages_to_process:
       if not newDB and message_is_backed_up(message_num['id'], sqlcur, sqlconn,
