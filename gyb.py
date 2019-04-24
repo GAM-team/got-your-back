@@ -39,6 +39,7 @@ reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
   'bin', 'allmail', 'drafts', 'archived']
 
 import argparse
+import importlib
 import sys
 import os
 import os.path
@@ -47,7 +48,9 @@ import random
 import struct
 import platform
 import datetime
+import socket
 import sqlite3
+import ssl
 import email
 import hashlib
 import re
@@ -1380,6 +1383,15 @@ def main(argv):
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
+    print(ssl.OPENSSL_VERSION)
+    proot = os.path.dirname(importlib.import_module('httplib2').__file__)
+    ca_path = os.path.join(proot, 'cacerts.txt')
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ssl_sock = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE, ca_certs=ca_path)
+    ssl_sock.connect(('www.googleapis.com', 443))
+    cipher_name, tls_ver, _ = ssl_sock.cipher()
+    print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
+
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
