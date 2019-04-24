@@ -37,7 +37,7 @@ matrix:
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
-- pip install pyinstaller
+- $pip install pyinstaller
 
 install:
 - $python -m PyInstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
