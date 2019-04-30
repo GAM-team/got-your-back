@@ -16,6 +16,18 @@ matrix:
     language: bash 
     env:
       ARCH=x86_64
+  - os: linux
+    name: "Linux Ubuntu Trusty 64-bit"
+    dist: trusty
+    language: bash
+    env:
+      ARCH=x86_64
+  - os: linux
+    name: "Linux Ubuntu Precise 64-bit"
+    dist: precise
+    language: bash
+    env:
+      ARCH=x86_64
   - os: osx
     name: "MacOS Sierra 10.12 64-bit"
     language: generic
@@ -73,7 +85,7 @@ script:
 - echo "This job will use $gyb_user"
 - gyb-test/gyb --version
 - gyb-test/gyb --version | grep "Python 3\.7\.3"
-- gyb-test/gyb --version | grep TLSv1\.3
+- gyb-test/gyb --version | grep TLSv1\.[23]
 - gyb-test/gyb --action purge --email $gyb_user
 - gyb-test/gyb --action purge-labels --email $gyb_user
 - gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
