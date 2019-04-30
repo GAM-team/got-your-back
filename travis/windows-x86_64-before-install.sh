@@ -6,4 +6,4 @@ export PATH=$PATH:/c/Python37/scripts
 cinst -y wixtoolset
 
 export python=/c/Python37/python
-export pip=/c/Python37/script/pip
+export pip=/c/Python37/scripts/pip
