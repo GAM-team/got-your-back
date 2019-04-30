@@ -11,16 +11,19 @@ env:
 matrix:
   include:
   - os: linux
+    name: "Linux Ubuntu Xenial 64-bit"
     dist: xenial
     language: bash 
     env:
       ARCH=x86_64
   - os: osx
+    name: "MacOS Sierra 10.12 64-bit"
     language: generic
     osx_image: xcode9.2
     env:
       ARCH=x86_64
   - os: windows
+    name: "Windows 64-bit"
     language: shell
     filter_secrets: false
     env:
@@ -28,6 +31,7 @@ matrix:
       CINST_ARGS=""
       WIX_ARCH=x64
   - os: windows
+    name: "Windows 32-bit"
     language: shell
     filter_secrets: false
     env:
@@ -38,6 +42,7 @@ matrix:
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 - $pip install pyinstaller
+- $pip install -r requirements.txt
 
 install:
 - $python -m PyInstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
