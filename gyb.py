@@ -235,7 +235,7 @@ def requestOAuthAccess():
     auth_as = options.use_admin
   else:
     auth_as = options.email
-  CLIENT_SECRETS = getProgPath()+'client_secrets.json'
+  CLIENT_SECRETS = os.path.join(getProgPath(), 'client_secrets.json')
   MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure a project
 
@@ -249,15 +249,15 @@ Try running:
 %s --action create-project --email %s
 
 """ % (CLIENT_SECRETS, sys.argv[0], options.email)
-  cfgFile = '%s%s.cfg' % (getProgPath(), auth_as)
+  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
   storage = oauth2client.file.Storage(cfgFile)
   credentials = storage.get()
   flags = cmd_flags()
-  if os.path.isfile(getProgPath()+'nobrowser.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
   if credentials is None or credentials.invalid:
     disable_ssl_certificate_validation = False
-    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
       disable_ssl_certificate_validation = True
     http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
@@ -342,7 +342,7 @@ https://www.googleapis.com/auth/gmail.labels',
     credentials = oauth2client.tools.run_flow(flow=FLOW, storage=storage,
       flags=flags, http=http)
     disable_ssl_certificate_validation = False
-    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
       disable_ssl_certificate_validation = True
     http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
@@ -381,7 +381,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
 
   if options.debug:
     httplib2.debuglevel = 4 
-  last_update_check_file = getProgPath()+'lastcheck.txt'
+  last_update_check_file = os.path.join(getProgPath(), 'lastcheck.txt')
   current_version = __version__
   now_time = calendar.timegm(time.gmtime())
   check_url = 'https://api.github.com/repos/jay0lee/got-your-back/releases' # includes pre-releases
@@ -393,7 +393,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     check_url = check_url + '/latest' # latest full release
   headers = {u'Accept': u'application/vnd.github.v3.text+json'}
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   try:
@@ -456,7 +456,7 @@ def buildGAPIObject(api):
     auth_as = options.use_admin
   else:
     auth_as = options.email
-  oauth2file = '%s%s.cfg' % (getProgPath(), auth_as)
+  oauth2file = os.path.join(getProgPath(), '%s.cfg' % auth_as)
   storage = oauth2client.file.Storage(oauth2file)
   credentials = storage.get()
   if credentials is None or credentials.invalid:
@@ -464,24 +464,24 @@ def buildGAPIObject(api):
     credentials = storage.get()
   credentials.user_agent = getGYBVersion(' | ') 
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     extra_args['prettyPrint'] = True
-  if os.path.isfile(getProgPath()+'extra-args.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
     import configparser
     config = configparser.ConfigParser()
     config.optionxform = str
-    config.read(getProgPath()+'extra-args.txt')
+    config.read(os.path.join(getProgPath(), 'extra-args.txt'))
     extra_args.update(dict(config.items('extra-args')))
   http = credentials.authorize(http)
   version = getAPIVer(api)
   try:
     return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
-    disc_file = getProgPath()+'%s-%s.json' % (api, version)
+    disc_file = os.path.join(getProgPath(), '%s-%s.json' % (api, version))
     if os.path.isfile(disc_file):
       f = file(disc_file, 'r')
       discovery = f.read()
@@ -499,20 +499,20 @@ def buildGAPIServiceObject(api, soft_errors=False):
     auth_as = options.use_admin
   else:
     auth_as = options.email
-  oauth2servicefilejson = getProgPath()+'oauth2service.json'
+  oauth2servicefilejson = os.path.join(getProgPath(), 'oauth2service.json')
   scopes = getAPIScope(api)
   credentials = ServiceAccountCredentials.from_json_keyfile_name(
     oauth2servicefilejson, scopes)
   credentials = credentials.create_delegated(auth_as)
   credentials.user_agent = getGYBVersion(' | ')
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   http = httplib2.Http(
     disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     extra_args['prettyPrint'] = True
-  if os.path.isfile(getProgPath()+'extra-args.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
     import configparser
     config = configparser.ConfigParser()
     config.optionxform = str
@@ -665,10 +665,10 @@ def getCRMService(login_hint):
   storage_dict = {}
   storage = DictionaryStorage(storage_dict, u'credentials')
   flags = cmd_flags()
-  if os.path.isfile(getProgPath()+'nobrowser.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   http = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
@@ -681,7 +681,7 @@ def getCRMService(login_hint):
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(httpObj, project_name, checkEnabled):
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   s, c = simplehttp.request(GYB_PROJECT_APIS, 'GET')
@@ -781,7 +781,7 @@ def _createClientSecretsOauth2service(httpObj, projectId):
     if not client_secret:
       client_secret = input().strip()
     disable_ssl_certificate_validation = False
-    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
       disable_ssl_certificate_validation = True 
     simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation) 
     client_valid = _checkClientAndSecret(simplehttp, client_id, client_secret)
@@ -799,7 +799,7 @@ def _createClientSecretsOauth2service(httpObj, projectId):
         "token_uri": "https://accounts.google.com/o/oauth2/token"
     }
 }''' % (client_id, client_secret, projectId)
-  client_secrets_file = getProgPath()+'client_secrets.json'
+  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   writeFile(client_secrets_file, cs_data, continueOnError=False)
 
 PROJECTID_PATTERN = re.compile(r'^[a-z][a-z0-9-]{4,28}[a-z0-9]$')
@@ -820,7 +820,7 @@ def _getLoginHintProjects():
     sys.exit(3)
   login_hint = getValidateLoginHint(login_hint)
   crm, httpObj = getCRMService(login_hint)
-  client_secrets_file = getProgPath()+'client_secrets.json'
+  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   if pfilter == u'current':
     cs_data = readFile(client_secrets_file, mode=u'rb', continueOnError=True, displayError=True, encoding=None)
     if not cs_data:
@@ -849,8 +849,8 @@ def doDelProjects():
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
 def doCreateProject():
-  service_account_file = getProgPath()+'oauth2service.json'
-  client_secrets_file = getProgPath()+'client_secrets.json'
+  service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
+  client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   for a_file in [service_account_file, client_secrets_file]:
     if os.path.exists(a_file):
       print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
@@ -938,7 +938,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       sys.exit(2)
     break
   disable_ssl_certificate_validation = False
-  if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
     disable_ssl_certificate_validation = True
   enableProjectAPIs(httpObj, project_name, False)
   iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpObj,
@@ -980,7 +980,7 @@ def doCheckServiceAccount():
   all_scopes_pass = True
   for scope in all_scopes:
     try:
-      oauth2service_file = getProgPath()+'oauth2service.json'
+      oauth2service_file = os.path.join(getProgPath(), 'oauth2service.json')
       credentials = oauth2client.service_account.ServiceAccountCredentials.from_json_keyfile_name(
           oauth2service_file, [scope])
       credentials = credentials.create_delegated(options.email)
@@ -1150,7 +1150,7 @@ def doesTokenMatchEmail():
   print("Error: you did not authorize the OAuth token in the browser with the \
 %s Google Account. Please make sure you are logged in to the correct account \
 when authorizing the token in the browser." % auth_as)
-  cfgFile = '%s%s.cfg' % (getProgPath(), auth_as)
+  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
   os.remove(cfgFile)
   return False
 
@@ -2019,7 +2019,7 @@ otaBytesByService,quotaType')
     if options.service_account:
       print('ERROR: --action revoke does not work with --service-account')
       sys.exit(5)
-    oauth2file = getProgPath()+'%s.cfg' % options.email
+    oauth2file = os.path.join(getProgPath(), '%s.cfg' % options.email)
     storage = oauth2client.file.Storage(oauth2file)
     credentials = storage.get()
     try:
@@ -2028,7 +2028,7 @@ otaBytesByService,quotaType')
       print('Error: Authorization doesn\'t exist')
       sys.exit(1)
     disable_ssl_certificate_validation = False
-    if os.path.isfile(getProgPath()+'noverifyssl.txt'):
+    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
       disable_ssl_certificate_validation = True
     http = httplib2.Http(
       disable_ssl_certificate_validation=disable_ssl_certificate_validation)
