@@ -212,7 +212,15 @@ method breaks Gmail deduplication and threading.')
   return parser.parse_args(argv)
 
 def getProgPath():
-  return os.path.dirname(os.path.realpath(sys.argv[0]))+path_divider
+  if os.environ.get('STATICX_PROG_PATH', False):
+    # StaticX static executable
+    return os.path.dirname(os.environ['STATICX_PROG_PATH'])
+  elif getattr(sys, 'frozen', False):
+    # PyInstaller exe
+    return os.path.dirname(sys.executable)
+  else:
+    # Source code
+    return os.path.dirname(os.path.realpath(__file__))
 
 class cmd_flags(object):
   def __init__(self):
@@ -1383,6 +1391,7 @@ def main(argv):
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
+    print('Path: %s' % getProgPath())
     print(ssl.OPENSSL_VERSION)
     proot = os.path.dirname(importlib.import_module('httplib2').__file__)
     ca_path = os.path.join(proot, 'cacerts.txt')

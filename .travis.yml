@@ -71,8 +71,9 @@ script:
 - cat travis/cfg_template.json | python travis/svars-write.py &> /dev/null
 - echo "This job will use $gyb_user"
 - gyb-test/gyb --version
-- gyb-test/gyb --version | grep "Python 3\.7\.3"
-- gyb-test/gyb --version | grep TLSv1\.[23]
+- gyb-test/gyb --version | grep "Python 3\.7\.3" # we should be using Python 3.7.3
+- gyb-test/gyb --version | grep TLSv1\.[23] # we should be using TLS 1.2 or 1.3
+- gyb-test/gyb --version | grep travis # travis should be part of path
 - gyb-test/gyb --action purge --email $gyb_user
 - gyb-test/gyb --action purge-labels --email $gyb_user
 - gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
