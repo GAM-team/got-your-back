@@ -30,7 +30,7 @@ __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, path_divider
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, httpc
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
@@ -44,6 +44,7 @@ import sys
 import os
 import os.path
 import time
+import calendar
 import random
 import struct
 import platform
@@ -60,11 +61,14 @@ import base64
 import json
 import xml.etree.ElementTree as etree
 from urllib.parse import urlencode
+import configparser
+import webbrowser
 
 import httplib2
 import oauth2client.client
 import oauth2client.file
 from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.contrib.dictionary_storage import DictionaryStorage
 import oauth2client.tools
 import googleapiclient
 import googleapiclient.discovery
@@ -72,12 +76,23 @@ import googleapiclient.errors
 
 import fmbox
 
-if os.name == 'windows' or os.name == 'nt':
-  path_divider = '\\'
-else:
-  path_divider = '/'
+# override httplib2 so we can force TLS versions
+def _build_ssl_context(disable_ssl_certificate_validation, ca_certs, cert_file=None, key_file=None):
+  context = ssl.SSLContext(httplib2.DEFAULT_TLS_VERSION)
+  context.verify_mode = ssl.CERT_REQUIRED
+  context.check_hostname = True
+  if options.ca_file:
+    ca_certs = options.ca_file
+  context.load_verify_locations(ca_certs)
+  if cert_file:
+    context.load_cert_chain(cert_file, key_file)
+  if options.tls_min_version:
+    context.minimum_version = getattr(ssl.TLSVersion, options.tls_min_version)
+  if options.tls_max_version:
+    context.maximum_version = getattr(ssl.TLSVersion, options.tls_max_version)
+  return context
 
-# Override some oauth2client.tools strings saving us a few GAM-specific mods to oauth2client
+# Override some oauth2client.tools strings
 oauth2client.tools._FAILED_START_MESSAGE = """
 Failed to start a local webserver listening on either port 8080
 or port 8090. Please check your firewall settings and locally
@@ -103,8 +118,16 @@ Go to the following link in your browser:
 """
 
 def SetupOptionParser(argv):
+  tls_choices = []
+  if getattr(ssl, 'TLSVersion', False):
+    tls_min_default = 'TLSv1_2'
+    tls_vals = list(ssl.TLSVersion)[1:-1]
+    tls_choices = []
+    for val in tls_vals:
+      tls_choices.append(val.name)
+  else:
+    tls_min_default = None
   parser = argparse.ArgumentParser(add_help=False)
-  #parser.usage = parser.print_help()
   parser.add_argument('--email',
     dest='email',
     help='Full email address of user or group to act against')
@@ -198,6 +221,20 @@ method breaks Gmail deduplication and threading.')
     type=int,
     default=0,
     help='Limit in megabytes batch requests allow. Prevents memory issues.')
+  parser.add_argument('--tls-min-version',
+    dest='tls_min_version',
+    default=tls_min_default,
+    choices=tls_choices,
+    help='Python 3.7+ only. Set minimum version of TLS HTTPS connections require. Default is TLSv1_2')
+  parser.add_argument('--tls-max-version',
+    dest='tls_max_version',
+    default=None,
+    choices=tls_choices,
+    help='Python 3.7+ only. Set maximum version of TLS HTTPS connections use. Default is no max')
+  parser.add_argument('--ca-file',
+    dest='ca_file',
+    default=None,
+    help='specify a certificate authority to use for validating HTTPS hosts.')
   parser.add_argument('--version',
     action='store_true',
     dest='version',
@@ -256,11 +293,6 @@ Try running:
   if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
   if credentials is None or credentials.invalid:
-    disable_ssl_certificate_validation = False
-    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-      disable_ssl_certificate_validation = True
-    http = httplib2.Http(
-      disable_ssl_certificate_validation=disable_ssl_certificate_validation)
     possible_scopes = ['https://www.googleapis.com/auth/gmail.modify',
                        # Gmail modify
 
@@ -340,12 +372,7 @@ https://www.googleapis.com/auth/gmail.labels',
     FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS,
       scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=auth_as)
     credentials = oauth2client.tools.run_flow(flow=FLOW, storage=storage,
-      flags=flags, http=http)
-    disable_ssl_certificate_validation = False
-    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-      disable_ssl_certificate_validation = True
-    http = httplib2.Http(
-      disable_ssl_certificate_validation=disable_ssl_certificate_validation)
+      flags=flags, http=httpc)
 
 #
 # Read a file
@@ -373,14 +400,11 @@ def readFile(filename, mode=u'rb', continueOnError=False, displayError=True, enc
     systemErrorExit(2, str(e))
 
 def doGYBCheckForUpdates(forceCheck=False, debug=False):
-  import calendar
 
   def _LatestVersionNotAvailable():
     if forceCheck:
       systemErrorExit(4, u'GYB Latest Version information not available')
 
-  if options.debug:
-    httplib2.debuglevel = 4 
   last_update_check_file = os.path.join(getProgPath(), 'lastcheck.txt')
   current_version = __version__
   now_time = calendar.timegm(time.gmtime())
@@ -392,12 +416,8 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
       return
     check_url = check_url + '/latest' # latest full release
   headers = {u'Accept': u'application/vnd.github.v3.text+json'}
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
-  simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   try:
-    (_, c) = simplehttp.request(check_url, u'GET', headers=headers)
+    (_, c) = httpc.request(check_url, u'GET', headers=headers)
     try:
       release_data = json.loads(c.decode('utf-8'))
     except ValueError:
@@ -423,7 +443,6 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
       print('\n\nHit CTRL+C to visit the GYB website and download the latest release or wait 15 seconds to continue with this boring old version. GYB won\'t bother you with this announcement for 1 week or you can create a file named noupdatecheck.txt in the same location as gyb.py or gyb.exe and GYB won\'t ever check for updates.')
       time.sleep(15)
     except KeyboardInterrupt:
-      import webbrowser
       webbrowser.open(release_data[u'html_url'])
       print('GYB exiting for update...')
       sys.exit(0)
@@ -452,6 +471,7 @@ def getAPIScope(api):
     return ['https://www.googleapis.com/auth/drive.appdata']
 
 def buildGAPIObject(api):
+  global httpc
   if options.use_admin:
     auth_as = options.use_admin
   else:
@@ -463,23 +483,17 @@ def buildGAPIObject(api):
     doRequestOAuth()
     credentials = storage.get()
   credentials.user_agent = getGYBVersion(' | ') 
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
-  http = httplib2.Http(
-    disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
-    import configparser
     config = configparser.ConfigParser()
     config.optionxform = str
     config.read(os.path.join(getProgPath(), 'extra-args.txt'))
     extra_args.update(dict(config.items('extra-args')))
-  http = credentials.authorize(http)
+  httpc = credentials.authorize(httpc)
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
+    return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
     disc_file = os.path.join(getProgPath(), '%s-%s.json' % (api, version))
     if os.path.isfile(disc_file):
@@ -487,14 +501,14 @@ def buildGAPIObject(api):
       discovery = f.read()
       f.close()
       return googleapiclient.discovery.build_from_document(discovery,
-        base='https://www.googleapis.com', http=http)
+        base='https://www.googleapis.com', http=httpc)
     else:
       print('No online discovery doc and %s does not exist locally'
         % disc_file)
       raise
 
 def buildGAPIServiceObject(api, soft_errors=False):
-  global extra_args
+  global extra_args, httpc
   if options.use_admin:
     auth_as = options.use_admin
   else:
@@ -505,23 +519,17 @@ def buildGAPIServiceObject(api, soft_errors=False):
     oauth2servicefilejson, scopes)
   credentials = credentials.create_delegated(auth_as)
   credentials.user_agent = getGYBVersion(' | ')
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
-  http = httplib2.Http(
-    disable_ssl_certificate_validation=disable_ssl_certificate_validation)
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
-    import configparser
     config = configparser.ConfigParser()
     config.optionxform = str
     config.read(getGamPath()+'extra-args.txt')
     extra_args.update(dict(config.items('extra-args')))
-  http = credentials.authorize(http)
+  httpc = credentials.authorize(httpc)
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=http, cache_discovery=False)
+    return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
   except oauth2client.client.AccessTokenRefreshError as e:
     message = e.args[0]
     if message in ['access_denied',
@@ -655,7 +663,6 @@ def percentage(part, whole):
   return '{0:.2f}'.format(100 * float(part)/float(whole))
 
 def getCRMService(login_hint):
-  from oauth2client.contrib.dictionary_storage import DictionaryStorage
   scope = 'https://www.googleapis.com/auth/cloud-platform'
   client_id = '297408095146-fug707qsjv4ikron0hugpevbrjhkmsk7.apps.googleusercontent.com'
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
@@ -667,30 +674,21 @@ def getCRMService(login_hint):
   flags = cmd_flags()
   if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
-  http = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-  credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=http)
-  http = credentials.authorize(httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation,
-                 cache=None))
+  credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=httpc)
+  httpc = credentials.authorize(httpc)
   return (googleapiclient.discovery.build('cloudresourcemanager', u'v1',
-      http=http, cache_discovery=False,
-      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI), http)
+      http=httpc, cache_discovery=False,
+      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI), httpc)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(httpObj, project_name, checkEnabled):
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
-  simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-  s, c = simplehttp.request(GYB_PROJECT_APIS, 'GET')
+  s, c = httpc.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
   serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
-          http=httpObj, cache_discovery=False,
+          http=httpc, cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   if checkEnabled:
     enabledServices = callGAPIpages(serveman.services(), 'list', 'services',
@@ -780,11 +778,7 @@ def _createClientSecretsOauth2service(httpObj, projectId):
     client_secret = input(u'Enter your Client Secret: ').strip()
     if not client_secret:
       client_secret = input().strip()
-    disable_ssl_certificate_validation = False
-    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-      disable_ssl_certificate_validation = True 
-    simplehttp = httplib2.Http(disable_ssl_certificate_validation=disable_ssl_certificate_validation) 
-    client_valid = _checkClientAndSecret(simplehttp, client_id, client_secret)
+    client_valid = _checkClientAndSecret(httpc, client_id, client_secret)
     if client_valid:
       break
     print()
@@ -937,11 +931,8 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       print(status[u'error'])
       sys.exit(2)
     break
-  disable_ssl_certificate_validation = False
-  if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-    disable_ssl_certificate_validation = True
   enableProjectAPIs(httpObj, project_name, False)
-  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpObj,
+  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
@@ -1386,21 +1377,19 @@ def getSizeOfMessages(messages, gmail):
   return message_sizes
 
 def main(argv):
-  global options, gmail
+  global options, gmail, httpc
   options = SetupOptionParser(argv)
+  httplib2._build_ssl_context = _build_ssl_context
+  httpc = httplib2.Http()
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
     print('Path: %s' % getProgPath())
     print(ssl.OPENSSL_VERSION)
-    proot = os.path.dirname(importlib.import_module('httplib2').__file__)
-    ca_path = os.path.join(proot, 'cacerts.txt')
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ssl_sock = ssl.wrap_socket(s, cert_reqs=ssl.CERT_NONE, ca_certs=ca_path)
-    ssl_sock.connect(('www.googleapis.com', 443))
-    cipher_name, tls_ver, _ = ssl_sock.cipher()
+    httpc = httplib2.Http()
+    httpc.request('https://www.googleapis.com')
+    cipher_name, tls_ver, _ = httpc.connections['https:www.googleapis.com'].sock.cipher()
     print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
-
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
@@ -1727,7 +1716,7 @@ def main(argv):
         for filename in files:
           if filename[-4:].lower() != '.xml':
             continue
-          file_path = '%s%s%s' % (path, path_divider, filename)
+          file_path = os.path.join(path, filename)
           print("\nReading Vault labels from %s file %s" % (humansize(file_path), file_path))
           print("large files may take some time to read...")
           for _, elem in etree.iterparse(file_path, events=('end',)):
@@ -1748,7 +1737,7 @@ def main(argv):
         if filename[-4:].lower() != '.mbx' and \
           filename[-5:].lower() != '.mbox':
           continue
-        file_path = '%s%s%s' % (path, path_divider, filename)
+        file_path = os.path.join(path, filename)
         print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
         mbox = fmbox.fmbox(file_path)
         current = 0
@@ -2027,13 +2016,6 @@ otaBytesByService,quotaType')
     except AttributeError:
       print('Error: Authorization doesn\'t exist')
       sys.exit(1)
-    disable_ssl_certificate_validation = False
-    if os.path.isfile(os.path.join(getProgPath(), 'noverifyssl.txt')):
-      disable_ssl_certificate_validation = True
-    http = httplib2.Http(
-      disable_ssl_certificate_validation=disable_ssl_certificate_validation)
-    if options.debug:
-      httplib2.debuglevel = 4
     sys.stdout.write('This authorizaton token will self-destruct in 3...')
     sys.stdout.flush()
     time.sleep(1)
@@ -2046,7 +2028,7 @@ otaBytesByService,quotaType')
     sys.stdout.write('boom!\n')
     sys.stdout.flush()
     try:
-      credentials.revoke(http)
+      credentials.revoke(httpc)
     except oauth2client.client.TokenRevokeError:
       print('Error')
       os.remove(oauth2file)
@@ -2078,7 +2060,7 @@ otaBytesByService,quotaType')
 
 if __name__ == '__main__':
   if sys.version_info[0] < 3 or sys.version_info[1] < 5:
-    print('ERROR: GYB requires Python 3.5 or greater.')
+    print('ERROR: GYB requires Python 3.7 or greater.')
     sys.exit(3)
   try:
     main(sys.argv[1:])
@@ -2088,6 +2070,11 @@ if __name__ == '__main__':
 1) Use a 64-bit version of GYB. It has access to more memory.
 2) Add "--memory-limit 100" argument to GYB to reduce memory usage.''' % options.action)
     sys.exit(5)
+  except ssl.SSLError as e:
+    if e.reason == 'NO_PROTOCOLS_AVAILABLE':
+      print('ERROR: %s - Please adjust your --tls-min-version and --tls-max-version arguments.' % e.reason)
+    else:
+      raise
   except KeyboardInterrupt:
     try:
       sqlconn.commit()
