@@ -18,6 +18,7 @@ OPTIONS:
 EOF
 }
 
+
 target_dir="$HOME/bin"
 myarch=$(uname -m)
 myos=$(uname -s)
@@ -75,6 +76,11 @@ echo_yellow()
 {
 echo -e "\x1B[1;33m$1"
 echo -e '\x1B[0m'
+}
+
+version_gt()
+{
+test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"
 }
 
 case $myos in
