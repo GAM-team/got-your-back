@@ -26,6 +26,8 @@ upgrade_only=false
 gybversion="latest"
 adminuser=""
 regularuser=""
+glibc_vers="2.23 2.19 2.15"
+
 while getopts "hd:a:o:lp:u:r:v:" OPTION
 do
      case $OPTION in
@@ -78,8 +80,18 @@ echo -e '\x1B[0m'
 case $myos in
   [lL]inux)
     myos="linux"
+    this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
+    echo "This Linux distribution uses glibc $this_glibc_ver"
+    useglibc="legacy"
+    for gam_glibc_ver in $gam_glibc_vers; do
+      if version_gt $this_glibc_ver $gam_glibc_ver; then
+        useglibc="glibc$gam_glibc_ver"
+        echo_green "Using GYB compiled against $useglibc"
+        break
+      fi
+    done
     case $myarch in
-      x86_64) gybfile="linux-x86_64.tar.xz";;
+      x86_64) gybfile="linux-x86_64-$useglibc.tar.xz";;
       i?86) gybfile="linux-i686.tar.xz";;
       arm|armv7l) gybfile="linux-armv7l.tar.xz";;
       arm64|aarch64) gybfile="linux-aarch64.tar.xz";;

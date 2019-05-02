@@ -221,16 +221,17 @@ method breaks Gmail deduplication and threading.')
     type=int,
     default=0,
     help='Limit in megabytes batch requests allow. Prevents memory issues.')
-  parser.add_argument('--tls-min-version',
-    dest='tls_min_version',
-    default=tls_min_default,
-    choices=tls_choices,
-    help='Python 3.7+ only. Set minimum version of TLS HTTPS connections require. Default is TLSv1_2')
-  parser.add_argument('--tls-max-version',
-    dest='tls_max_version',
-    default=None,
-    choices=tls_choices,
-    help='Python 3.7+ only. Set maximum version of TLS HTTPS connections use. Default is no max')
+  if tls_choices:
+    parser.add_argument('--tls-min-version',
+      dest='tls_min_version',
+      default=tls_min_default,
+      choices=tls_choices,
+      help='Python 3.7+ only. Set minimum version of TLS HTTPS connections require. Default is TLSv1_2')
+    parser.add_argument('--tls-max-version',
+      dest='tls_max_version',
+      default=None,
+      choices=tls_choices,
+      help='Python 3.7+ only. Set maximum version of TLS HTTPS connections use. Default is no max')
   parser.add_argument('--ca-file',
     dest='ca_file',
     default=None,
