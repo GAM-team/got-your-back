@@ -268,6 +268,7 @@ class cmd_flags(object):
     self.auth_host_port = [8080, 9090]
 
 def requestOAuthAccess():
+  global httpc
   if options.use_admin:
     auth_as = options.use_admin
   else:
@@ -404,7 +405,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
   def _LatestVersionNotAvailable():
     if forceCheck:
       systemErrorExit(4, u'GYB Latest Version information not available')
-
+  global httpc
   last_update_check_file = os.path.join(getProgPath(), 'lastcheck.txt')
   current_version = __version__
   now_time = calendar.timegm(time.gmtime())
@@ -663,6 +664,7 @@ def percentage(part, whole):
   return '{0:.2f}'.format(100 * float(part)/float(whole))
 
 def getCRMService(login_hint):
+  global httpc
   scope = 'https://www.googleapis.com/auth/cloud-platform'
   client_id = '297408095146-fug707qsjv4ikron0hugpevbrjhkmsk7.apps.googleusercontent.com'
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
@@ -676,12 +678,13 @@ def getCRMService(login_hint):
     flags.noauth_local_webserver = True
   credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=httpc)
   httpc = credentials.authorize(httpc)
-  return (googleapiclient.discovery.build('cloudresourcemanager', u'v1',
+  return googleapiclient.discovery.build('cloudresourcemanager', u'v1',
       http=httpc, cache_discovery=False,
-      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI), httpc)
+      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
-def enableProjectAPIs(httpObj, project_name, checkEnabled):
+def enableProjectAPIs(project_name, checkEnabled):
+  global httpc
   s, c = httpc.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
@@ -729,7 +732,7 @@ def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=Tr
       return False
     systemErrorExit(6, e)
 
-def _createClientSecretsOauth2service(httpObj, projectId):
+def _createClientSecretsOauth2service(projectId):
 
   def _checkClientAndSecret(simplehttp, client_id, client_secret):
     url = u'https://www.googleapis.com/oauth2/v4/token'
@@ -813,7 +816,7 @@ def _getLoginHintProjects():
     print('ERROR: delete-projects action requires --email and a project --search argument')
     sys.exit(3)
   login_hint = getValidateLoginHint(login_hint)
-  crm, httpObj = getCRMService(login_hint)
+  crm = getCRMService(login_hint)
   client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   if pfilter == u'current':
     cs_data = readFile(client_secrets_file, mode=u'rb', continueOnError=True, displayError=True, encoding=None)
@@ -826,13 +829,13 @@ def _getLoginHintProjects():
       print('The format of your client secrets file:\n\n%s\n\nis incorrect. Please recreate the file.' % client_secrets_file)
   else:
     projects = _getProjects(crm, pfilter)
-  return (crm, httpObj, login_hint, projects)
+  return (crm, login_hint, projects)
 
 def _getProjects(crm, pfilter):
   return callGAPIpages(crm.projects(), u'list', u'projects', filter=pfilter)
 
 def doDelProjects():
-  crm, _, login_hint, projects = _getLoginHintProjects()
+  crm, login_hint, projects = _getLoginHintProjects()
   count = len(projects)
   print('User: {0}, Delete {1} Projects'.format(login_hint, count))
   i = 0
@@ -843,6 +846,7 @@ def doDelProjects():
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
 def doCreateProject():
+  global httpc
   service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
   client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   for a_file in [service_account_file, client_secrets_file]:
@@ -854,7 +858,7 @@ def doCreateProject():
     sys.exit(3)
   login_hint = options.email
   login_domain = login_hint[login_hint.find(u'@')+1:]
-  crm, httpObj = getCRMService(login_hint)
+  crm = getCRMService(login_hint)
   project_id = u'gyb-project'
   for i in range(3):
     project_id += u'-%s' % ''.join(random.choice(string.digits + string.ascii_lowercase) for i in range(3))
@@ -931,7 +935,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       print(status[u'error'])
       sys.exit(2)
     break
-  enableProjectAPIs(httpObj, project_name, False)
+  enableProjectAPIs(project_name, False)
   iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
@@ -943,7 +947,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
                  name=service_account['name'], body={'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE', 'keyAlgorithm': u'KEY_ALG_RSA_2048'})
   oauth2service_data = base64.b64decode(key[u'privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
-  _createClientSecretsOauth2service(httpObj, project_id)
+  _createClientSecretsOauth2service(project_id)
   sa_url = 'https://console.developers.google.com/iam-admin/serviceaccounts/project?project=%s' % project_id
   print('''Almost there! Now please go to:
 
@@ -1396,7 +1400,6 @@ def main(argv):
     sys.exit(0)
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
-
   if options.debug:
     httplib2.debuglevel = 4
   if options.action == 'create-project':
@@ -1411,7 +1414,6 @@ def main(argv):
   elif options.action == 'split-mbox':
     print('split-mbox is no longer necessary and is deprecated. Mbox file size should not impact restore performance in this version.')
     sys.exit(0)
-
   if not options.email:
     print('ERROR: --email is required.')
     sys.exit(1)
