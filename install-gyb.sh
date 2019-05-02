@@ -83,9 +83,9 @@ case $myos in
     this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
     echo "This Linux distribution uses glibc $this_glibc_ver"
     useglibc="legacy"
-    for gam_glibc_ver in $gam_glibc_vers; do
-      if version_gt $this_glibc_ver $gam_glibc_ver; then
-        useglibc="glibc$gam_glibc_ver"
+    for glibc_ver in $glibc_vers; do
+      if version_gt $this_glibc_ver $glibc_ver; then
+        useglibc="glibc$glibc_ver"
         echo_green "Using GYB compiled against $useglibc"
         break
       fi
