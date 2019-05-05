@@ -685,11 +685,12 @@ def getCRMService(login_hint):
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(project_name, checkEnabled):
-  global httpc
-  s, c = httpc.request(GYB_PROJECT_APIS, 'GET')
+  httpc_github = httplib2.Http()
+  s, c = httpc_github.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
+  global httpc
   apis = c.decode("utf-8").splitlines()
   serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
           http=httpc, cache_discovery=False,
