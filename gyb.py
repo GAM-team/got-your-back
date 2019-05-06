@@ -30,7 +30,7 @@ __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, httpc
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, httpc, anonhttpc
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
@@ -406,7 +406,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
   def _LatestVersionNotAvailable():
     if forceCheck:
       systemErrorExit(4, u'GYB Latest Version information not available')
-  global httpc
+  global anonhttpc
   last_update_check_file = os.path.join(getProgPath(), 'lastcheck.txt')
   current_version = __version__
   now_time = calendar.timegm(time.gmtime())
@@ -419,7 +419,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     check_url = check_url + '/latest' # latest full release
   headers = {u'Accept': u'application/vnd.github.v3.text+json'}
   try:
-    (_, c) = httpc.request(check_url, u'GET', headers=headers)
+    (_, c) = anonhttpc.request(check_url, u'GET', headers=headers)
     try:
       release_data = json.loads(c.decode('utf-8'))
     except ValueError:
@@ -685,7 +685,7 @@ def getCRMService(login_hint):
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(project_name, checkEnabled):
-  global httpc
+  global anonhttpc
   s, c = httpc.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
@@ -735,13 +735,14 @@ def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=Tr
 
 def _createClientSecretsOauth2service(projectId):
 
-  def _checkClientAndSecret(simplehttp, client_id, client_secret):
+  def _checkClientAndSecret(client_id, client_secret):
+    global anonhttpc
     url = u'https://www.googleapis.com/oauth2/v4/token'
     post_data = {u'client_id': client_id, u'client_secret': client_secret,
                  u'code': u'ThisIsAnInvalidCodeOnlyBeingUsedToTestIfClientAndSecretAreValid',
                  u'redirect_uri': u'urn:ietf:wg:oauth:2.0:oob', u'grant_type': u'authorization_code'}
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
-    _, content = simplehttp.request(url, u'POST', urlencode(post_data), headers=headers)
+    _, content = anonhttpc.request(url, u'POST', urlencode(post_data), headers=headers)
     try:
       content = json.loads(content.decode('utf-8'))
     except ValueError:
@@ -782,7 +783,7 @@ def _createClientSecretsOauth2service(projectId):
     client_secret = input(u'Enter your Client Secret: ').strip()
     if not client_secret:
       client_secret = input().strip()
-    client_valid = _checkClientAndSecret(httpc, client_id, client_secret)
+    client_valid = _checkClientAndSecret(client_id, client_secret)
     if client_valid:
       break
     print()
@@ -1382,10 +1383,11 @@ def getSizeOfMessages(messages, gmail):
   return message_sizes
 
 def main(argv):
-  global options, gmail, httpc
+  global options, gmail, httpc, anonhttpc
   options = SetupOptionParser(argv)
   httplib2._build_ssl_context = _build_ssl_context
   httpc = httplib2.Http()
+  anonhttpc = httplib2.Http()
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
