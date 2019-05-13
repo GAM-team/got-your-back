@@ -45,7 +45,7 @@ tar xf Python-$PYTHON_VER.tar.xz
 cd Python-$PYTHON_VER
 echo "Compiling Python $PYTHON_VER..."
 safe_flags="--with-openssl=$mypath/ssl --enable-shared --prefix=$mypath/python --with-ensurepip=upgrade"
-unsafe_flags="--enable-optmizations --with-lto"
+unsafe_flags="--enable-optimizations --with-lto"
 ./configure $safe_flags $unsafe_flags > /dev/null
 make -j$cpucount -s
 if [ $? != 0 ]; then
