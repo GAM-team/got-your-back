@@ -44,9 +44,15 @@ echo "Extracting Python..."
 tar xf Python-$PYTHON_VER.tar.xz
 cd Python-$PYTHON_VER
 echo "Compiling Python $PYTHON_VER..."
-./configure --with-openssl=$mypath/ssl --enable-shared \
-	--prefix=$mypath/python --with-ensurepip=upgrade > /dev/null
+safe_flags="--with_openssl=$mypath/ssl --enable-shared --prefix=$mypath/python --with-ensurepip=upgrade"
+unsafe_flags="--enable-optmizations --with-lto"
+./configure $safe_flags $unsafe_flags > /dev/null
 make -j$cpucount -s
+if [ $? != 0 ]; then
+  echo "Trying Python $PYTHON_VER compile again without unsafe flags"
+  ./configure $safe_flags > /dev/null
+  make -j$cpucount -s
+fi
 echo "Installing Python..."
 make install > /dev/null
 cd ~
