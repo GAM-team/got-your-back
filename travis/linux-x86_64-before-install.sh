@@ -48,7 +48,9 @@ safe_flags="--with-openssl=$mypath/ssl --enable-shared --prefix=$mypath/python -
 unsafe_flags="--enable-optimizations --with-lto"
 ./configure $safe_flags $unsafe_flags > /dev/null
 make -j$cpucount -s
-if [ $? != 0 ]; then
+RESULT=$?
+echo "Optimized make exited with $RESULT"
+if [ $RESULT != 0 ]; then
   echo "Trying Python $PYTHON_VER compile again without unsafe flags"
   ./configure $safe_flags > /dev/null
   make -j$cpucount -s
