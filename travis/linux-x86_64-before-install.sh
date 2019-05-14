@@ -21,7 +21,7 @@ echo "My Path is $mypath"
 cpucount=$(nproc --all)
 echo "This device has $cpucount CPUs for compiling..."
 
-cd ~/build
+cd ~/pybuild
 # Compile latest OpenSSL
 if [ ! -d openssl-$BUILD_OPENSSL_VERSION ]; then
   wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
@@ -36,7 +36,7 @@ make -j$cpucount -s
 echo "Running make install for OpenSSL..."
 make install > /dev/null
 export LD_LIBRARY_PATH=~/ssl/lib
-cd ~/build
+cd ~/pybuild
 
 # Compile latest Python
 if [ ! -d Python-$BUILD_PYTHON_VERSION ]; then

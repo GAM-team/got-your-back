@@ -2,7 +2,7 @@ mypath=$HOME
 whereibelong=$(pwd)
 brew install xz > /dev/null
 
-cd ~/build
+cd ~/pybuild
 # Compile latest OpenSSL
 if [ ! -d openssl-$BUILD_OPENSSL_VERSION ]; then
   wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
@@ -17,7 +17,7 @@ make -j$cpucount -s
 echo "Running make install for OpenSSL..."
 make install > /dev/null
 export LD_LIBRARY_PATH=~/ssl/lib
-cd ~/build
+cd ~/pybuild
 
 # Compile latest Python
 if [ ! -d Python-$BUILD_PYTHON_VERSION ]; then
