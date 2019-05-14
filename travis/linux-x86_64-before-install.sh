@@ -2,11 +2,11 @@ export whereibelong=$(pwd)
 export dist=$(lsb_release --codename --short)
 echo "We are running on Ubuntu $dist"
 echo "RUNNING: apt update..."
-sudo apt-get --yes update > /dev/null
+sudo apt-get -qq --yes update
 echo "RUNNING: apt dist-upgrade..."
-sudo apt-get --yes dist-upgrade > /dev/null
+sudo apt-get -qq --yes dist-upgrade
 echo "Installing build tools..."
-sudo apt-get --yes install build-essential
+sudo apt-get -qq --yes install build-essential
 
 echo "Installing deps for python3"
 sudo cp -v /etc/apt/sources.list /tmp
@@ -24,7 +24,7 @@ echo "This device has $cpucount CPUs for compiling..."
 
 # Compile latest OpenSSL
 OPENSSL_VER=1.1.1b
-wget https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz
+wget --quiet https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz
 echo "Extracting OpenSSL..."
 tar xf openssl-$OPENSSL_VER.tar.gz
 cd openssl-$OPENSSL_VER
@@ -39,7 +39,7 @@ cd ~
 
 # Compile latest Python
 PYTHON_VER=3.7.3
-wget https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tar.xz
+wget --quiet https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tar.xz
 echo "Extracting Python..."
 tar xf Python-$PYTHON_VER.tar.xz
 cd Python-$PYTHON_VER
