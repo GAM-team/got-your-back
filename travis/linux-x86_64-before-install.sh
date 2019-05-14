@@ -10,18 +10,18 @@ sudo apt-get -qq --yes install build-essential > /dev/null
 
 echo "Installing deps for python3"
 sudo cp -v /etc/apt/sources.list /tmp
-chmod a+rwx /tmp/sources.list
+sudo chmod a+rwx /tmp/sources.list
 echo "deb-src http://archive.ubuntu.com/ubuntu/ $dist main" >> /tmp/sources.list
 sudo cp -v /tmp/sources.list /etc/apt
-sudo apt-get --yes update > /dev/null
-sudo apt-get --yes build-dep python3
+sudo apt-get -qq --yes update > /dev/null
+sudo apt-get -qq --yes build-dep python3 > /dev/null
 
 mypath=$HOME
 echo "My Path is $mypath"
 cpucount=$(nproc --all)
 echo "This device has $cpucount CPUs for compiling..."
 
-cd build
+cd ~/build
 # Compile latest OpenSSL
 if [ ! -d openssl-$BUILD_OPENSSL_VERSION ]; then
   wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
