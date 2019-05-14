@@ -2,11 +2,11 @@ export whereibelong=$(pwd)
 export dist=$(lsb_release --codename --short)
 echo "We are running on Ubuntu $dist"
 echo "RUNNING: apt update..."
-sudo apt-get -qq --yes update
+sudo apt-get -qq --yes update > /dev/null
 echo "RUNNING: apt dist-upgrade..."
-sudo apt-get -qq --yes dist-upgrade
+sudo apt-get -qq --yes dist-upgrade > /dev/null
 echo "Installing build tools..."
-sudo apt-get -qq --yes install build-essential
+sudo apt-get -qq --yes install build-essential > /dev/null
 
 echo "Installing deps for python3"
 sudo cp -v /etc/apt/sources.list /tmp
@@ -52,6 +52,7 @@ RESULT=$?
 echo "Optimized make exited with $RESULT"
 if [ $RESULT != 0 ]; then
   echo "Trying Python $PYTHON_VER compile again without unsafe flags"
+  make clean
   ./configure $safe_flags > /dev/null
   make -j$cpucount -s
 fi
