@@ -80,7 +80,8 @@ script:
 - echo "This job will use $gyb_user"
 - gyb-test/gyb --version
 - gyb-test/gyb --version | grep "Python ${BUILD_PYTHON_VERSION//./\\.}" # we should be using latest Python
-- gyb-test/gyb --version | grep "OpenSSL ${BUILD_OPENSSL_VERSION//./\\.}" # we should be using latest OpenSSL
+  #- gyb-test/gyb --version | grep "OpenSSL ${BUILD_OPENSSL_VERSION//./\\.}" # we should be using latest OpenSSL
+- gyb-test/gyb --version | grep "OpenSSL 1\.1\.1"
 - gyb-test/gyb --version | grep TLSv1\.[23] # we should be using TLS 1.2 or 1.3
 - gyb-test/gyb --version | grep travis # travis should be part of path
 - gyb-test/gyb --action purge --email $gyb_user
