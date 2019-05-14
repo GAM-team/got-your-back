@@ -2,10 +2,13 @@ mypath=$HOME
 whereibelong=$(pwd)
 brew install xz > /dev/null
 
+cd ~/build
 # Compile latest OpenSSL
-wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
-echo "Extracting OpenSSL..."
-tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
+if [ ! -d openssl-$BUILD_OPENSSL_VERSION ]; then
+  wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
+  echo "Extracting OpenSSL..."
+  tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
+fi
 cd openssl-$BUILD_OPENSSL_VERSION
 echo "Compiling OpenSSL $BUILD_OPENSSL_VERSION..."
 ./config shared --prefix=$mypath/ssl
@@ -14,12 +17,14 @@ make -j$cpucount -s
 echo "Running make install for OpenSSL..."
 make install > /dev/null
 export LD_LIBRARY_PATH=~/ssl/lib
-cd ~
+cd ~/build
 
 # Compile latest Python
-wget --quiet https://www.python.org/ftp/python/$BUILD_PYTHON_VERSION/Python-$BUILD_PYTHON_VERSION.tar.xz
-echo "Extracting Python..."
-tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
+if [ ! -d Python-$BUILD_PYTHON_VERSION ]; then
+  wget --quiet https://www.python.org/ftp/python/$BUILD_PYTHON_VERSION/Python-$BUILD_PYTHON_VERSION.tar.xz
+  echo "Extracting Python..."
+  tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
+fi
 cd Python-$BUILD_PYTHON_VERSION
 echo "Compiling Python $BUILD_PYTHON_VERSION..."
 safe_flags="--with-openssl=$mypath/ssl --enable-shared --prefix=$mypath/python --with-ensurepip=upgrade"

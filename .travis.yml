@@ -16,8 +16,7 @@ cache:
     - $HOME/.cache/pip
     - $HOME/python
     - $HOME/ssl
-    - $HOME/Python-$BUILD_PYTHON_VERSION
-    - $HOME/openssl-$BUILD_SSL_VERSION
+    - $HOME/build
 
 matrix:
   include:
