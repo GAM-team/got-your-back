@@ -1957,9 +1957,10 @@ def main(argv):
         purge_chunks.append([])
       purged_messages += 1
     for purge_chunk in purge_chunks:
-      callGAPI(gmail.users().messages(), function='batchDelete',
-        userId='me', body={'ids': purge_chunk})
-      rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
+      if purge_chunk: # make sure we actually have some IDs
+        callGAPI(gmail.users().messages(), function='batchDelete',
+          userId='me', body={'ids': purge_chunk})
+        rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
     print("\n")
 
   # PURGE-LABELS #
