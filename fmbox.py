@@ -17,13 +17,24 @@ class fmsg():
   def __init__(self, msg_bytes):
     self.msg_bytes = msg_bytes
  
-  def get_header(self, header):
+  def get_header(self, header, case_insensitive=False):
+    if case_insensitive:
+      header = header.lower()
     for line in self.msg_bytes.split(b'\n'):
+      if case_insensitive:
+        line = line.lower()
       if line.startswith(b'%s: ' % header):
         return line[len(header)+2:].decode('ascii')
       elif line == '':
         return ''
     return ''
+
+  def set_headers(self, headers):
+    new_msg = b''
+    for key, value in headers.items():
+      new_msg += b'%s: %s\n' % (key, value)
+    new_msg += self.msg_bytes
+    self.msg_bytes = new_msg
 
   def remove_header(self, header):
     new_msg = b''
