@@ -1,5 +1,4 @@
 until powershell Install-WindowsFeature Net-Framework-Core; do echo "trying again..."; done
-cd ~/pybuild
 export exefile=Win32OpenSSL_Light-${BUILD_OPENSSL_VERSION//./_}.exe
 if [ ! -e $exefile ]; then
   echo "Downloading $exefile..."
