@@ -1763,6 +1763,8 @@ def main(argv):
             message = mbox.next()
           except StopIteration:
             break
+          if not message.get_header(b'from', case_insensitive=True):
+            message.set_headers({b'From': b'Not Set <not@set.net>'})
           mbox_pct = percentage(mbox._mbox_position, mbox._mbox_size)
           deleted = options.vault
           labels = options.label_restored

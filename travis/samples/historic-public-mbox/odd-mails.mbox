@@ -1,0 +1,34 @@
+From nobody Mon Sep 17 00:00:00 2001
+from: Lowercase Sender <lowercase@sender.com>
+Subject: lowercase sender
+
+This is the body
+
+From nobody Mon Sep 17 00:00:00 2001
+FROM: uppercase sender <uppercase@sender.com>
+Subject: UPPERCASE SENDER
+
+A body
+
+From nobody Mon Sep 17 00:00:00 2001
+fRoM: mixed case sender <mixedcase@sender.com>
+Subject: mIxEd CaSe
+
+body
+
+From nobody Mon Sep 17 00:00:00 2001
+From: <notanemail>
+Subject: From is no an email address
+
+my body
+
+From nobody Mon Sep 17 00:00:00 2001
+From: notbracketed
+Subject: from has no brackets
+
+another test
+
+From nobody Mon Sep 17 00:00:00 2001
+From: <a@b.c>
+
+Minimal email headers
