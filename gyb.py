@@ -76,22 +76,6 @@ import googleapiclient.errors
 
 import fmbox
 
-# override httplib2 so we can force TLS versions
-def _build_ssl_context(disable_ssl_certificate_validation, ca_certs, cert_file=None, key_file=None):
-  context = ssl.SSLContext(httplib2.DEFAULT_TLS_VERSION)
-  context.verify_mode = ssl.CERT_REQUIRED
-  context.check_hostname = True
-  if options.ca_file:
-    ca_certs = options.ca_file
-  context.load_verify_locations(ca_certs)
-  if cert_file:
-    context.load_cert_chain(cert_file, key_file)
-  if options.tls_min_version:
-    context.minimum_version = getattr(ssl.TLSVersion, options.tls_min_version)
-  if options.tls_max_version:
-    context.maximum_version = getattr(ssl.TLSVersion, options.tls_max_version)
-  return context
-
 # Override some oauth2client.tools strings
 oauth2client.tools._FAILED_START_MESSAGE = """
 Failed to start a local webserver listening on either port 8080
@@ -983,7 +967,7 @@ def doCheckServiceAccount():
           oauth2service_file, [scope])
       credentials = credentials.create_delegated(options.email)
       credentials.user_agent = getGYBVersion(' | ')
-      credentials.refresh(httplib2.Http())
+      credentials.refresh(_createHttpObj())
       result = u'PASS'
     except httplib2.ServerNotFoundError as e:
       print(e)
@@ -1330,6 +1314,10 @@ def backup_message(request_id, response, exception):
            INSERT INTO labels (message_num, label) VALUES (?, ?)""",
                               (message_num, label))
 
+def _createHttpObj(cache=None):
+  return httplib2.Http(tls_maximum_version=options.tls_max_version, tls_minimum_version=options.tls_min_version,
+                       cache=cache)
+
 def bytes_to_larger(myval):
   myval = int(myval)
   mysize = 'b'
@@ -1386,15 +1374,13 @@ def getSizeOfMessages(messages, gmail):
 def main(argv):
   global options, gmail, httpc, anonhttpc
   options = SetupOptionParser(argv)
-  httplib2._build_ssl_context = _build_ssl_context
-  httpc = httplib2.Http()
-  anonhttpc = httplib2.Http()
+  httpc = _createHttpObj()
+  anonhttpc = _createHttpObj()
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
     print('Path: %s' % getProgPath())
     print(ssl.OPENSSL_VERSION)
-    httpc = httplib2.Http()
     httpc.request('https://www.googleapis.com')
     cipher_name, tls_ver, _ = httpc.connections['https:www.googleapis.com'].sock.cipher()
     print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
