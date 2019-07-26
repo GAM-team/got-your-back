@@ -49,7 +49,7 @@ echo "Compiling Python $BUILD_PYTHON_VERSION..."
 safe_flags="--with-openssl=$mypath/ssl --enable-shared --prefix=$mypath/python --with-ensurepip=upgrade"
 unsafe_flags="--enable-optimizations --with-lto"
 if [ ! -e Makefile ]; then
-  ./configure $safe_flags $unsafe_flags > /dev/null
+  ./configure $safe_flags # $unsafe_flags > /dev/null
 fi
 make -j$cpucount -s
 RESULT=$?
