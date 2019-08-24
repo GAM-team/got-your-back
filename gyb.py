@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.27'
+__version__ = '1.28'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -499,7 +499,6 @@ def buildGAPIServiceObject(api, soft_errors=False):
     auth_as = options.email
   oauth2servicefilejson = os.path.join(getProgPath(), 'oauth2service.json')
   scopes = getAPIScope(api)
-  print(scopes)
   credentials = ServiceAccountCredentials.from_json_keyfile_name(
     oauth2servicefilejson, scopes)
   credentials = credentials.create_delegated(auth_as)
@@ -967,7 +966,6 @@ def doCheckServiceAccount():
       credentials.user_agent = getGYBVersion(' | ')
       credentials.refresh(_createHttpObj())
       granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.access_token)
-      print(granted_scopes)
       result = u'PASS'
     except httplib2.ServerNotFoundError as e:
       print(e)
