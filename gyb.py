@@ -1665,6 +1665,7 @@ def main(argv):
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
     print("\n")
+    sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
 
