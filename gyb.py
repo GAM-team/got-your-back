@@ -30,7 +30,7 @@ __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, httpc, anonhttpc
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
@@ -253,7 +253,6 @@ class cmd_flags(object):
     self.auth_host_port = [8080, 9090]
 
 def requestOAuthAccess():
-  global httpc
   if options.use_admin:
     auth_as = options.use_admin
   else:
@@ -358,7 +357,7 @@ https://www.googleapis.com/auth/gmail.labels',
     FLOW = oauth2client.client.flow_from_clientsecrets(CLIENT_SECRETS,
       scope=scopes, message=MISSING_CLIENT_SECRETS_MESSAGE, login_hint=auth_as)
     credentials = oauth2client.tools.run_flow(flow=FLOW, storage=storage,
-      flags=flags, http=httpc)
+      flags=flags, http=_createHttpObj())
 
 #
 # Read a file
@@ -390,7 +389,6 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
   def _LatestVersionNotAvailable():
     if forceCheck:
       systemErrorExit(4, u'GYB Latest Version information not available')
-  global anonhttpc
   last_update_check_file = os.path.join(getProgPath(), 'lastcheck.txt')
   current_version = __version__
   now_time = calendar.timegm(time.gmtime())
@@ -402,6 +400,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
       return
     check_url = check_url + '/latest' # latest full release
   headers = {u'Accept': u'application/vnd.github.v3.text+json'}
+  anonhttpc = _createHttpObj()
   try:
     (_, c) = anonhttpc.request(check_url, u'GET', headers=headers)
     try:
@@ -457,7 +456,6 @@ def getAPIScope(api):
     return ['https://www.googleapis.com/auth/drive.appdata']
 
 def buildGAPIObject(api):
-  global httpc
   if options.use_admin:
     auth_as = options.use_admin
   else:
@@ -476,7 +474,7 @@ def buildGAPIObject(api):
     config.optionxform = str
     config.read(os.path.join(getProgPath(), 'extra-args.txt'))
     extra_args.update(dict(config.items('extra-args')))
-  httpc = credentials.authorize(httpc)
+  httpc = credentials.authorize(_createHttpObj())
   version = getAPIVer(api)
   try:
     return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
@@ -494,13 +492,14 @@ def buildGAPIObject(api):
       raise
 
 def buildGAPIServiceObject(api, soft_errors=False):
-  global extra_args, httpc
+  global extra_args
   if options.use_admin:
     auth_as = options.use_admin
   else:
     auth_as = options.email
   oauth2servicefilejson = os.path.join(getProgPath(), 'oauth2service.json')
   scopes = getAPIScope(api)
+  print(scopes)
   credentials = ServiceAccountCredentials.from_json_keyfile_name(
     oauth2servicefilejson, scopes)
   credentials = credentials.create_delegated(auth_as)
@@ -512,7 +511,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
     config.optionxform = str
     config.read(getGamPath()+'extra-args.txt')
     extra_args.update(dict(config.items('extra-args')))
-  httpc = credentials.authorize(httpc)
+  httpc = credentials.authorize(_createHttpObj())
   version = getAPIVer(api)
   try:
     return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
@@ -649,7 +648,6 @@ def percentage(part, whole):
   return '{0:.2f}'.format(100 * float(part)/float(whole))
 
 def getCRMService(login_hint):
-  global httpc
   scope = 'https://www.googleapis.com/auth/cloud-platform'
   client_id = '297408095146-fug707qsjv4ikron0hugpevbrjhkmsk7.apps.googleusercontent.com'
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
@@ -662,15 +660,15 @@ def getCRMService(login_hint):
   if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
   credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=httpc)
-  httpc = credentials.authorize(httpc)
+  httpc = credentials.authorize(_createHttpObj())
   return googleapiclient.discovery.build('cloudresourcemanager', u'v1',
       http=httpc, cache_discovery=False,
       discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(project_name, checkEnabled):
-  global httpc
-  global anonhttpc
+  httpc = _createHttpObj()
+  anonhttpc = _createHttpObj()
   s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET')
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
@@ -721,12 +719,12 @@ def writeFile(filename, data, mode=u'wb', continueOnError=False, displayError=Tr
 def _createClientSecretsOauth2service(projectId):
 
   def _checkClientAndSecret(client_id, client_secret):
-    global anonhttpc
     url = u'https://www.googleapis.com/oauth2/v4/token'
     post_data = {u'client_id': client_id, u'client_secret': client_secret,
                  u'code': u'ThisIsAnInvalidCodeOnlyBeingUsedToTestIfClientAndSecretAreValid',
                  u'redirect_uri': u'urn:ietf:wg:oauth:2.0:oob', u'grant_type': u'authorization_code'}
     headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    anonhttpc = _createHttpObj()
     _, content = anonhttpc.request(url, u'POST', urlencode(post_data), headers=headers)
     try:
       content = json.loads(content.decode('utf-8'))
@@ -833,7 +831,6 @@ def doDelProjects():
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
 def doCreateProject():
-  global httpc
   service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
   client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   for a_file in [service_account_file, client_secrets_file]:
@@ -923,7 +920,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       sys.exit(2)
     break
   enableProjectAPIs(project_name, False)
-  iam = googleapiclient.discovery.build(u'iam', u'v1', http=httpc,
+  iam = googleapiclient.discovery.build(u'iam', u'v1', http=_createHttpObj(),
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
@@ -960,6 +957,7 @@ def doCheckServiceAccount():
         all_scopes.append(scope)
   all_scopes.sort()
   all_scopes_pass = True
+  oa2 = googleapiclient.discovery.build('oauth2', 'v1', _createHttpObj())
   for scope in all_scopes:
     try:
       oauth2service_file = os.path.join(getProgPath(), 'oauth2service.json')
@@ -968,6 +966,8 @@ def doCheckServiceAccount():
       credentials = credentials.create_delegated(options.email)
       credentials.user_agent = getGYBVersion(' | ')
       credentials.refresh(_createHttpObj())
+      granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.access_token)
+      print(granted_scopes)
       result = u'PASS'
     except httplib2.ServerNotFoundError as e:
       print(e)
@@ -1315,7 +1315,8 @@ def backup_message(request_id, response, exception):
                               (message_num, label))
 
 def _createHttpObj(cache=None):
-  return httplib2.Http(tls_maximum_version=options.tls_max_version, tls_minimum_version=options.tls_min_version,
+  return httplib2.Http(tls_maximum_version=options.tls_max_version,
+                       tls_minimum_version=options.tls_min_version,
                        cache=cache)
 
 def bytes_to_larger(myval):
@@ -1372,17 +1373,18 @@ def getSizeOfMessages(messages, gmail):
   return message_sizes
 
 def main(argv):
-  global options, gmail, httpc, anonhttpc
+  global options, gmail
   options = SetupOptionParser(argv)
-  httpc = _createHttpObj()
-  anonhttpc = _createHttpObj()
+  if options.debug:
+    httplib2.debuglevel = 4
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
     print('Path: %s' % getProgPath())
     print(ssl.OPENSSL_VERSION)
-    httpc.request('https://www.googleapis.com')
-    cipher_name, tls_ver, _ = httpc.connections['https:www.googleapis.com'].sock.cipher()
+    anonhttpc = _createHttpObj()
+    anonhttpc.request('https://www.googleapis.com')
+    cipher_name, tls_ver, _ = anonhttpc.connections['https:www.googleapis.com'].sock.cipher()
     print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
     sys.exit(0)
   if options.shortversion:
@@ -1390,8 +1392,6 @@ def main(argv):
     sys.exit(0)
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
-  if options.debug:
-    httplib2.debuglevel = 4
   if options.action == 'create-project':
     doCreateProject()
     sys.exit(0)
