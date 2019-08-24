@@ -86,6 +86,7 @@ script:
 - gyb-test/gyb --action purge --email $gyb_user
 - gyb-test/gyb --action purge-labels --email $gyb_user
 - gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
+- gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
 - gyb-test/gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
 - gyb-test/gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
 - gyb-test/gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user

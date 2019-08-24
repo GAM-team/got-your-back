@@ -1,3 +1,4 @@
+export mypath=$(pwd)
 until powershell Install-WindowsFeature Net-Framework-Core; do echo "trying again..."; done
 #export exefile=Win32OpenSSL_Light-${BUILD_OPENSSL_VERSION//./_}.exe
 #if [ ! -e $exefile ]; then
@@ -30,3 +31,4 @@ md5sum ../PyInstaller/bootloader/Windows-32bit/*
 echo "PATH: $PATH"
 cd ..
 $python setup.py install
+cd $mypath
