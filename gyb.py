@@ -2025,7 +2025,7 @@ otaBytesByService,quotaType')
     sys.stdout.write('boom!\n')
     sys.stdout.flush()
     try:
-      credentials.revoke(httpc)
+      credentials.revoke(_createHttpObj())
     except oauth2client.client.TokenRevokeError:
       print('Error')
       os.remove(oauth2file)
