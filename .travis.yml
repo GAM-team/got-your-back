@@ -158,3 +158,4 @@ deploy:
   file: gyb-$GYBVERSION-*
   on:
     repo: jay0lee/got-your-back
+    condition: $VMTYPE = build

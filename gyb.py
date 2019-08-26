@@ -1313,9 +1313,12 @@ def backup_message(request_id, response, exception):
                               (message_num, label))
 
 def _createHttpObj(cache=None):
-  return httplib2.Http(tls_maximum_version=options.tls_max_version,
-                       tls_minimum_version=options.tls_min_version,
-                       cache=cache)
+  http_args = {'cache': cache}
+  if 'tls_maximum_version' in options:
+    http_args['tls_maximum_version'] = options.tls_maximum_version
+  if 'tls_minimum_version' in options:
+    http_args['tls_minimum_version'] = options.tls_minimum_version
+  return httplib2.Http(**http_args)
 
 def bytes_to_larger(myval):
   myval = int(myval)
