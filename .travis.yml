@@ -12,6 +12,9 @@ env:
     - secure: "N+TLP2/GHs7Byk6MvWOsMbE+yNAA8H1NlmClhc3F1qkkhMEUYSL+8678SFqLc7+nwAkZuo0k/X7DkCBqqvRBit9nb/vnwhtkA0KEJTJXhlPTI0KNnGPWtqpkHKK2pQi8ugIXymoLNvHw1pwQbk1pLpHeT+utsadlRhM+uDl4ZDQX0HXyl6k4qggJGHWLEIeHGM+tVEF7OJA/neT18+H7YfFxS0clAJX1MaeSDHetSeZl0/pyRmTAEvM0QTTfJ/08jf9HSXpdZJAPKhWdrF0K86KO0SkEEdNFgEWlTyO1iIfWyankKRy2RWXuGMDooje+i6UElEKIF6csnvAj4C+WLknf3bwH8wnt0w2/szjJ7PM6/dOrPYkWOa5Zz0nrvusTASnV0PWZd/Yiet0NOBIuLuxG7MCUnKg8u2qCZpcEBc3+hWPQ6MKTi199hTIBX2a5oGl1xyK0+vRFzIF2YHhWtt38iVo0zh3wb/xrzLx66HrokUN9XIQNVFJ71KCjOrDUHKp8i76cpw38kw+uO5SPJ6lZCKZYfnYty/93ZFGTIUjLgZdhr/KAFihAUYf5slJNUjKzBZtH3tYk7SJeDFYZTOgCqEnYmWLzaBsPxAREct0xk27Ms7rbVXs4aEfJz7KbSRfTfkq58sx95nNhbBI1VD7uRHrJj8/MD9cmmGigSIg="
     - secure: "anpOHuH8Cyw8VLoW7Wjmh+d8HJ0pHfZuC5Ll1TdppP+7P4A0dayj3in90+10cxjtAcOE1vEQP0A8hwjgwsXWxmOauO7uSqHYQsOytE1ULRpVZp+jU6ZjVbHsI9nwmVGG/pjbb4lA5y1jNjlRez+jO6uK81dBbX5NVuHpglnHGD2Cwim+SC4HYeY6b/NzvtdoXwgZKW/P7vdfALAYYBOn0IKFf5wO9ACHF1bj/1LXfcc9JeEOCuNJm7GgSdMXegF11XtC/TaAZ9i/pQ+TM7HeQ4qRBf5doNCO3l2pvINmYjtU2/o5wyHi11qaCydy5yyn9X1ryS17+tne9AfKWCS4Dnrny5jtd22nZMzua5l4B4jKFoO9p/pcFYWfcbl+3gPWqbfbkm4x6rZUwiztD60T/uTHSNmHbxExom8X7ikcezpdc1SjrAGrRsqhWLcaY6N8eV3mwxNvhAMNMMpypQkTmYwSZnigYJFpoHDWwSEyH7E6zpeqT39GbWcu6yABAWNwvwqc2ll1oDrn0NJ6Ds5d6uRpNGVn42UuNNB97nuCh+y6LBI3N/x0rBOOJ3+jD2OmGSo1gR1tzDADx1L7qa6+G20BuLr64hGnUoFEJRc3rK057lb3BmhAnVhEDMW6xiOUoISq1J3OSEpLPUlVb81DdzMttC/eJH8aNtv3Fd8glRk="
     - secure: "j9FxB3GNXLd/9MuVFTRG5l1ti95f4bztkKTb8Fzum/ZKdb70FncXh33m01zdJtqQ/ozvEOlAo7Nhsh1VKXJMK72QS4E8EKAKkhXNripTCBlqaelQ7wTi7TXTop0oWxSPotOb9nUWo/5Ip/ufQRre6vGC3uiKYQAZTnxy1XMD8F++i/wO0MNKzqDdnf7gYVzOhbHmgbtkd4H0+uismx8mCvAdIFP95hPMc2su8nybdBUL3zVvrahIshudSQg4BEZxQekLcR6iTSv9baJE6Yl+mY3HH5XS03LJzmI2lnX523gwNugenKHlauzveh2oIoP7m1RZ74HdL7Zia3nTPjuDaLoy6XFE21AtPeJBjeJdJ8WeCsFDeffvQzqSXM2RH/Mzk6/Ua/E/BrjNik7pK6qIK4UL5Q6uOKtVRI5smzMVeakOX4gkGy6driCQsFwzjRRZn/dT8BP3u/pvLloN2ePFH2BPUgwIvjoW2PNdwuko/K4LzlNpqkjwszVT5mdEi2/btZpckCS45OiDa7+MigVBJTF2JV71vgHccwESC6bvGVItZ2SNM6li4hc+EkdEg6CvdR3TGtTUk7ySVQGlHZoC9xaij8oWl/ijGG3UXiItPJ2gm3eWSrW326NAEzKH/fIR9dwIHbbmDz8CqF5pZBNVl5dEMfnqZ086mp3SZmuCjTM="
+    - secure: "BJr0jsl5F5Rm4hoBW0aMYeuAboGyv2rX3Lb+FSk00PqSQXAiwCiP8JmqmcJE/UKUiI3VLtfeR7WaHY8F2gRJmVlX6+8E4eSpTT7tGUxrYFJzkMNRvObHn09k3gOE4/ii13odydpcEDg0pSHMCVjkvG5lc5jtYsYck27gY3uMUoZGq9OeG5fXQd1yGjE936RW2oryoldcB00ohHs7dvsTxYBWqhKW+ZJbiZYuGzdIz7Jr+kS0SSFLMlElmNEdnPHXgn1DXLANIMjY3w99qTf6HZG64Tx4Tl/V4lmqRM5pdYrKukWihOJmbevjHRQGx4nWXYawKnLQoPpAVfc1UcR42mJbh1tFSV2/m7wX4FrlULTZtMV5+Lg1hDxJXy7NOKFywWVVxh59fJ4a8Zf9zTvX/rGKcajfkBlUtgGYzmUpQLF3i8IclUViPEI8+Gzi0L5VJ5qQXG0P2RPQ6Z6jwVbqt4KHf40S1xC8Md2+bupiD1WUgFPG385mCbN+qXTQxAn/TZj5Q82TxbNP2895G0rbT2RTpbpZW3wxsEBEIGzECG4Jh/gjdA7U1TON90qaxy8K06StvDgBRCwO045PkN3zptT36NFKqJAf6fHz2ZRXKANCS9HAHPwsCx0T6TUrYHBYIMpOIGMR+pAUatpvKTiv3a0Z8Cd50ibt8yjpzYr4h+8="
+    - secure: "MeVINmCUFlfA2OvhCJPNBDuDBIjmave3BenF68iRd1HeLoE1SJhV43dTc3IHC/acF81NyZZe3/i4BJ661SnQ65zY5HimVrzcjHpVSsyD8zs21NodW3xE2Cy+1E04D31Q2XOtux6/mOJWB16LK+66Mi0c05RoDdmw/bWnf2qDIwcxV34IlvPYinl1nFfU3tniG5yGBZt8ZVYafLVmEZFHuWTjWCiv4F495Lr8819hG9bFMZifbgK/OojDJ7oaJTwEogh01oMdCK2S/8+cqXOt7Tr9gva6tiCRQEy0bYDMRWIKHJwjwh+o/AAGEoDg0uwtUMMm7rpRITOaAEcoWYVhxebFfuhUhwTI69QhzIZiMDnQbwKhD/0LRWhnnH4Ddu1Q2D8up/OZ4FcYwrqKnqsFYK0R7FKvZ3VPPG+yR/4Oo1TcxXUKWjvNHYkAYIwfoZq33a3a55UwrKpONePF5NQXkDp2CSm/Qf71FyFAAxXzuCXlE7gQI1/lF7EJP5UJHINxhS9aqjVBrlx/Q3SKTp2+k+jD2tX/4o0aClSjFq7IPDhYR2iwy+w85OTnoS4r/ldQ1Mj9ooyp6qZLlTduIixKHssU978CWpSjwq2nQpjQYxUoRxtDoWr1myXwFQ1p6SYooLt5QLJlbB9DuMVH/phIQ/m6Fg8vVoNmE5LLINOzvsc="
+    - secure: "iNCH+tqAnnbYra4gSqBt6qeAfwgPDcleF/gy5AeaEsq7RoMMf2mqde8mW0S7IkDxjJffE/nl7x5Jopqxrc9AuDOYaQwJJjDyRmZ3KsbYB+6frunThS1cCnuET1nr/wNcs1LFLswBJ6GL0I2TabqzFbBp9J9ddlwqLYTxjsy1Mz9Hms5URTC8mmF74XR/N3De33FW46DoNCLUVm7czzFMN1sKvala0Et6SEGdYTV6kx3YCBYL+7dZdfISchjxgaAeFmKVk2891jPYiV19086Sg29W9AK3bHoa5uzM3yGQkWgNMZWsnpf5cFbLGXvFX4VwOj0OWKK8DHsuhXZ7n7jmsntr4pjUIbGFyfWYhMoaxg1nQeJQbDbLJYT06oBxXDsAdlFGVP3QstvetDafqe0lK6kuQwgJMsnPZ8079biGZZEd1kN8mmvgQKQmWZU7xF5OpoQN+sAM55oXl315EM1Y/afNu/byBqYZh9QJFcFKZGCufymdwiOEJVeueNEuibxvHV9bcOKcPig6w+dyNbAQ2KFR54rG/eMvveDPx/rKdlglkY/UEyLVd066zVwknsCbHreQLnAfPB9O3zdc75aNCiv26/Im0/5KIoi8YcGnlJYg3fKZ/LcjiwgN/Er8sbmXOtSWZHkxUABqZFxBdX0dL6wYehEoj7NZL14MPdSrjQE="
 cache:
   directories:
     - $HOME/.cache/pip
@@ -26,19 +29,58 @@ matrix:
     dist: xenial
     language: bash 
     env:
-      ARCH=x86_64
+      - ARCH=x86_64
+      - VMTYPE=build
   - os: linux
     name: "Linux Ubuntu Trusty 64-bit"
     dist: trusty
     language: bash
     env:
-      ARCH=x86_64
+      - ARCH=x86_64
+      - VMTYPE=build
   - os: linux
     name: "Linux Ubuntu Precise 64-bit"
     dist: precise
     language: bash
     env:
-      ARCH=x86_64
+      - ARCH=x86_64
+      - VMTYPE=build
+  - os: linux
+    name: "Linux 64-bit - Python 3.5 Source Testing"
+    dist: xenial
+    language: python
+    python:
+      - "3.5"
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python 3.6 Source Testing"
+    dist: bionic
+    language: python
+    python:
+      - "3.6"
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python 3.8-dev Source Testing"
+    dist: bionic
+    language: python
+    python:
+      - "3.8-dev"
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python nightly Source Testing"
+    dist: bionic
+    language: python
+    python:
+      - "nightly"
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
   - os: osx
     name: "MacOS Sierra 10.12 64-bit"
     language: generic
@@ -70,40 +112,37 @@ install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-install.sh
 
 script:
-- mkdir gyb-test
-- cp -rf gyb/* gyb-test/
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - export gyb_group="gyb-travis-group-$jid@pdl.jaylee.us"
-- export gyb_user_file="gyb-test/$gyb_user.cfg"
+- export gyb_user_file="$gybpath/$gyb_user.cfg"
 - cat travis/cfg_template.json | python travis/svars-write.py &> /dev/null
-- openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv -in travis/oauth2service.json.enc -out gyb-test/oauth2service.json -d
+- openssl aes-256-cbc -K $encrypted_8664d605d46a_key -iv $encrypted_8664d605d46a_iv -in travis/oauth2service.json.enc -out $gybpath/oauth2service.json -d
 - echo "This job will use $gyb_user"
-- gyb-test/gyb --version
-- gyb-test/gyb --version | grep "Python ${BUILD_PYTHON_VERSION//./\\.}" # we should be using latest Python
-- gyb-test/gyb --version | grep "OpenSSL ${BUILD_OPENSSL_VERSION//./\\.}" # we should be using latest OpenSSL
-- gyb-test/gyb --version | grep TLSv1\.[23] # we should be using TLS 1.2 or 1.3
-- gyb-test/gyb --version | grep travis # travis should be part of path
-- gyb-test/gyb --action purge --email $gyb_user
-- gyb-test/gyb --action purge-labels --email $gyb_user
-- gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
-- gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
-- gyb-test/gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume
-- gyb-test/gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
-- gyb-test/gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
-- gyb-test/gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
-- gyb-test/gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume
-- gyb-test/gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user
-- gyb-test/gyb --action restore-mbox --local-folder travis/samples/vault-export-mbox --email $gyb_user
-- gyb-test/gyb --action count --email $gyb_user
-- gyb-test/gyb --action count --email $gyb_user --service-account
-- gyb-test/gyb --action quota --email $gyb_user
-- gyb-test/gyb --action quota --email $gyb_user --service-account
-- gyb-test/gyb --action estimate --email $gyb_user
-- gyb-test/gyb --action estimate --email $gyb_user --service-account
-- gyb-test/gyb --action backup --email $gyb_user
-- gyb-test/gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
-- rm -rf gyb-test
+- $gyb --version
+- if [ "$VMTYPE" == "build" ]; then $gyb --version | grep "Python ${BUILD_PYTHON_VERSION//./\\.}"; fi # we should be using latest Python
+- if [ "$VMTYPE" == "build" ]; then $gyb --version | grep "OpenSSL ${BUILD_OPENSSL_VERSION//./\\.}"; fi # we should be using latest OpenSSL
+- if [ "$VMTYPE" == "build" ]; then $gyb --version | grep TLSv1\.[23]; fi # we should be using TLS 1.2 or 1.3
+- $gyb --version | grep travis # travis should be part of path
+- $gyb --action purge --email $gyb_user
+- $gyb --action purge-labels --email $gyb_user
+- $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
+- $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
+- $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume
+- $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
+- $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
+- $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
+- $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume
+- $gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user
+- $gyb --action restore-mbox --local-folder travis/samples/vault-export-mbox --email $gyb_user
+- $gyb --action count --email $gyb_user
+- $gyb --action count --email $gyb_user --service-account
+- $gyb --action quota --email $gyb_user
+- $gyb --action quota --email $gyb_user --service-account
+- $gyb --action estimate --email $gyb_user
+- $gyb --action estimate --email $gyb_user --service-account
+- $gyb --action backup --email $gyb_user
+- $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
 before_deploy:
 - export TRAVIS_TAG="preview"
