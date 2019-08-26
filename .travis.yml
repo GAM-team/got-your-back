@@ -126,6 +126,7 @@ script:
 - if [ "$VMTYPE" == "build" ]; then $gyb --version | grep "OpenSSL ${BUILD_OPENSSL_VERSION//./\\.}"; fi # we should be using latest OpenSSL
 - if [ "$VMTYPE" == "build" ]; then $gyb --version | grep TLSv1\.[23]; fi # we should be using TLS 1.2 or 1.3
 - $gyb --version | grep travis # travis should be part of path
+- $gyb --action check-service-account --email $gyb_user
 - $gyb --action purge --email $gyb_user
 - $gyb --action purge-labels --email $gyb_user
 - $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
