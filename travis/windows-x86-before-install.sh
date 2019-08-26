@@ -15,6 +15,10 @@ cinst -y wixtoolset
 export python=/c/Python37/python
 export pip=/c/Python37/scripts/pip
 
+echo "Upgrading pip packages..."
+$pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
+$pip install -r requirements.txt
+
 # Install PyInstaller from source and build bootloader
 # to try and avoid getting flagged as malware since
 # lots of malware uses PyInstaller default bootloader

@@ -88,21 +88,12 @@ else
       make
       sudo make install
     fi
-    if [ ! -d musl=$MUSL_VERSION ]; then
-      echo "Downloading MUSL $MUSL_VERSION"
-      wget https://www.musl-libc.org/releases/musl-$MUSL_VERSION.tar.gz
-      tar xf musl-$MUSL_VERSION.tar.gz
-      cd musl-$MUSL_VERSION
-      ./configure
-      make
-      sudo make install
-    fi
     $pip install git+https://github.com/JonathonReinhart/staticx.git@master
   fi
 
   echo "Upgrading pip packages..."
   $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
-  $pip install -r src/requirements.txt
+  $pip install -r requirements.txt
   $pip install pyinstaller
 
   cd $whereibelong
