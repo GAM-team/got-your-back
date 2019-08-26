@@ -46,11 +46,11 @@ export pip=pip3
 #fi
 #echo "Installing Python..."
 #make install > /dev/null
-cd ~
+#cd ~
 
-export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
-export python=~/python/bin/python3
-export pip=~/python/bin/pip3
+#export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
+#export python=~/python/bin/python3
+#export pip=~/python/bin/pip3
 
 $python -V
 
