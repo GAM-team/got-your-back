@@ -964,7 +964,8 @@ def doCheckServiceAccount():
       credentials.user_agent = getGYBVersion(' | ')
       credentials.refresh(_createHttpObj())
       granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.access_token)
-      if scope in granted_scopes['scope'].split(' '):
+      if scope in granted_scopes['scope'].split(' ') and \
+         granted_scopes.get('email', '').lower() == options.email.lower():
         result = 'PASS'
       else:
         result = 'FAIL'
