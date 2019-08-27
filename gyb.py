@@ -67,7 +67,8 @@ import webbrowser
 import httplib2
 import oauth2client.client
 import oauth2client.file
-from oauth2client.service_account import ServiceAccountCredentials
+import google.oauth2.service_account
+import google_auth_httplib2
 from oauth2client.contrib.dictionary_storage import DictionaryStorage
 import oauth2client.tools
 import googleapiclient
@@ -378,7 +379,7 @@ def readFile(filename, mode='rb', continueOnError=False, displayError=True, enco
   except IOError as e:
     if continueOnError:
       if displayError:
-        stderrWarningMsg(e)
+        sys.stderr.write(str(e))
       return None
     systemErrorExit(6, e)
   except (LookupError, UnicodeDecodeError, UnicodeError) as e:
@@ -497,12 +498,8 @@ def buildGAPIServiceObject(api, soft_errors=False):
     auth_as = options.use_admin
   else:
     auth_as = options.email
-  oauth2servicefilejson = os.path.join(getProgPath(), 'oauth2service.json')
   scopes = getAPIScope(api)
-  credentials = ServiceAccountCredentials.from_json_keyfile_name(
-    oauth2servicefilejson, scopes)
-  credentials = credentials.create_delegated(auth_as)
-  credentials.user_agent = getGYBVersion(' | ')
+  _, credentials = getSvcAcctCredentials(scopes, auth_as)
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
@@ -510,26 +507,20 @@ def buildGAPIServiceObject(api, soft_errors=False):
     config.optionxform = str
     config.read(getGamPath()+'extra-args.txt')
     extra_args.update(dict(config.items('extra-args')))
-  httpc = credentials.authorize(_createHttpObj())
+  httpc = _createHttpObj()
+  request = google_auth_httplib2.Request(httpc)
+  credentials.refresh(request)
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
-  except oauth2client.client.AccessTokenRefreshError as e:
-    message = e.args[0]
-    if message in ['access_denied',
-                   'unauthorized_client: Unauthorized client or scope in request.',
-                   'access_denied: Requested client not authorized.']:
-      print('Error: Access Denied. Please make sure the Client Name:\
-\n\n%s\n\nis authorized for the API Scope(s):\n\n%s\n\nThis can be \
-configured in your Control Panel under:\n\nSecurity -->\nAdvanced \
-Settings -->\nManage third party OAuth Client access'
-% (credentials.client_id, ','.join(scopes)))
-      sys.exit(5)
-    else:
-      print('Error: %s' % e)
-      if soft_errors:
-        return False
-      sys.exit(4)
+    service = googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
+    service._http = google_auth_httplib2.AuthorizedHttp(credentials, http=httpc)
+    return service
+  except (httplib2.ServerNotFoundError, RuntimeError) as e:
+    systemErrorExit(4, e)
+  except google.auth.exceptions.RefreshError as e:
+    if isinstance(e.args, tuple):
+      e = e.args[0]
+    systemErrorExit(5, e)
 
 def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
   retries = 10
@@ -815,6 +806,10 @@ def _getLoginHintProjects():
     projects = _getProjects(crm, pfilter)
   return (crm, login_hint, projects)
 
+def systemErrorExit(code=1, error_text='Unknown Error'):
+  print('ERROR: %s' % error_text)
+  sys.exit(code)
+
 def _getProjects(crm, pfilter):
   return callGAPIpages(crm.projects(), 'list', 'projects', filter=pfilter)
 
@@ -928,16 +923,6 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
   _createClientSecretsOauth2service(project_id)
-  sa_url = 'https://console.developers.google.com/iam-admin/serviceaccounts/project?project=%s' % project_id
-  print('''Almost there! Now please go to:
-
-%s
-
-1. Click the 3 dots to the right of your service account.
-2. Choose Edit.
-3. Check the "Enable G Suite Domain-wide Delegation" box and click Save.
-''' % sa_url)
-  input('Press Enter when done...')
   print('That\'s it! Your GYB Project is created and ready to use.')
 
 API_SCOPE_MAPPING = {
@@ -946,6 +931,25 @@ API_SCOPE_MAPPING = {
   'gmail': ['https://mail.google.com/',],
   'groupsmigration': ['https://www.googleapis.com/auth/apps.groups.migration',],
 }
+
+MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON = 'Please run\n\ngyb --action create-project\ngyb --action check-service-account\n\nto create and configure a service account.'
+def getSvcAcctCredentials(scopes, act_as):
+  try:
+    json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
+    if not json_string:
+      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      systemErrorExit(6, None)
+    sa_info = json.loads(json_string)
+    credentials = google.oauth2.service_account.Credentials.from_service_account_info(sa_info)
+    credentials = credentials.with_scopes(scopes)
+    credentials = credentials.with_subject(act_as)
+    request = google_auth_httplib2.Request(_createHttpObj())
+    credentials.refresh(request)
+    return sa_info['client_id'], credentials
+  except (ValueError, KeyError):
+    print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+    systemErrorExit(6, 'oauth2service.json is invalid.')
+
 def doCheckServiceAccount():
   all_scopes = []
   for _, scopes in API_SCOPE_MAPPING.items():
@@ -957,18 +961,14 @@ def doCheckServiceAccount():
   oa2 = googleapiclient.discovery.build('oauth2', 'v1', _createHttpObj())
   for scope in all_scopes:
     try:
-      oauth2service_file = os.path.join(getProgPath(), 'oauth2service.json')
-      credentials = oauth2client.service_account.ServiceAccountCredentials.from_json_keyfile_name(
-          oauth2service_file, [scope, 'https://www.googleapis.com/auth/userinfo.email'])
-      credentials = credentials.create_delegated(options.email)
-      credentials.user_agent = getGYBVersion(' | ')
-      credentials.refresh(_createHttpObj())
-      granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.access_token)
+      client_id, credentials = getSvcAcctCredentials([scope, 'https://www.googleapis.com/auth/userinfo.email'], options.email)
+      granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.token)
       if scope in granted_scopes['scope'].split(' ') and \
          granted_scopes.get('email', '').lower() == options.email.lower():
         result = 'PASS'
       else:
         result = 'FAIL'
+        all_scopes_pass = False
     except httplib2.ServerNotFoundError as e:
       print(e)
       sys.exit(4)
@@ -977,7 +977,7 @@ def doCheckServiceAccount():
       all_scopes_pass = False
     print(' Scope: {0:60} {1}'.format(scope, result))
   if all_scopes_pass:
-    print('\nAll scopes passed!\nService account %s is fully authorized.' % credentials.client_id)
+    print('\nAll scopes passed!\nService account %s is fully authorized.' % client_id)
     return
   user_domain = options.email[options.email.find('@')+1:]
   scopes_failed = '''SOME SCOPES FAILED! Please go to:
