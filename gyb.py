@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.28'
+__version__ = '1.29'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -1915,6 +1915,7 @@ def main(argv):
          'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
            (message_num,))
       sqlconn.commit()
+    sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
 
