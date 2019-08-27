@@ -363,7 +363,7 @@ https://www.googleapis.com/auth/gmail.labels',
 #
 # Read a file
 #
-def readFile(filename, mode='rb', continueOnError=False, displayError=True, encoding=None):
+def readFile(filename, mode='r', continueOnError=False, displayError=True, encoding=None):
   try:
     if filename != '-':
       if not encoding:
@@ -649,7 +649,7 @@ def getCRMService(login_hint):
   flags = cmd_flags()
   if os.path.isfile(os.path.join(getProgPath(), 'nobrowser.txt')):
     flags.noauth_local_webserver = True
-  credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=httpc)
+  credentials = oauth2client.tools.run_flow(flow=flow, storage=storage, flags=flags, http=_createHttpObj())
   httpc = credentials.authorize(_createHttpObj())
   return googleapiclient.discovery.build('cloudresourcemanager', 'v1',
       http=httpc, cache_discovery=False,
