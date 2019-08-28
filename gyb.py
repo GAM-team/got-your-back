@@ -348,9 +348,11 @@ def requestOAuthAccess():
     if selected_scopes[i] == '*':
       scopes.append(possible_scopes[i])
   credentials = _run_oauth_flow(client_id, client_secret, scopes, access_type='offline', login_hint=auth_as)
-  writeCredentials(credentials, cfgFile)
+  writeCredentials(credentials)
 
-def writeCredentials(creds, cfgFile):
+def writeCredentials(creds):
+  auth_as = options.use_admin if options.use_admin else options.email
+  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)  
   creds_data = {
     'token': creds.token,
     'refresh_token': creds.refresh_token,
@@ -1453,7 +1455,7 @@ def main(argv):
     doCheckServiceAccount()
     sys.exit(0)
   if not options.service_account:  # 3-Legged OAuth
-    requestOAuthAccess()
+    getValidOauth2TxtCredentials()
     if not doesTokenMatchEmail():
       sys.exit(9)
     gmail = buildGAPIObject('gmail')
