@@ -75,6 +75,36 @@ import googleapiclient.errors
 
 import fmbox
 
+def getGYBVersion(divider="\n"):
+  return ('Got Your Back %s~DIV~%s~DIV~%s - %s~DIV~Python %s.%s.%s %s-bit \
+%s~DIV~google-api-client %s~DIV~%s %s' % (__version__, __website__, __author__, __email__,
+sys.version_info[0], sys.version_info[1], sys.version_info[2],
+struct.calcsize('P')*8, sys.version_info[3], googleapiclient.__version__, platform.platform(),
+platform.machine())).replace('~DIV~', divider)
+
+USER_AGENT = getGYBVersion(' | ')
+# Override and wrap google_auth_httplib2 request methods so that the
+# user-agent string is inserted into HTTP request headers.
+def _request_with_user_agent(request_method):
+  """Inserts the user-agent header kwargs sent to a method."""
+  def wrapped_request_method(self, *args, **kwargs):
+    if kwargs.get('headers') is not None:
+      if kwargs['headers'].get('user-agent'):
+        if USER_AGENT not in kwargs['headers']['user-agent']:
+          # Save the existing user-agent header and tack on the user-agent.
+          kwargs['headers']['user-agent'] = '%s %s' % (USER_AGENT, kwargs['headers']['user-agent'])
+      else:
+        kwargs['headers']['user-agent'] = USER_AGENT
+    else:
+      kwargs['headers'] = {'user-agent': USER_AGENT}
+    return request_method(self, *args, **kwargs)
+  return wrapped_request_method
+
+google_auth_httplib2.Request.__call__ = _request_with_user_agent(
+  google_auth_httplib2.Request.__call__)
+google_auth_httplib2.AuthorizedHttp.request = _request_with_user_agent(
+  google_auth_httplib2.AuthorizedHttp.request)
+
 def SetupOptionParser(argv):
   tls_choices = []
   if getattr(ssl, 'TLSVersion', False):
@@ -236,7 +266,7 @@ def getValidOauth2TxtCredentials(force_refresh=False):
           continue
         systemErrorExit(4, str(e))
   elif credentials is None or not credentials.valid:
-    doRequestOAuth()
+    requestOAuthAccess()
     credentials = getOauth2TxtStorageCredentials()
   return credentials
 
@@ -352,7 +382,7 @@ def requestOAuthAccess():
 
 def writeCredentials(creds):
   auth_as = options.use_admin if options.use_admin else options.email
-  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)  
+  cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
   creds_data = {
     'token': creds.token,
     'refresh_token': creds.refresh_token,
@@ -418,7 +448,8 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     if last_check_time > now_time-604800:
       return
     check_url = check_url + '/latest' # latest full release
-  headers = {'Accept': 'application/vnd.github.v3.text+json'}
+  headers = {'Accept': 'application/vnd.github.v3.text+json',
+             'User-Agent': getGYBVersion(' | ')}
   anonhttpc = _createHttpObj()
   try:
     (_, c) = anonhttpc.request(check_url, 'GET', headers=headers)
@@ -477,7 +508,6 @@ def getAPIScope(api):
 def buildGAPIObject(api):
   credentials = getValidOauth2TxtCredentials()
   httpc = google_auth_httplib2.AuthorizedHttp(credentials, _createHttpObj())
-  credentials.user_agent = getGYBVersion(' | ') 
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
@@ -648,8 +678,7 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
     long_url, state = super(ShortURLFlow, self).authorization_url(**kwargs)
     simplehttp = _createHttpObj(timeout=10)
     url_shortnr = 'https://gyb-shortn.jaylee.us/create'
-    headers = {'Content-Type': 'application/json',
-               'user-agent': getGYBVersion(divider=" | ")}
+    headers = {'Content-Type': 'application/json'}
     try:
       resp, content = simplehttp.request(url_shortnr, 'POST', '{"long_url": "%s"}' % long_url, headers=headers)
     except:
@@ -697,16 +726,17 @@ def getCRMService(login_hint):
   client_id = '297408095146-fug707qsjv4ikron0hugpevbrjhkmsk7.apps.googleusercontent.com'
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
   credentials = _run_oauth_flow(client_id, client_secret, scope, 'online', login_hint)
-  httpc = credentials.authorize(_createHttpObj())
-  return googleapiclient.discovery.build('cloudresourcemanager', 'v1',
+  httpc = google_auth_httplib2.AuthorizedHttp(credentials)
+  crm = googleapiclient.discovery.build('cloudresourcemanager', 'v1',
       http=httpc, cache_discovery=False,
       discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
+  return (crm, httpc)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
-def enableProjectAPIs(project_name, checkEnabled):
-  httpc = _createHttpObj()
+def enableProjectAPIs(project_name, checkEnabled, httpc):
   anonhttpc = _createHttpObj()
-  s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET')
+  headers = {'User-Agent': getGYBVersion(' | ')}
+  s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET', headers=headers)
   if s.status < 200 or s.status > 299:
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
@@ -760,7 +790,8 @@ def _createClientSecretsOauth2service(projectId):
     post_data = {'client_id': client_id, 'client_secret': client_secret,
                  'code': 'ThisIsAnInvalidCodeOnlyBeingUsedToTestIfClientAndSecretAreValid',
                  'redirect_uri': 'urn:ietf:wg:oauth:2.0:oob', 'grant_type': 'authorization_code'}
-    headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    headers = {'Content-type': 'application/x-www-form-urlencoded',
+               'User-Agent': getGYBVersion(' | ')}
     anonhttpc = _createHttpObj()
     _, content = anonhttpc.request(url, 'POST', urlencode(post_data), headers=headers)
     try:
@@ -838,7 +869,7 @@ def _getLoginHintProjects():
     print('ERROR: delete-projects action requires --email and a project --search argument')
     sys.exit(3)
   login_hint = getValidateLoginHint(login_hint)
-  crm = getCRMService(login_hint)
+  crm, _ = getCRMService(login_hint)
   client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   if pfilter == 'current':
     cs_data = readFile(client_secrets_file, mode='rb', continueOnError=True, displayError=True, encoding=None)
@@ -880,7 +911,7 @@ def doCreateProject():
       sys.exit(5)
   login_hint = options.email
   login_domain = login_hint[login_hint.find('@')+1:]
-  crm = getCRMService(login_hint)
+  crm, httpc = getCRMService(login_hint)
   project_id = 'gyb-project'
   for i in range(3):
     project_id += '-%s' % ''.join(random.choice(string.digits + string.ascii_lowercase) for i in range(3))
@@ -957,8 +988,8 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       print(status['error'])
       sys.exit(2)
     break
-  enableProjectAPIs(project_name, False)
-  iam = googleapiclient.discovery.build('iam', 'v1', http=_createHttpObj(),
+  enableProjectAPIs(project_name, False, httpc)
+  iam = googleapiclient.discovery.build('iam', 'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
@@ -1202,13 +1233,6 @@ def initializeDB(sqlcur, sqlconn, email):
           ('db_version', __db_schema_version__)))
   sqlconn.commit()
 
-def getGYBVersion(divider="\n"):
-  return ('Got Your Back %s~DIV~%s~DIV~%s - %s~DIV~Python %s.%s.%s %s-bit \
-%s~DIV~%s %s' % (__version__, __website__, __author__, __email__,
-sys.version_info[0], sys.version_info[1], sys.version_info[2],
-struct.calcsize('P')*8, sys.version_info[3], platform.platform(),
-platform.machine())).replace('~DIV~', divider)
-
 def labelIdsToLabels(labelIds):
   global allLabelIds, gmail
   labels = list()
@@ -1430,7 +1454,8 @@ def main(argv):
     print('Path: %s' % getProgPath())
     print(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
-    anonhttpc.request('https://www.googleapis.com')
+    headers = {'User-Agent': getGYBVersion(' | ')}
+    anonhttpc.request('https://www.googleapis.com', headers=headers)
     cipher_name, tls_ver, _ = anonhttpc.connections['https:www.googleapis.com'].sock.cipher()
     print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
     sys.exit(0)
