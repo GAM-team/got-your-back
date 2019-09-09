@@ -20,7 +20,7 @@ class fmsg():
   def get_header(self, header, case_insensitive=False):
     if case_insensitive:
       header = header.lower()
-    header_value = ''
+    header_value = b''
     check_folded_header = False
     for line in self.msg_bytes.split(b'\n'):
       if case_insensitive:
@@ -29,13 +29,13 @@ class fmsg():
         if line.startswith(b' ') or line.startswith(b'\t'):
           header_value += line.lstrip()
         else:
-          return header_value
+          return header_value.decode()
       elif line.startswith(b'%s: ' % header):
-        header_value = line[len(header)+2:].decode()
+        header_value = line[len(header)+2:]
         check_folded_header = True
       elif line == '':
-        return header_value
-    return header_value
+        return header_value.decode()
+    return header_value.decode()
 
   def set_headers(self, headers):
     new_msg = b''
