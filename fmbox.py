@@ -20,14 +20,22 @@ class fmsg():
   def get_header(self, header, case_insensitive=False):
     if case_insensitive:
       header = header.lower()
+    header_value = ''
+    check_folded_header = False
     for line in self.msg_bytes.split(b'\n'):
       if case_insensitive:
         line = line.lower()
-      if line.startswith(b'%s: ' % header):
-        return line[len(header)+2:].decode('ascii')
+      if check_folded_header:
+        if line.startswith(' ') or line.startswith('\t'):
+          header_value += line.lstrip()
+        else:
+          return header_value
+      elif line.startswith(b'%s: ' % header):
+        header_value = line[len(header)+2:].decode()
+        check_folded_header = True
       elif line == '':
-        return ''
-    return ''
+        return header_value
+    return header_value
 
   def set_headers(self, headers):
     new_msg = b''
@@ -81,7 +89,7 @@ class fmbox():
       line = self._file.readline()
       if not line or line.startswith(b'From '):
         msg = fmsg(bytes(msg_bytes).replace(linesep, b'\n'))
-        msg.set_from(self._last_from_line[5:].decode('ascii'))
+        msg.set_from(self._last_from_line[5:].decode())
         if line:
           self._last_from_line = line.replace(linesep, b'')
         else:
