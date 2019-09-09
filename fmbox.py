@@ -26,7 +26,7 @@ class fmsg():
       if case_insensitive:
         line = line.lower()
       if check_folded_header:
-        if line.startswith(' ') or line.startswith('\t'):
+        if line.startswith(b' ') or line.startswith(b'\t'):
           header_value += line.lstrip()
         else:
           return header_value
