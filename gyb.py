@@ -1840,7 +1840,7 @@ def main(argv):
                 labels_str = mybytes.decode(encoding)
               except UnicodeDecodeError:
                 pass
-            labels = labels_str.strip().split(',')
+            labels = [p.strip() for p in re.split("(,|\\\".*?\\\"|'.*?')", labels_str) if p.strip(',')]
           cased_labels = []
           for label in labels:
             if label == '' or label == None:
