@@ -37,7 +37,9 @@ allLabels = dict()
 reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
   'sent', 'draft', 'chat', 'chats', 'migrated', 'todo', 'todos', 'buzz',
   'bin', 'allmail', 'drafts', 'archived']
-
+system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
+                 'SENT', 'DRAFT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
+                 'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS']
 import argparse
 import importlib
 import sys
@@ -120,7 +122,7 @@ def SetupOptionParser(argv):
     dest='email',
     help='Full email address of user or group to act against')
   action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
-    'count', 'purge', 'purge-labels', 'estimate', 'quota', 'reindex', 'revoke',
+    'count', 'purge', 'purge-labels', 'print-labels', 'estimate', 'quota', 'reindex', 'revoke',
     'split-mbox', 'create-project', 'delete-projects', 'check-service-account']
   parser.add_argument('--action',
     choices=action_choices,
@@ -1266,6 +1268,11 @@ def labelsToLabelIds(labels):
         allLabels[a_label['name']] = a_label['id']
   labelIds = list()
   for label in labels:
+    # convert language system labels to standard
+    label = labellang.mappings.get(label.upper(), label)
+    if label.upper() in system_labels:
+      labelIds.append(label.upper())
+      continue
     base_label = label.split('/')[0]
     if base_label.lower() in reserved_labels and base_label not in allLabels.keys():
       label = '_%s' % (label)
@@ -1501,7 +1508,7 @@ def main(argv):
   
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
-  if options.action not in ['count', 'purge', 'purge-labels',
+  if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
     'quota', 'revoke']:
     if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
       print("\nUsing backup folder %s" % options.local_folder)
@@ -1840,7 +1847,7 @@ def main(argv):
                 labels_str = mybytes.decode(encoding)
               except UnicodeDecodeError:
                 pass
-            labels = [p.strip() for p in re.split("(,|\\\".*?\\\"|'.*?')", labels_str) if p.strip(',')]
+            labels = [p.strip(string.whitespace+'\"') for p in re.split("(,|\\\".*?\\\"|'.*?')", labels_str) if p.strip(',')]
           cased_labels = []
           for label in labels:
             if label == '' or label == None:
@@ -2045,6 +2052,15 @@ def main(argv):
         rewrite_line('Deleting label %s' % printable_name)
       callGAPI(service=gmail.users().labels(), function='delete',
         userId='me', id=label_result['id'], soft_errors=True)
+    print('\n')
+
+  # PRINT-LABELS #
+  elif options.action == 'print-labels':
+    labels = callGAPI(service=gmail.users().labels(), function='list',
+                               userId='me', fields='labels(id,name,type)')
+    user_labels = []
+    for label in labels.get('labels'):
+      print('%s (%s)' % (label['name'], label['id']))
     print('\n')
 
   # QUOTA #

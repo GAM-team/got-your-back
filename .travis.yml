@@ -149,6 +149,8 @@ script:
 - $gyb --action quota --email $gyb_user --service-account
 - $gyb --action estimate --email $gyb_user
 - $gyb --action estimate --email $gyb_user --service-account
+- $gyb --action print-labels --email $gyb_user
+- $gyb --action print-labels --email $gyb_user --service-account
 - $gyb --action backup --email $gyb_user
 - $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
