@@ -37,6 +37,7 @@ matrix:
     dist: bionic
     arch: arm64
     language: bash
+    filter_secrets: false
     env:
       - ARCH=arm64
       - VMTYPE=build
@@ -52,6 +53,7 @@ matrix:
     dist: xenial
     arch: arm64
     language: bash
+    filter_secrets: false
     env:
       - ARCH=arm64
       - VMTYPE=build
