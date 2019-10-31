@@ -2,7 +2,8 @@ mypath=$HOME
 whereibelong=$(pwd)
 #brew install xz > /dev/null
 
-cd ~/pybuild
+echo "Syncing time..."
+sudo ntpdate -u time.google.com
 
 if [ ! -f python-$BUILD_PYTHON_VERSION-macosx10.9.pkg ]; then
   wget --quiet https://www.python.org/ftp/python/$BUILD_PYTHON_VERSION/python-$BUILD_PYTHON_VERSION-macosx10.9.pkg

@@ -8,12 +8,12 @@ until powershell Install-WindowsFeature Net-Framework-Core; do echo "trying agai
 #echo "Installing $exefile..."
 #powershell ".\\${exefile} /silent /sp- /suppressmsgboxes /DIR=C:\\ssl"
 cinst -y $CINST_ARGS python3
-#cp -v /c/Program\ Files/OpenSSL/bin/*.dll /c/Python37/DLLs
-export PATH=$PATH:/c/Python37/scripts
+#cp -v /c/Program\ Files/OpenSSL/bin/*.dll /c/Python38/DLLs
+export PATH=$PATH:/c/Python38/scripts
 cinst -y wixtoolset
-#until cp -v /c/ssl/*.dll /c/Python37/DLLs; do echo "trying again..."; done
-export python=/c/Python37/python
-export pip=/c/Python37/scripts/pip
+#until cp -v /c/ssl/*.dll /c/Python38/DLLs; do echo "trying again..."; done
+export python=/c/Python38/python
+export pip=/c/Python38/scripts/pip
 
 echo "Upgrading pip packages..."
 $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
@@ -29,7 +29,7 @@ tar xf PyInstaller-$PYINSTALLER_VERSION.tar.gz
 cd PyInstaller-$PYINSTALLER_VERSION/bootloader
 echo "bootloader before:"
 md5sum ../PyInstaller/bootloader/Windows-32bit/*
-/c/python37/python ./waf all --target-arch=32bit
+/c/python38/python ./waf all --target-arch=32bit
 echo "bootloader after:"
 md5sum ../PyInstaller/bootloader/Windows-32bit/*
 echo "PATH: $PATH"

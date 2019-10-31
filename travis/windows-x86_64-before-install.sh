@@ -8,11 +8,11 @@ until powershell Install-WindowsFeature Net-Framework-Core; do echo "trying agai
 #echo "Installing $exefile..."
 #powershell ".\\${exefile} /silent /sp- /suppressmsgboxes /DIR=C:\\ssl"
 cinst $CINST_ARGS python3
-export PATH=$PATH:/c/Python37/scripts
+export PATH=$PATH:/c/Python38/scripts
 cinst -y wixtoolset
-#until cp -v /c/ssl/*.dll /c/Python37/DLLs; do echo "trying again..."; done
-export python=/c/Python37/python
-export pip=/c/Python37/scripts/pip
+#until cp -v /c/ssl/*.dll /c/Python38/DLLs; do echo "trying again..."; done
+export python=/c/Python38/python
+export pip=/c/Python38/scripts/pip
 
 echo "Upgrading pip packages..."
 $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
