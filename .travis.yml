@@ -79,67 +79,67 @@ matrix:
    env:
      - PLATFORM=arm64
      - VMTYPE=build
-  - os: linux
-    name: "Linux 64-bit - Python 3.5 Source Testing"
-    dist: xenial
-    language: python
-    python:
-      - "3.5"
-    env:
-      - ARCH=x86_64
-      - VMTYPE=test
-  - os: linux
-    name: "Linux 64-bit - Python 3.6 Source Testing"
-    dist: bionic
-    language: python
-    python:
-      - "3.6"
-    env:
-      - ARCH=x86_64
-      - VMTYPE=test
-  - os: linux
-    name: "Linux 64-bit - Python 3.8-dev Source Testing"
-    dist: bionic
-    language: python
-    python:
-      - "3.8-dev"
-    env:
-      - ARCH=x86_64
-      - VMTYPE=test
-  - os: linux
-    name: "Linux 64-bit - Python nightly Source Testing"
-    dist: bionic
-    language: python
-    python:
-      - "nightly"
-    env:
-      - ARCH=x86_64
-      - VMTYPE=test
-  - os: osx
-    name: "MacOS Sierra 10.12 64-bit"
-    language: generic
-    osx_image: xcode9.2
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: windows
-    name: "Windows 64-bit"
-    language: shell
-    filter_secrets: false
-    env:
-      - ARCH=x86_64
-      - CINST_ARGS=""
-      - WIX_ARCH=x64
-      - VMTYPE=build
-  - os: windows
-    name: "Windows 32-bit"
-    language: shell
-    filter_secrets: false
-    env:
-      - CINST_ARGS=--forcex86
-      - ARCH=x86
-      - WIX_ARCH=x86
-      - VMTYPE=build
+ - os: linux
+   name: "Linux 64-bit - Python 3.5 Source Testing"
+   dist: xenial
+   language: python
+   python:
+     - "3.5"
+   env:
+     - ARCH=x86_64
+     - VMTYPE=test
+ - os: linux
+   name: "Linux 64-bit - Python 3.6 Source Testing"
+   dist: bionic
+   language: python
+   python:
+     - "3.6"
+   env:
+     - ARCH=x86_64
+     - VMTYPE=test
+ - os: linux
+   name: "Linux 64-bit - Python 3.8-dev Source Testing"
+   dist: bionic
+   language: python
+   python:
+     - "3.8-dev"
+   env:
+     - ARCH=x86_64
+     - VMTYPE=test
+ - os: linux
+   name: "Linux 64-bit - Python nightly Source Testing"
+   dist: bionic
+   language: python
+   python:
+     - "nightly"
+   env:
+     - ARCH=x86_64
+     - VMTYPE=test
+ - os: osx
+   name: "MacOS Sierra 10.12 64-bit"
+   language: generic
+   osx_image: xcode9.2
+   env:
+     - ARCH=x86_64
+     - VMTYPE=build
+ - os: windows
+   name: "Windows 64-bit"
+   language: shell
+   filter_secrets: false
+   env:
+     - ARCH=x86_64
+     - CINST_ARGS=""
+     - WIX_ARCH=x64
+     - VMTYPE=build
+ - os: windows
+   name: "Windows 32-bit"
+   language: shell
+   filter_secrets: false
+   env:
+     - CINST_ARGS=--forcex86
+     - ARCH=x86
+     - WIX_ARCH=x86
+     - VMTYPE=build
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
@@ -166,13 +166,13 @@ script:
 - $gyb --action purge-labels --email $gyb_user
 - $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
 - $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
-- $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume --fast-restore
+- $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume
 - $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
 - $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
 - $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
 - $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account
 - $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
-- $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume --fast-restore
+- $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume
 - $gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user
 - $gyb --action restore-mbox --local-folder travis/samples/vault-export-mbox --email $gyb_user
 - $gyb --action count --email $gyb_user
