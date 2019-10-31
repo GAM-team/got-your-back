@@ -1,27 +1,33 @@
+cd src
 if [ "$VMTYPE" == "test" ]; then
-  export gyb="$python gyb.py"
-  export gybpath=$(readlink -e .)
+  export gam="$python gam.py"
+  export gampath=$(readlink -e .)
 else
-  $python -m PyInstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
-  gyb/gyb --version
-  export GYBVERSION=`gyb/gyb --short-version`
-  cp LICENSE gyb
+  $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gam $GAMOS-gam.spec
+  export gam="gam/gam"
+  export gampath=$(readlink -e gam)
+  export GAMVERSION=`$gam version simple`
+  cp LICENSE $gampath
+  cp whatsnew.txt $gampath
+  cp GamCommands.txt $gampath
   this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
-  GYB_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME-$ARCH-glibc$this_glibc_ver.tar.xz
-  tar cfJ $GYB_ARCHIVE gyb/
+  GAM_ARCHIVE=gam-$GAMVERSION-$GAMOS-$PLATFORM-glibc$this_glibc_ver.tar.xz
+  rm $gampath/lastupdatecheck.txt
+  tar cfJ $GAM_ARCHIVE gam/
+  echo "PyInstaller GAM info:"
+  du -h gam/gam
+  time $gam version extended
+
   if [[ "$dist" == "precise" ]]; then
-    GYB_LEGACY_ARCHIVE=gyb-$GYBVERSION-$TRAVIS_OS_NAME-$ARCH-legacy.tar.xz
-    $python -OO -m staticx gyb/gyb gyb/gyb-staticx
-    strip gyb/gyb-staticx
-    rm gyb/gyb
-    mv gyb/gyb-staticx gyb/gyb
-    tar cfJ $GYB_LEGACY_ARCHIVE gyb/
-    echo "Legacy StaticX GYB info:"
-    du -h gyb/gyb
-    time gyb/gyb --version
+    GAM_LEGACY_ARCHIVE=gam-$GAMVERSION-$GAMOS-$PLATFORM-legacy.tar.xz
+    $python -OO -m staticx gam/gam gam/gam-staticx
+    strip gam/gam-staticx
+    rm gam/gam
+    mv gam/gam-staticx gam/gam
+    tar cfJ $GAM_LEGACY_ARCHIVE gam/
+    echo "Legacy StaticX GAM info:"
+    du -h gam/gam
+    time $gam version extended
   fi
-  mkdir gyb-test
-  cp -rf gyb/* gyb-test/
-  export gybpath=$(readlink -e gyb-test)
-  export gyb="$gybpath/gyb"
+
 fi

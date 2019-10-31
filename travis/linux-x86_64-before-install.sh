@@ -1,5 +1,3 @@
-echo "Syncing time..."
-sudo ntpdate -u time.google.com
 if [ "$VMTYPE" == "test" ]; then
   export python="python"
   export pip="pip"
@@ -9,74 +7,89 @@ else
   export whereibelong=$(pwd)
   export dist=$(lsb_release --codename --short)
   echo "We are running on Ubuntu $dist"
-  echo "RUNNING: apt update..."
-  sudo apt-get -qq --yes update > /dev/null
-  echo "RUNNING: apt dist-upgrade..."
-  sudo apt-get -qq --yes dist-upgrade > /dev/null
-  echo "Installing build tools..."
-  sudo apt-get -qq --yes install build-essential > /dev/null
-
-  echo "Installing deps for python3"
-  sudo cp -v /etc/apt/sources.list /tmp
-  sudo chmod a+rwx /tmp/sources.list
-  echo "deb-src http://archive.ubuntu.com/ubuntu/ $dist main" >> /tmp/sources.list
-  sudo cp -v /tmp/sources.list /etc/apt
-  sudo apt-get -qq --yes update > /dev/null
-  sudo apt-get -qq --yes build-dep python3 > /dev/null
-
-  mypath=$HOME
-  echo "My Path is $mypath"
+  export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
+  SSLVER=$(~/ssl/bin/openssl version)
+  SSLRESULT=$?
+  PYVER=$(~/python/bin/python3 -V)
+  PYRESULT=$?
+  if [ $SSLRESULT -ne 0 ] || [[ "$SSLVER" != "OpenSSL $BUILD_OPENSSL_VERSION "* ]] || [ $PYRESULT -ne 0 ] || [[ "$PYVER" != "Python $PYTHON_BUILD_VERSION"* ]]; then
+    echo "SSL Result: $SSLRESULT - SSL Ver: $SSLVER - Py Result: $PYRESULT - Py Ver: $PYVER"
+    if [ $SSLRESULT -ne 0 ]; then
+      echo "sslresult -ne 0"
+    fi
+    if [[ "$SSLVER" != "OpenSSL $BUILD_OPENSSL_VERSION "* ]]; then
+      echo "sslver not equal to..."
+    fi
+    if [ $PYRESULT -ne 0 ]; then
+      echo "pyresult -ne 0"
+    fi
+    if [[ "$PYVER" != "Python $PYTHON_BUILD_VERSION" ]]; then
+      echo "pyver not equal to..."
+    fi
+    cd ~
+    rm -rf ssl
+    rm -rf python
+    mkdir ssl
+    mkdir python
+    echo "RUNNING: apt update..."
+    sudo apt-get -qq --yes update > /dev/null
+    echo "RUNNING: apt dist-upgrade..."
+    sudo apt-get -qq --yes dist-upgrade > /dev/null
+    echo "Installing build tools..."
+    sudo apt-get -qq --yes install build-essential
+    echo "Installing deps for python3"
+    sudo cp -v /etc/apt/sources.list /tmp
+    sudo chmod a+rwx /tmp/sources.list
+    echo "deb-src http://archive.ubuntu.com/ubuntu/ $dist main" >> /tmp/sources.list
+    sudo cp -v /tmp/sources.list /etc/apt
+    sudo apt-get -qq --yes update > /dev/null
+    sudo apt-get -qq --yes build-dep python3 > /dev/null
 
-  cd ~/pybuild
-  # Compile latest OpenSSL
-  if [ ! -d openssl-$BUILD_OPENSSL_VERSION ]; then
+    # Compile latest OpenSSL
     wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
-    echo "Extracting OpenSSL $BUILD_OPENSSL_VERSION..."
+    echo "Extracting OpenSSL..."
     tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
-  fi
-  cd openssl-$BUILD_OPENSSL_VERSION
-  echo "Compiling OpenSSL $BUILD_OPENSSL_VERSION..."
-  ./config shared --prefix=$mypath/ssl
-  echo "Running make for OpenSSL..."
-  make -j$cpucount -s
-  echo "Running make install for OpenSSL..."
-  make install > /dev/null
-  export LD_LIBRARY_PATH=~/ssl/lib
-  cd ~/pybuild
+    cd openssl-$BUILD_OPENSSL_VERSION
+    echo "Compiling OpenSSL $BUILD_OPENSSL_VERSION..."
+    ./config shared --prefix=$HOME/ssl
+    echo "Running make for OpenSSL..."
+    make -j$cpucount -s
+    echo "Running make install for OpenSSL..."
+    make install > /dev/null
+    cd ~
 
-  # Compile latest Python
-  if [ ! -d Python-$BUILD_PYTHON_VERSION ]; then
+    # Compile latest Python
+    echo "Downloading Python $BUILD_PYTHON_VERSION..."
     curl -O https://www.python.org/ftp/python/$BUILD_PYTHON_VERSION/Python-$BUILD_PYTHON_VERSION.tar.xz
     echo "Extracting Python..."
     tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
+    cd Python-$BUILD_PYTHON_VERSION
+    echo "Compiling Python $BUILD_PYTHON_VERSION..."
+    safe_flags="--with-openssl=$HOME/ssl --enable-shared --prefix=$HOME/python --with-ensurepip=upgrade"
+    unsafe_flags="--enable-optimizations --with-lto"
+    if [ ! -e Makefile ]; then
+      echo "running configure with safe and unsafe"
+      ./configure $safe_flags $unsafe_flags > /dev/null
+    fi
+    make -j$cpucount PROFILE_TASK="-m test.regrtest --pgo -j$(( $cpucount * 2 ))" -s
+    RESULT=$?
+    echo "First make exited with $RESULT"
+    if [ $RESULT != 0 ]; then
+      echo "Trying Python compile again without unsafe flags..."
+      make clean
+      ./configure $safe_flags > /dev/null
+      make -j$cpucount -s
+      echo "Sticking with safe Python for now..."
+    fi
+    echo "Installing Python..."
+    make install > /dev/null
+    cd ~
   fi
-  cd Python-$BUILD_PYTHON_VERSION
-  echo "Compiling Python $BUILD_PYTHON_VERSION..."
-  safe_flags="--with-openssl=$mypath/ssl --enable-shared --prefix=$mypath/python --with-ensurepip=upgrade"
-  unsafe_flags="--enable-optimizations --with-lto"
-  if [ ! -e Makefile ]; then
-    ./configure $safe_flags # $unsafe_flags > /dev/null
-  fi
-  make -j$cpucount -s
-  RESULT=$?
-  echo "First make exited with $RESULT"
-  if [ $RESULT != 0 ]; then
-    echo "Trying Python $BUILD_PYTHON_VERSION compile again without unsafe flags"
-    make clean
-    ./configure $safe_flags > /dev/null
-    make -j$cpucount -s
-  fi
-  echo "Installing Python..."
-  make install > /dev/null
-  cd ~
 
-  export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
-  export python=~/python/bin/python3
-  export pip=~/python/bin/pip3
-
-  $python -V
+  python=~/python/bin/python3
+  pip=~/python/bin/pip3
 
   if [[ "$dist" == "precise" ]]; then
     echo "Installing deps for StaticX..."
@@ -93,10 +106,10 @@ else
     $pip install git+https://github.com/JonathonReinhart/staticx.git@master
   fi
 
-  echo "Upgrading pip packages..."
-  $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
-  $pip install -r requirements.txt
-  $pip install pyinstaller
-
   cd $whereibelong
 fi
+
+echo "Upgrading pip packages..."
+$pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
+$pip install --upgrade -r src/requirements.txt
+$pip install --upgrade https://github.com/pyinstaller/pyinstaller/archive/develop.tar.gz

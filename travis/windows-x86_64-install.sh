@@ -1,13 +1,20 @@
-$python -m PyInstaller --clean -F --distpath=gyb $TRAVIS_OS_NAME-gyb.spec
-gyb/gyb --version
-export GYBVERSION=`gyb/gyb --short-version`
-cp LICENSE gyb
-cp gyb-setup.bat gyb
-cp license.rtf gyb
-GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip
-/c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn
-/c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch $WIX_ARCH windows-gyb.wxs
-/c/Program\ Files\ \(x86\)/Wix\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$ARCH.msi || true
+cd src
+echo "compiling GAM with pyinstaller..."
+pyinstaller --clean --noupx -F --distpath=gam $GAMOS-gam.spec
+export gam="gam/gam"
+export gampath=$(readlink -e gam)
+echo "running compiled GAM..."
+$gam version
+export GAMVERSION=`$gam version simple`
+rm gam/lastupdatecheck.txt
+cp LICENSE gam
+cp GamCommands.txt gam
+cp whatsnew.txt gam
+cp gam-setup.bat gam
+GAM_ARCHIVE=gam-$GAMVERSION-$GAMOS-$PLATFORM.zip
+/c/Program\ Files/7-Zip/7z.exe a -tzip $GAM_ARCHIVE gam -xr!.svn
+mkdir gam-64
+cp -rf gam/* gam-64/;
+/c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 gam.wxs
+/c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll gam.wixobj -o gam-$GAMVERSION-$GAMOS-$PLATFORM.msi || true;
 rm *.wixpdb
-export gybpath=$(readlink -e gyb)
-export gyb="$gybpath/gyb"
