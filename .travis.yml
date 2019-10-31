@@ -28,16 +28,32 @@ matrix:
   - os: linux
     name: "Linux Ubuntu Bionic 64-bit"
     dist: bionic
+    language: bash 
+    env:
+      - ARCH=x86_64
+      - VMTYPE=build
+  - os: linux
+    name: "Linux Ubuntu Bionic arm64"
+    dist: bionic
+    arch: arm64
+    language: bash
+    env:
+      - ARCH=arm64
+      - VMTYPE=build
+  - os: linux
+    name: "Linux Ubuntu Xenial 64-bit"
+    dist: xenial
     language: bash
     env:
       - ARCH=x86_64
       - VMTYPE=build
   - os: linux
-    name: "Linux Ubuntu Xenial 64-bit"
+    name: "Linux Ubuntu Xenial arm64"
     dist: xenial
-    language: bash 
+    arch: arm64
+    language: bash
     env:
-      - ARCH=x86_64
+      - ARCH=arm64
       - VMTYPE=build
   - os: linux
     name: "Linux Ubuntu Trusty 64-bit"
@@ -54,92 +70,62 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=build
   - os: linux
-    dist: bionic
-    arch: arm64
-    name: "Linux ARM64 Bionic"
-    language: bash
-    filter_secrets: false
-    addons:
-      apt:
-        packages:
-          - ruby
+    name: "Linux 64-bit - Python 3.5 Source Testing"
+    dist: xenial
+    language: python
+    python: 3.5
     env:
-      - PLATFORM=arm64
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python 3.6 Source Testing"
+    dist: bionic
+    language: python
+    python: 3.6
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python 3.8-dev Source Testing"
+    dist: bionic
+    language: python
+    python: 3.8-dev
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "Linux 64-bit - Python nightly Source Testing"
+    dist: bionic
+    language: python
+    python: nightly
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: osx
+    name: "MacOS Sierra 10.12 64-bit"
+    language: generic
+    osx_image: xcode9.2
+    env:
+      - ARCH=x86_64
       - VMTYPE=build
- - os: linux
-   dist: xenial
-   arch: arm64
-   name: "Linux ARM64 Xenial"
-   language: bash
-   filter_secrets: false
-   addons:
-     apt:
-       packages:
-         - ruby
-   env:
-     - PLATFORM=arm64
-     - VMTYPE=build
- - os: linux
-   name: "Linux 64-bit - Python 3.5 Source Testing"
-   dist: xenial
-   language: python
-   python:
-     - "3.5"
-   env:
-     - ARCH=x86_64
-     - VMTYPE=test
- - os: linux
-   name: "Linux 64-bit - Python 3.6 Source Testing"
-   dist: bionic
-   language: python
-   python:
-     - "3.6"
-   env:
-     - ARCH=x86_64
-     - VMTYPE=test
- - os: linux
-   name: "Linux 64-bit - Python 3.8-dev Source Testing"
-   dist: bionic
-   language: python
-   python:
-     - "3.8-dev"
-   env:
-     - ARCH=x86_64
-     - VMTYPE=test
- - os: linux
-   name: "Linux 64-bit - Python nightly Source Testing"
-   dist: bionic
-   language: python
-   python:
-     - "nightly"
-   env:
-     - ARCH=x86_64
-     - VMTYPE=test
- - os: osx
-   name: "MacOS Sierra 10.12 64-bit"
-   language: generic
-   osx_image: xcode9.2
-   env:
-     - ARCH=x86_64
-     - VMTYPE=build
- - os: windows
-   name: "Windows 64-bit"
-   language: shell
-   filter_secrets: false
-   env:
-     - ARCH=x86_64
-     - CINST_ARGS=""
-     - WIX_ARCH=x64
-     - VMTYPE=build
- - os: windows
-   name: "Windows 32-bit"
-   language: shell
-   filter_secrets: false
-   env:
-     - CINST_ARGS=--forcex86
-     - ARCH=x86
-     - WIX_ARCH=x86
-     - VMTYPE=build
+  - os: windows
+    name: "Windows 64-bit"
+    language: shell
+    filter_secrets: false
+    env:
+      - ARCH=x86_64
+      - CINST_ARGS=""
+      - WIX_ARCH=x64
+      - VMTYPE=build
+  - os: windows
+    name: "Windows 32-bit"
+    language: shell
+    filter_secrets: false
+    env:
+      - CINST_ARGS=--forcex86
+      - ARCH=x86
+      - WIX_ARCH=x86
+      - VMTYPE=build
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
@@ -195,7 +181,7 @@ deploy:
   draft: true
   file_glob: true
   overwrite: true
-  skip_cleanup: true
+  cleanup: false
   api_key:
     secure: QFIqvSfIVtk6AUOfBXXHlSJh7vA09fBpg09A3F7URYXd5baAshVVnKEh3fiRftQccgCAn7H4npjRfo7uxWDr3lD1l7KbvD6LbwjSFeF1X1gD1+d6q7V8umGMgWowQEZnbbYeNxoPwEs0y/0MWyAGsWO/HD6z96PcqhYLsBUVVRsw9KUt5d5m92xTFzLWyoyE29x6dRg8kRoYbxHKaOBpzLkZiADWF3OawuSa/nhxji6uKN846gutfsaWRC/+v9mz7Z2zjAbSmo/J34cloEbSCCsDRjBNuOTptnrkxaA/g/xW/IQIMuNMzZkcDAsUYArK53u3ib4nJaOcxn7L+QmADp9Cp7puxZPKuYuMeEZOqmZ9L/F2U5BE+3vQnlbVB9aNP1NGQmwGkMqkSx0bbSch+ar0v+lOILPv3rnOZstTkzOcRuf3I+uPeCb9hL4oX69XuF9FeMl2H+Js2JhR52R54OjGJhwfZsSD1QbvjtZih3a5k+dPS2qCRnn8xzLX8wOVGqWLJpxBdE3gXMEexEtWx2h0m0uW+qyls0+RuywNCnukGygkCL3WDLHt3t9TyxbsBGvtlusV+wPVanUnVfFptvn8K2RY5fpVoWUmmGd6pjH9vMag0kfsHUVYmHPcC1nE0isBuzYpH8W0Hfnk78LqfxVHwhzMHVLo2OhhIre0gY4=
   file: gyb-$GYBVERSION-*
