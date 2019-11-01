@@ -1,9 +1,11 @@
 cd src
 if [ "$VMTYPE" == "test" ]; then
   export gyb="$python gyb.py"
+  export gybpath=$(readlink -e .)
 else
   $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb linux-gyb.spec
   export gyb="gyb/gyb"
+  $(readlink -e gyb)
   export GYBVERSION=`$gyb --simple-versio`
   cp LICENSE gyb
   this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')

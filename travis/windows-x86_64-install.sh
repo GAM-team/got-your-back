@@ -1,6 +1,7 @@
 echo "compiling GYB with pyinstaller..."
 pyinstaller --clean --noupx -F --distpath=gyb windows-gyb.spec
 export gyb="gyb/gyb"
+export gybpath=$(readlink -e gyb)
 echo "running compiled GYB..."
 $gyb --version
 export GYBVERSION=`$gyb --short-version`

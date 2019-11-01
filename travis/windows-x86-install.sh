@@ -1,5 +1,6 @@
 pyinstaller --clean --noupx -F --distpath=gyb windows-gyb.spec
 export gyb="gyb/gyb"
+export gybpath=$(readlink -e gyb)
 $gyb --version
 export GYBVERSION=`$gyb --simple-version`
 cp LICENSE gyb

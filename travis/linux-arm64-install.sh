@@ -4,6 +4,7 @@ if [ "$VMTYPE" == "test" ]; then
 else
   $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb linux-gyb.spec
   export gyb="gyb/gyb"
+  export gybpath=$(readlink -e gyb)
   export GYBVERSION=`$gyb --short-version`
   cp LICENSE gyb
   this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')

@@ -3,6 +3,7 @@ echo "MacOS Version Info According to Python:"
 python -c "import platform; print(platform.mac_ver())"
 $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb osx-gyb.spec
 export gyb="gyb/gyb"
+export gybpath=gyb
 $gyb --version
 export GYBVERSION=`$gyb --simple-version`
 cp LICENSE gyb

@@ -131,7 +131,6 @@ matrix:
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
-- $pip install -r requirements.txt
 
 install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-install.sh
