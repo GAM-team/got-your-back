@@ -1,4 +1,3 @@
-cd src
 pyinstaller --clean --noupx -F --distpath=gyb windows-gyb.spec
 export gyb="gyb/gyb"
 $gyb --version

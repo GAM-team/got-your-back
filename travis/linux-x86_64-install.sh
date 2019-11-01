@@ -2,7 +2,7 @@ cd src
 if [ "$VMTYPE" == "test" ]; then
   export gyb="$python gyb.py"
 else
-  $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb $GAMOS-gyb.spec
+  $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb linux-gyb.spec
   export gyb="gyb/gyb"
   export GYBVERSION=`$gyb --simple-versio`
   cp LICENSE gyb
