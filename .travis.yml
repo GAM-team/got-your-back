@@ -150,6 +150,7 @@ matrix:
       - VMTYPE=build
 
 before_install:
+- export PYTHONUTF8=1
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 
 install:
