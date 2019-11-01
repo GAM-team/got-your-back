@@ -104,11 +104,25 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: osx
-    name: "MacOS Sierra 10.12 64-bit"
+    name: "MacOS 10.12"
     language: generic
     osx_image: xcode9.2
     env:
       - ARCH=x86_64
+      - VMTYPE=build
+  - os: osx
+    name: "MacOS 10.13"
+    language: generic
+    osx_image: xcode10.1
+    env:
+      - PLATFORM=x86_64
+      - VMTYPE=build
+  - os: osx
+    name: "MacOS 10.14"
+    language: generic
+    osx_image: xcode11.1
+    env:
+      - PLATFORM=x86_64
       - VMTYPE=build
   - os: windows
     name: "Windows 64-bit"

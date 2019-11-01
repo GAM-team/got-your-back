@@ -5,7 +5,7 @@ $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb osx-gyb.spe
 export gyb="gyb/gyb"
 export gybpath=gyb
 $gyb --version
-export GYBVERSION=`$gyb --simple-version`
+export GYBVERSION=`$gyb --short-version`
 cp LICENSE gyb
 MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
 GYB_ARCHIVE=gyb-$GYBVERSION-macos-$PLATFORM-MacOS$MACOSVERSION.tar.xz
