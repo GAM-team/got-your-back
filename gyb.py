@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.31'
+__version__ = '1.32'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -1071,7 +1071,7 @@ and grant Client name:
 
 Access to scopes:
 
-%s\n''' % (user_domain, credentials.client_id, ',\n'.join(all_scopes))
+%s\n''' % (user_domain, client_id, ',\n'.join(all_scopes))
   print('')
   print(scopes_failed)  
   sys.exit(3)
