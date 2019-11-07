@@ -2057,11 +2057,16 @@ def main(argv):
 
   # PRINT-LABELS #
   elif options.action == 'print-labels':
+    safe_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     labels = callGAPI(service=gmail.users().labels(), function='list',
                                userId='me', fields='labels(id,name,type)')
     user_labels = []
     for label in labels.get('labels'):
-      print('%s (%s)' % (label['name'], label['id']))
+      try:
+        print('%s (%s)' % (label['name'], label['id']))
+      except UnicodeEncodeError:
+        printable_name = ''.join(c for c in label['name'] if c in safe_chars)
+        print('%s: (%s)' % (printable_name, label['id']))
     print('\n')
 
   # QUOTA #

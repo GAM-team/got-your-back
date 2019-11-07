@@ -5,7 +5,7 @@ else
   $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb linux-gyb.spec
   export gyb="gyb/gyb"
   export gybpath=$(readlink -e gyb)
-  export GYBVERSION=`$gyb --simple-version`
+  export GYBVERSION=`$gyb --short-version`
   cp LICENSE gyb
   this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
   GYB_ARCHIVE=gyb-$GYBVERSION-linux-$PLATFORM-glibc$this_glibc_ver.tar.xz
