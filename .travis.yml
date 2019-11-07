@@ -94,10 +94,10 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: linux
-    name: "Linux 64-bit - Python 3.8-dev Source Testing"
+    name: "Linux 64-bit - Python 3.7 Source Testing"
     dist: bionic
     language: python
-    python: 3.8-dev
+    python: 3.7
     env:
       - ARCH=x86_64
       - VMTYPE=test
@@ -150,7 +150,6 @@ matrix:
       - VMTYPE=build
 
 before_install:
-- export PYTHONUTF8=1
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
 
 install:

@@ -2,7 +2,7 @@ pyinstaller --clean --noupx -F --distpath=gyb windows-gyb.spec
 export gyb="gyb/gyb"
 export gybpath=$(readlink -e gyb)
 $gyb --version
-export GYBVERSION=`$gyb --simple-version`
+export GYBVERSION=`$gyb --short-version`
 cp LICENSE gyb
 cp gyb-setup.bat gyb
 GYB_ARCHIVE=gyb-$GYBVERSION-windows-$PLATFORM.zip

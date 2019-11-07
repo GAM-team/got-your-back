@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.31'
+__version__ = '1.32'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -706,7 +706,7 @@ def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=No
       'token_uri': 'https://oauth2.googleapis.com/token',
       }
     }
-  flow = ShortURLFlow.from_client_config(client_config, scopes)
+  flow = ShortURLFlow.from_client_config(client_config, scopes, autogenerate_code_verifier=True)
   kwargs = {'access_type': access_type}
   if login_hint:
     kwargs['login_hint'] = login_hint
@@ -1071,7 +1071,7 @@ and grant Client name:
 
 Access to scopes:
 
-%s\n''' % (user_domain, credentials.client_id, ',\n'.join(all_scopes))
+%s\n''' % (user_domain, client_id, ',\n'.join(all_scopes))
   print('')
   print(scopes_failed)  
   sys.exit(3)
@@ -2057,11 +2057,16 @@ def main(argv):
 
   # PRINT-LABELS #
   elif options.action == 'print-labels':
+    safe_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     labels = callGAPI(service=gmail.users().labels(), function='list',
                                userId='me', fields='labels(id,name,type)')
     user_labels = []
     for label in labels.get('labels'):
-      print('%s (%s)' % (label['name'], label['id']))
+      try:
+        print('%s (%s)' % (label['name'], label['id']))
+      except UnicodeEncodeError:
+        printable_name = ''.join(c for c in label['name'] if c in safe_chars)
+        print('%s: (%s)' % (printable_name, label['id']))
     print('\n')
 
   # QUOTA #

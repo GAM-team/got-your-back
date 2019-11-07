@@ -5,6 +5,8 @@ whereibelong=$(pwd)
 
 #brew upgrade
 
+sudo ntpdate -u time.google.com
+
 cd ~
 
 if [ ! -f python-$BUILD_PYTHON_VERSION-macosx10.9.pkg ]; then
