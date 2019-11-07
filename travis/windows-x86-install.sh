@@ -12,3 +12,6 @@ cp -rf gyb/* gyb-64/;
 /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x86 windows-gyb.wxs
 /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$PLATFORM.msi || true;
 rm *.wixpdb
+
+chcp 650001
+export PYTHONUTF8=1
