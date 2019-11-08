@@ -110,10 +110,10 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: linux
-    name: "PyPi Source Testing"
+    name: "PyPy Source Testing"
     dist: bionic
     language: python
-    python: pypi3
+    python: pypy3
     env:
       - ARCH=x86_64
       - VMTYPE=test
