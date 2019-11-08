@@ -7,7 +7,7 @@ $gyb --version
 export GYBVERSION=`$gyb --short-version`
 cp LICENSE gyb
 cp gyb-setup.bat gyb
-GYB_ARCHIVE=gyb-$GYBVERSION-windows-$PLATFORM.zip
+GYB_ARCHIVE=gyb-$GYBVERSION-windows-$ARCH.zip
 /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn
 mkdir gyb-64
 cp -rf gyb/* gyb-64/;
