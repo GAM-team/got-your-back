@@ -78,7 +78,7 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=build
   - os: linux
-    name: "Linux 64-bit - Python 3.5 Source Testing"
+    name: "Python 3.5 Source Testing"
     dist: xenial
     language: python
     python: 3.5
@@ -86,7 +86,7 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: linux
-    name: "Linux 64-bit - Python 3.6 Source Testing"
+    name: "Python 3.6 Source Testing"
     dist: bionic
     language: python
     python: 3.6
@@ -94,7 +94,7 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: linux
-    name: "Linux 64-bit - Python 3.7 Source Testing"
+    name: "Python 3.7 Source Testing"
     dist: bionic
     language: python
     python: 3.7
@@ -102,10 +102,18 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: linux
-    name: "Linux 64-bit - Python nightly Source Testing"
+    name: "Python nightly Source Testing"
     dist: bionic
     language: python
     python: nightly
+    env:
+      - ARCH=x86_64
+      - VMTYPE=test
+  - os: linux
+    name: "PyPi Source Testing"
+    dist: bionic
+    language: python
+    python: pypi3
     env:
       - ARCH=x86_64
       - VMTYPE=test
