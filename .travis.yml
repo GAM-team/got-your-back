@@ -30,6 +30,9 @@ cache:
     - $HOME/ssl
 
 matrix:
+  fast_finish: true
+  allow_failures:
+    - python: pypy3.5
   include:
   - os: linux
     name: "Linux Ubuntu Bionic 64-bit"
