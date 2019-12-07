@@ -203,6 +203,7 @@ script:
 - $gyb --action print-labels --email $gyb_user --service-account
 - $gyb --action backup --email $gyb_user
 - $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
+- if [ "$TRAVIS_OS_NAME" != "windows" ]; then bash <(curl -s -S -L https://git.io/gyb-install) -l; fi
 
 before_deploy:
 - export TRAVIS_TAG="preview"

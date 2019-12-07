@@ -22,20 +22,23 @@ EOF
 target_dir="$HOME/bin"
 myarch=$(uname -m)
 myos=$(uname -s)
+osversion=""
 update_profile=true
 upgrade_only=false
 gybversion="latest"
 adminuser=""
 regularuser=""
-glibc_vers="2.23 2.19 2.15"
+glibc_vers="2.27 2.23 2.19 2.15"
+macos_vers="10.14.4 10.13.6 10.12.6"
 
-while getopts "hd:a:o:lp:u:r:v:" OPTION
+while getopts "hd:a:o:b:lp:u:r:v:" OPTION
 do
      case $OPTION in
          h) usage; exit;;
          d) target_dir="$OPTARG";;
          a) myarch="$OPTARG";;
          o) myos="$OPTARG";;
+         b) osversion="$OPTARG";;
          l) upgrade_only=true;;
          p) update_profile="$OPTARG";;
          u) adminuser="$OPTARG";;
@@ -98,24 +101,32 @@ case $myos in
     done
     case $myarch in
       x86_64) gybfile="linux-x86_64-$useglibc.tar.xz";;
-      i?86) gybfile="linux-i686.tar.xz";;
-      arm|armv7l) gybfile="linux-armv7l.tar.xz";;
-      arm64|aarch64) gybfile="linux-aarch64.tar.xz";;
+      arm64|aarch64) gybfile="linux-arm64-$useglibc.tar.xz";;
       *)
-        echo_red "ERROR: this installer currently only supports x86_64, i686, armv7l and aarch64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
+        echo_red "ERROR: this installer currently only supports x86_64 and aarch64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
         exit
     esac
     ;;
   [Mm]ac[Oo][sS]|[Dd]arwin)
-    osver=$(sw_vers -productVersion | awk -F'.' '{print $2}')
-    if (( $osver < 14 )); then
-      echo_red "ERROR: GYB currently requires MacOS 10.14 or newer. You are running MacOS 10.$osver. Please upgrade." 
-      exit
+    if [ "$osversion" == "" ]; then
+      this_macos_ver=$(sw_vers -productVersion)
     else
-      echo_green "Good, you're running MacOS 10.$osver..."
+      this_macos_ver=$osversion
     fi
-    myos="osx"
-    gybfile="osx-x86_64.tar.xz"
+    echo_green "You are running MacOS $this_macos_ver"
+    use_macos_ver=""
+    for macos_ver in $macos_vers; do
+      if version_gt $this_macos_ver $macos_ver; then
+        use_macos_ver="MacOS$macos_ver"
+        echo_green "Using GYB compiled on $use_macos_ver"
+        break
+      fi
+    done
+    if [ "$use_macos_ver" == "" ]; then
+      echo_red "Sorry, you need to be running at least MacOS $macos_ver to run GAM"
+      exit
+    fi
+    gamfile="macos-x86_64-$use_macos_ver.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
