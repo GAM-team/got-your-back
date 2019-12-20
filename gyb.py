@@ -1834,7 +1834,7 @@ def main(argv):
             message.set_headers({b'From': b'Not Set <not@set.net>'})
           mbox_pct = percentage(mbox._mbox_position, mbox._mbox_size)
           deleted = options.vault
-          labels = options.label_restored
+          labels = options.label_restored.copy()
           if not options.strip_labels:
             if vault_label_map:
               mbox_from = message.get_from()
