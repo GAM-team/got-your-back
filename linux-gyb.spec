@@ -1,5 +1,11 @@
 # -*- mode: python -*-
+
+import sys
+
+sys.modules['FixTk'] = None
+
 a = Analysis(['gyb.py'],
+             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
