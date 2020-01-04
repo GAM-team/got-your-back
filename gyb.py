@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.33'
+__version__ = '1.34'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -2151,8 +2151,8 @@ if __name__ == '__main__':
     print('ERROR: GYB requires Python 3.5 or greater.')
     sys.exit(3)
   elif sys.version_info[1] >= 7:
-    sys.stdout.reconfigure(encoding='utf-8', errors='namereplace')
-    sys.stdin.reconfigure(encoding='utf-8', errors='namereplace')
+    sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
+    sys.stdin.reconfigure(encoding='utf-8', errors='backslashreplace')
   try:
     main(sys.argv[1:])
   except MemoryError:
