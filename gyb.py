@@ -816,7 +816,7 @@ def _createClientSecretsOauth2service(projectId):
     print('Unknown error: %s' % content)
     return False
 
-  console_credentials_url = 'https://console.developers.google.com/apis/credentials/consent?createClient&project=%s' % projectId
+  console_credentials_url = 'https://console.developers.google.com/apis/credentials/consent/edit?createClient&newAppInternalUser=true&project=%s' % projectId
   while True:
     print('''Please go to:
 
