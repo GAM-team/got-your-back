@@ -135,7 +135,7 @@ case $myos in
       echo_red "Sorry, you need to be running at least MacOS $macos_ver to run GAM"
       exit
     fi
-    gamfile="macos-x86_64-$use_macos_ver.tar.xz"
+    gybfile="macos-x86_64-$use_macos_ver.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
