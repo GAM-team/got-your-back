@@ -27,8 +27,8 @@ __email__ = 'jay0lee@gmail.com'
 __version__ = '1.34'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
-__db_schema_version__ = '6'
-__db_schema_min_version__ = '6'        #Minimum for restore
+__db_schema_version__ = '7'
+__db_schema_min_version__ = '7'        #Minimum for restore
 
 global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels
 extra_args = {'prettyPrint': False}
@@ -1168,7 +1168,12 @@ def convertDB(sqlconn, uidvalidity, oldversion):
         rebuildUIDTable(sqlconn)
       sqlconn.executemany('REPLACE INTO settings (name, value) VALUES (?,?)',
                         (('uidvalidity',uidvalidity), 
-                         ('db_version', __db_schema_version__)) )   
+                         ('db_version', __db_schema_version__)) )
+      if oldversion < '7':
+        # Convert to schema 7
+        sqlconn.executescript('''
+          ALTER TABLE messages ADD COLUMN message_compressed INTEGER;
+          ''')  
       sqlconn.commit()
   except sqlite3.OperationalError as e:
       print("Conversion error: %s" % e.message)
