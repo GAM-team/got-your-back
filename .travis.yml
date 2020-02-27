@@ -3,7 +3,7 @@ if: tag IS blank
 env:
   global:
     - BUILD_OPENSSL_VERSION=1.1.1d
-    - BUILD_PYTHON_VERSION=3.8.2
+    - BUILD_PYTHON_VERSION=3.8 1.
     - PYINSTALLER_VERSION=3.5
     - PATCHELF_VERSION=0.9
 
