@@ -138,19 +138,16 @@ matrix:
 
 before_install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
+- export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
+- export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
+- export gyb_group="gyb-travis-group-$jid@pdl.jaylee.us"
+- openssl aes-256-cbc -K $encrypted_6c3a5fee0b9c_key -iv $encrypted_6c3a5fee0b9c_iv -in travis/credentials.tar.enc -out travis/credentials.tar -d
 
 install:
 - source travis/$TRAVIS_OS_NAME-$ARCH-install.sh
 
 script:
-- export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
-- export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
-- export gyb_group="gyb-travis-group-$jid@pdl.jaylee.us"
-- pwd
-- ls
-- file travis/$jid.tar.enc
-- openssl aes-256-cbc -K $encrypted_6c3a5fee0b9c_key -iv $encrypted_6c3a5fee0b9c_iv -in travis/$jid.tar.enc -out $gybpath/$jid.tar -d
-- tar xvf $gybpath/$jid.tar -C $gybpath
+- tar xvf travis/credentials.tar -C $gybpath
 - echo "This job will use $gyb_user"
 - $gyb --version
 - if [ "$VMTYPE" == "build" ]; then $gyb --version | grep "Python ${BUILD_PYTHON_VERSION//./\\.}"; fi # we should be using latest Python
