@@ -1645,7 +1645,7 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 20
+      options.batch_size = 15 
     resumedb = os.path.join(options.local_folder, 
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1719,7 +1719,7 @@ def main(argv):
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
           mimetype='message/rfc822', resumable=True)
         try:
-          response = callGAPI(gmail.users.messages(), function='import_',
+          response = callGAPI(gmail.users().messages(), 'import_',
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
             deleted=options.vault, soft_errors=True, neverMarkSpam=True)
           exception = None
@@ -1772,7 +1772,7 @@ def main(argv):
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
     if options.batch_size == 0:
-      options.batch_size = 20
+      options.batch_size = 15
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
