@@ -125,7 +125,7 @@ def SetupOptionParser(argv):
     help='Full email address of user or group to act against')
   action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
     'count', 'purge', 'purge-labels', 'print-labels', 'estimate', 'quota', 'reindex', 'revoke',
-    'split-mbox', 'create-project', 'delete-projects', 'check-service-account']
+    'split-mbox', 'create-project', 'delete-projects', 'check-service-account', 'upgrade']
   parser.add_argument('--action',
     choices=action_choices,
     dest='action',
@@ -781,9 +781,6 @@ def writeFile(filename, data, mode='wb', continueOnError=False, displayError=Tru
   if isinstance(data, str):
     data = data.encode('utf-8')
   try:
-    #if compress:
-    #  data = gzip.compress(data)
-    #  filename = filename & '.gz'
     with open(os.path.expanduser(filename), mode) as f:
       f.write(data)
     return True
@@ -1528,7 +1525,7 @@ def main(argv):
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
-    'quota', 'revoke']:
+    'quota', 'revoke', 'upgrade']:
     if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
       print("\nUsing backup folder %s" % options.local_folder)
       global sqlconn
@@ -1550,6 +1547,21 @@ def main(argv):
           rebuildUIDTable(sqlconn)
           sqlconn.commit()
           sys.exit(0)
+
+  # UPGRADE #
+  if options.action == 'upgrade':
+    sqlconn = sqlite3.connect(sqldbfile,
+      detect_types=sqlite3.PARSE_DECLTYPES)
+    sqlconn.text_factory = str
+    sqlcur = sqlconn.cursor()
+    db_settings = get_db_settings(sqlcur)
+    print("\nUpgrading backup folder schema from %s to %s" % (db_settings['db_version'], __db_schema_version__))
+    if db_settings['db_version'] < __db_schema_version__:
+      convertDB(sqlconn, 0, db_settings['db_version'])
+      print("\nBackup folder schema upgraded from version %s to version %s" % (db_settings['db_version'], __db_schema_version__))
+    else:
+      print("\nBackup folder schema does not need to be upgraded")
+    sys.exit(0)
 
   # BACKUP #
   if options.action == 'backup':
