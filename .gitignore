@@ -60,6 +60,7 @@ lastcheck.txt
 gyb/
 oauth2service.json
 client_secrets.json
+*.sqlite
 
 # Prevents committing private key.
 privatekey.p12
