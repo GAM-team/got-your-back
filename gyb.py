@@ -1645,7 +1645,7 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 10
+      options.batch_size = 20
     resumedb = os.path.join(options.local_folder, 
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1747,7 +1747,7 @@ def main(argv):
         sqlconn.commit()
         current_batch_bytes = 5000
         largest_in_batch = 0
-      gbatch.add(gmail.users().messages()._import(userId='me',
+      gbatch.add(gmail.users().messages().import_(userId='me',
         body=body, fields='id', deleted=options.vault,
         neverMarkSpam=True), callback=restored_message,
           request_id=str(message_num))
@@ -1772,7 +1772,7 @@ def main(argv):
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
     if options.batch_size == 0:
-      options.batch_size = 10
+      options.batch_size = 20
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
