@@ -1650,7 +1650,7 @@ def main(argv):
     sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from \
       restored_messages''')
     sqlcur.execute('''SELECT message_num, message_internaldate, \
-      message_filename FROM messages
+      message_filename, message_compressed FROM messages
                       WHERE message_num NOT IN skip_messages ORDER BY \
                       message_internaldate DESC''') # All messages
 
@@ -1673,6 +1673,7 @@ def main(argv):
       current += 1
       message_filename = x[2]
       message_num = x[0]
+      message_compressed = x[3]
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
         print('WARNING! file %s does not exist for message %s'
@@ -1682,6 +1683,8 @@ def main(argv):
         continue
       f = open(os.path.join(options.local_folder, message_filename), 'rb')
       full_message = f.read()
+      if message_compressed == 1:
+          full_message = gzip.decompress(full_message)
       f.close()
       labels = []
       if not options.strip_labels:
