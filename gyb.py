@@ -195,7 +195,7 @@ where last restore left off.')
   parser.add_argument('--fast-restore',
     action='store_true',
     dest='fast_restore',
-    help='Optional: On restores, use the fast method. WARNING: using this \
+    help='DEPRECATED (do not use): On restores, use the fast method. WARNING: using this \
 method breaks Gmail deduplication and threading.')
   parser.add_argument('--fast-incremental',
     dest='refresh',
@@ -538,7 +538,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
   global extra_args
   auth_as = options.use_admin if options.use_admin else options.email
   scopes = getAPIScope(api)
-  _, credentials = getSvcAcctCredentials(scopes, auth_as)
+  credentials = getSvcAcctCredentials(scopes, auth_as)
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
@@ -676,22 +676,29 @@ def getValidateLoginHint(login_hint):
 def percentage(part, whole):
   return '{0:.2f}'.format(100 * float(part)/float(whole))
 
+def shorten_url(long_url):
+  simplehttp = _createHttpObj(timeout=10)
+  url_shortnr = 'https://gyb-shortn.jaylee.us/create'
+  headers = {'Content-Type': 'application/json',
+             'User-Agent': getGYBVersion(' | ')}
+  try:
+    resp, content = simplehttp.request(url_shortnr, 'POST',
+            f'{{"long_url": "{long_url}"}}', headers=headers)
+  except Exception as e:
+    return long_url
+  if resp.status != 200:
+    return long_url
+  try:
+    return json.loads(content).get('short_url', long_url)
+  except Exception as e:
+    print(content)
+    return long_url
+
 class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
   def authorization_url(self, **kwargs):
     long_url, state = super(ShortURLFlow, self).authorization_url(**kwargs)
-    simplehttp = _createHttpObj(timeout=10)
-    url_shortnr = 'https://gyb-shortn.jaylee.us/create'
-    headers = {'Content-Type': 'application/json'}
-    try:
-      resp, content = simplehttp.request(url_shortnr, 'POST', '{"long_url": "%s"}' % long_url, headers=headers)
-    except:
-      return long_url, state
-    if resp.status != 200:
-      return long_url, state
-    try:
-      return json.loads(content).get('short_url', long_url), state
-    except:
-      return long_url, state
+    short_url = shorten_url(long_url)
+    return short_url, state
 
 MESSAGE_CONSOLE_AUTHORIZATION_PROMPT = '\nGo to the following link in your browser:\n\n\t{url}\n'
 MESSAGE_CONSOLE_AUTHORIZATION_CODE = 'Enter verification code: '
@@ -1026,7 +1033,23 @@ def getSvcAcctCredentials(scopes, act_as):
     credentials = credentials.with_subject(act_as)
     request = google_auth_httplib2.Request(_createHttpObj())
     credentials.refresh(request)
-    return sa_info['client_id'], credentials
+    return credentials
+  except (ValueError, KeyError):
+    print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+    systemErrorExit(6, 'oauth2service.json is invalid.')
+
+def getSvcAccountClientId():
+  try:
+    json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
+    if not json_string:
+      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      systemErrorExit(6, None)
+    sa_info = json.loads(json_string)
+    client_id = sa_info.get('client_id')
+    if not client_id:
+      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      systemErrorExit(6, None)
+    return client_id
   except (ValueError, KeyError):
     print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
     systemErrorExit(6, 'oauth2service.json is invalid.')
@@ -1039,10 +1062,11 @@ def doCheckServiceAccount():
         all_scopes.append(scope)
   all_scopes.sort()
   all_scopes_pass = True
+  client_id = getSvcAccountClientId()
   oa2 = googleapiclient.discovery.build('oauth2', 'v1', _createHttpObj())
   for scope in all_scopes:
     try:
-      client_id, credentials = getSvcAcctCredentials([scope, 'https://www.googleapis.com/auth/userinfo.email'], options.email)
+      credentials = getSvcAcctCredentials([scope, 'https://www.googleapis.com/auth/userinfo.email'], options.email)
       granted_scopes = callGAPI(oa2, 'tokeninfo', access_token=credentials.token)
       if scope in granted_scopes['scope'].split(' ') and \
          granted_scopes.get('email', '').lower() == options.email.lower():
@@ -1061,19 +1085,21 @@ def doCheckServiceAccount():
     print('\nAll scopes passed!\nService account %s is fully authorized.' % client_id)
     return
   user_domain = options.email[options.email.find('@')+1:]
-  scopes_failed = '''SOME SCOPES FAILED! Please go to:
+  long_url = (f'https://admin.google.com/{user_domain}/ManageOauthClients'
+              f'?clientScopeToAdd={",".join(all_scopes)}'
+              f'&clientNameToAdd={client_id}')
+  short_url = shorten_url(long_url)
+  scopes_failed = f'''
+Some scopes failed! To authorize them, please go to:
 
-https://admin.google.com/%s/AdminHome?#OGX:ManageOauthClients
+  {short_url}
 
-and grant Client name:
-
-%s
-
-Access to scopes:
-
-%s\n''' % (user_domain, client_id, ',\n'.join(all_scopes))
-  print('')
-  print(scopes_failed)  
+You will be redirected to the G Suite admin console. The Client Name and API
+Scopes fields will be pre-populated. Please click Authorize to allow these
+scopes access. After authorizing it may take some time for this test to pass so
+go grab a cup of coffee and then try this command again.
+'''
+  print(scopes_failed)
   sys.exit(3)
 
 def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
@@ -1619,7 +1645,7 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 5
+      options.batch_size = 10
     resumedb = os.path.join(options.local_folder, 
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1641,14 +1667,8 @@ def main(argv):
                       WHERE message_num NOT IN skip_messages ORDER BY \
                       message_internaldate DESC''') # All messages
 
-    restore_serv = gmail.users().messages()
     if options.fast_restore:
-      restore_func = 'insert'
-      restore_params = {'internalDateSource': 'dateHeader'}
-    else:
-      restore_func = 'import_'
-      restore_params = {'neverMarkSpam': True}
-    restore_method = getattr(restore_serv, restore_func)
+      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
     current = 0
@@ -1699,9 +1719,9 @@ def main(argv):
         media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
           mimetype='message/rfc822', resumable=True)
         try:
-          response = callGAPI(service=restore_serv, function=restore_func,
+          response = callGAPI(gmail.users.messages(), function='import_',
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-            deleted=options.vault, soft_errors=True, **restore_params)
+            deleted=options.vault, soft_errors=True, neverMarkSpam=True)
           exception = None
         except (googleapiclient.errors.HttpError, googleapiclient.errors.MediaUploadSizeError) as e:
           response = None
@@ -1727,9 +1747,9 @@ def main(argv):
         sqlconn.commit()
         current_batch_bytes = 5000
         largest_in_batch = 0
-      gbatch.add(restore_method(userId='me',
+      gbatch.add(gmail.users().messages()._import(userId='me',
         body=body, fields='id', deleted=options.vault,
-        **restore_params), callback=restored_message,
+        neverMarkSpam=True), callback=restored_message,
           request_id=str(message_num))
       if len(gbatch._order) == options.batch_size:
         rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
@@ -1752,7 +1772,7 @@ def main(argv):
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
     if options.batch_size == 0:
-      options.batch_size = 5
+      options.batch_size = 10
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1773,14 +1793,8 @@ def main(argv):
       messages_to_skip.append(a_message[0])
     current_batch_bytes = 5000
     gbatch = gmail.new_batch_http_request()
-    restore_serv = gmail.users().messages()
     if options.fast_restore:
-      restore_func = 'insert'
-      restore_params = {'internalDateSource': 'dateHeader'}
-    else:
-      restore_func = 'import_'
-      restore_params = {'neverMarkSpam': True}
-    restore_method = getattr(restore_serv, restore_func)
+      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     max_batch_bytes = 8 * 1024 * 1024
     # Look for Google Vault XML metadata which contains message labels map
     vault_label_map = {}
@@ -1888,9 +1902,9 @@ def main(argv):
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
               mimetype='message/rfc822', resumable=True)
             try:
-              response = callGAPI(service=restore_serv, function=restore_func,
+              response = callGAPI(gmail.users().messages(), 'import_',
                 userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
-                deleted=deleted, soft_errors=True, **restore_params)
+                deleted=deleted, soft_errors=True, neverMarkSpam=True)
               if response == None:
                 continue
               exception = None
@@ -1912,9 +1926,9 @@ def main(argv):
             sqlconn.commit()
             current_batch_bytes = 5000
             largest_in_batch = 0
-          gbatch.add(restore_method(userId='me',
+          gbatch.add(gmail.users().messages().import_(userId='me',
             body=body, fields='id',
-            deleted=deleted, **restore_params),
+            deleted=deleted, neverMarkSpam=True),
             callback=restored_message,
             request_id=request_id)
           if len(gbatch._order) == options.batch_size:
@@ -2147,8 +2161,8 @@ otaBytesByService,quotaType')
     getSizeOfMessages(messages_to_estimate, gmail)
 
 if __name__ == '__main__':
-  if sys.version_info[0] < 3 or sys.version_info[1] < 5:
-    print('ERROR: GYB requires Python 3.5 or greater.')
+  if sys.version_info[0] < 3 or sys.version_info[1] < 6:
+    print('ERROR: GYB requires Python 3.6 or greater.')
     sys.exit(3)
   elif sys.version_info[1] >= 7:
     sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
