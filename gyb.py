@@ -58,6 +58,7 @@ import email
 import hashlib
 import re
 import string
+import gzip
 from itertools import islice, chain
 import base64
 import json
@@ -235,6 +236,10 @@ method breaks Gmail deduplication and threading.')
     action='store_true',
     dest='shortversion',
     help='Just print version and quit')
+  parser.add_argument('--compress',
+    action='store_true',
+    dest='compress',
+    help='Enable compress on the individal email files')
   parser.add_argument('--help',
     action='help',
     help='Display this message.')
@@ -772,10 +777,13 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
         print
         input('Press enter once resolved and we will try enabling the API again.')
 
-def writeFile(filename, data, mode='wb', continueOnError=False, displayError=True):
+def writeFile(filename, data, mode='wb', continueOnError=False, displayError=True, compress=False):
   if isinstance(data, str):
     data = data.encode('utf-8')
   try:
+    #if compress:
+    #  data = gzip.compress(data)
+    #  filename = filename & '.gz'
     with open(os.path.expanduser(filename), mode) as f:
       f.write(data)
     return True
@@ -1223,7 +1231,8 @@ def rewrite_line(mystring):
 
 def initializeDB(sqlcur, sqlconn, email):
   sqlcur.executescript('''
-   CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
+   CREATE TABLE messages(message_num INTEGER PRIMARY KEY,
+                         message_compressed INTEGER,
                          message_filename TEXT, 
                          message_internaldate TIMESTAMP);
    CREATE TABLE labels (message_num INTEGER, label TEXT);
@@ -1373,13 +1382,17 @@ def backup_message(request_id, response, exception):
     f = open(message_full_filename, 'wb')
     raw_message = str(response['raw'])
     full_message = base64.urlsafe_b64decode(raw_message)
+    if options.compress:
+      full_message = gzip.compress(full_message)
     f.write(full_message)
     f.close()
     sqlcur.execute("""
              INSERT INTO messages (
-                         message_filename, 
-                         message_internaldate) VALUES (?, ?)""",
+                         message_filename,
+                         message_compressed,
+                         message_internaldate) VALUES (?, ?, ?)""",
                         (message_rel_filename,
+                        1 if options.compress else 0,
                          time_for_sqlite))
     message_num = sqlcur.lastrowid
     sqlcur.execute("""
