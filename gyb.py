@@ -27,8 +27,8 @@ __email__ = 'jay0lee@gmail.com'
 __version__ = '1.35'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
-__db_schema_version__ = '6'
-__db_schema_min_version__ = '6'        #Minimum for restore
+__db_schema_version__ = '7'
+__db_schema_min_version__ = '7'        #Minimum for restore
 
 global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels
 extra_args = {'prettyPrint': False}
@@ -58,6 +58,7 @@ import email
 import hashlib
 import re
 import string
+import gzip
 from itertools import islice, chain
 import base64
 import json
@@ -124,7 +125,7 @@ def SetupOptionParser(argv):
     help='Full email address of user or group to act against')
   action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
     'count', 'purge', 'purge-labels', 'print-labels', 'estimate', 'quota', 'reindex', 'revoke',
-    'split-mbox', 'create-project', 'delete-projects', 'check-service-account']
+    'split-mbox', 'create-project', 'delete-projects', 'check-service-account', 'upgrade']
   parser.add_argument('--action',
     choices=action_choices,
     dest='action',
@@ -235,6 +236,10 @@ method breaks Gmail deduplication and threading.')
     action='store_true',
     dest='shortversion',
     help='Just print version and quit')
+  parser.add_argument('--compress',
+    action='store_true',
+    dest='compress',
+    help='Enable compress on the individal email files')
   parser.add_argument('--help',
     action='help',
     help='Display this message.')
@@ -779,7 +784,7 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
         print
         input('Press enter once resolved and we will try enabling the API again.')
 
-def writeFile(filename, data, mode='wb', continueOnError=False, displayError=True):
+def writeFile(filename, data, mode='wb', continueOnError=False, displayError=True, compress=False):
   if isinstance(data, str):
     data = data.encode('utf-8')
   try:
@@ -1186,7 +1191,12 @@ def convertDB(sqlconn, uidvalidity, oldversion):
         rebuildUIDTable(sqlconn)
       sqlconn.executemany('REPLACE INTO settings (name, value) VALUES (?,?)',
                         (('uidvalidity',uidvalidity), 
-                         ('db_version', __db_schema_version__)) )   
+                         ('db_version', __db_schema_version__)) )
+      if oldversion < '7':
+        # Convert to schema 7
+        sqlconn.executescript('''
+          ALTER TABLE messages ADD COLUMN message_compressed INTEGER;
+          ''')  
       sqlconn.commit()
   except sqlite3.OperationalError as e:
       print("Conversion error: %s" % e.message)
@@ -1249,7 +1259,8 @@ def rewrite_line(mystring):
 
 def initializeDB(sqlcur, sqlconn, email):
   sqlcur.executescript('''
-   CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
+   CREATE TABLE messages(message_num INTEGER PRIMARY KEY,
+                         message_compressed INTEGER,
                          message_filename TEXT, 
                          message_internaldate TIMESTAMP);
    CREATE TABLE labels (message_num INTEGER, label TEXT);
@@ -1399,13 +1410,17 @@ def backup_message(request_id, response, exception):
     f = open(message_full_filename, 'wb')
     raw_message = str(response['raw'])
     full_message = base64.urlsafe_b64decode(raw_message)
+    if options.compress:
+      full_message = gzip.compress(full_message)
     f.write(full_message)
     f.close()
     sqlcur.execute("""
              INSERT INTO messages (
-                         message_filename, 
-                         message_internaldate) VALUES (?, ?)""",
+                         message_filename,
+                         message_compressed,
+                         message_internaldate) VALUES (?, ?, ?)""",
                         (message_rel_filename,
+                        1 if options.compress else 0,
                          time_for_sqlite))
     message_num = sqlcur.lastrowid
     sqlcur.execute("""
@@ -1536,7 +1551,7 @@ def main(argv):
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
-    'quota', 'revoke']:
+    'quota', 'revoke', 'upgrade']:
     if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
       print("\nUsing backup folder %s" % options.local_folder)
       global sqlconn
@@ -1558,6 +1573,21 @@ def main(argv):
           rebuildUIDTable(sqlconn)
           sqlconn.commit()
           sys.exit(0)
+
+  # UPGRADE #
+  if options.action == 'upgrade':
+    sqlconn = sqlite3.connect(sqldbfile,
+      detect_types=sqlite3.PARSE_DECLTYPES)
+    sqlconn.text_factory = str
+    sqlcur = sqlconn.cursor()
+    db_settings = get_db_settings(sqlcur)
+    print("\nUpgrading backup folder schema from %s to %s" % (db_settings['db_version'], __db_schema_version__))
+    if db_settings['db_version'] < __db_schema_version__:
+      convertDB(sqlconn, 0, db_settings['db_version'])
+      print("\nBackup folder schema upgraded from version %s to version %s" % (db_settings['db_version'], __db_schema_version__))
+    else:
+      print("\nBackup folder schema does not need to be upgraded")
+    sys.exit(0)
 
   # BACKUP #
   if options.action == 'backup':
@@ -1663,7 +1693,7 @@ def main(argv):
     sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from \
       restored_messages''')
     sqlcur.execute('''SELECT message_num, message_internaldate, \
-      message_filename FROM messages
+      message_filename, message_compressed FROM messages
                       WHERE message_num NOT IN skip_messages ORDER BY \
                       message_internaldate DESC''') # All messages
 
@@ -1680,6 +1710,7 @@ def main(argv):
       current += 1
       message_filename = x[2]
       message_num = x[0]
+      message_compressed = x[3]
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
         print('WARNING! file %s does not exist for message %s'
@@ -1689,6 +1720,8 @@ def main(argv):
         continue
       f = open(os.path.join(options.local_folder, message_filename), 'rb')
       full_message = f.read()
+      if message_compressed == 1:
+          full_message = gzip.decompress(full_message)
       f.close()
       labels = []
       if not options.strip_labels:
