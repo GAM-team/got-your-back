@@ -66,6 +66,7 @@ import base64
 import json
 import xml.etree.ElementTree as etree
 from urllib.parse import urlencode
+from urllib.parse import urlparse
 import configparser
 import webbrowser
 
@@ -805,20 +806,26 @@ def uploadS3(filename, bucket, objectName):
   try:
     response = s3_client.upload_file(filename, bucket, objectName)
   except ClientError as e:
-      print("\nAn error occurred when uploading a message to S3: " & e)
+      print("\nAn error occurred when uploading a message to S3: %s" % e)
       return False
   return True
 
-def downloadS3(filename, bucket, objectName):
+def downloadS3(bucket, objectName):
   # DOwnload the file
+  fd, tfile = tempfile.mkstemp()
+  os.close(fd)
   s3_client = boto3.client('s3')
   try:
-    response = s3_client.download_file(bucket, objectName, filename)
+    response = s3_client.download_file(bucket, objectName, tfile)
+    fd = open(tfile, 'rb')
+    full_message = fd.read()
+    fd.close()
+    os.unlink(tfile)
+    return full_message
   except ClientError as e:
-    print("\nAn error occurred when download a message from S3: " & e)
+    print("\nAn error occurred when download a message from S3: %s" % e)
     return False
-  return True
-
+  
 def _createClientSecretsOauth2service(projectId):
 
   def _checkClientAndSecret(client_id, client_secret):
@@ -1434,7 +1441,7 @@ def backup_message(request_id, response, exception):
     if options.s3_bucket:
       uploadS3(message_full_filename, options.s3_bucket, message_s3_filename)
       os.unlink(message_full_filename)
-      message_rel_filename = 's3://' + message_rel_filename 
+      message_rel_filename = 's3://' + options.s3_bucket + '/' + message_s3_filename
     sqlcur.execute("""
              INSERT INTO messages (
                          message_filename, 
@@ -1714,15 +1721,17 @@ def main(argv):
       current += 1
       message_filename = x[2]
       message_num = x[0]
+      is_remote_storage = message_filename.find('s3://') == 0
       if not os.path.isfile(os.path.join(options.local_folder,
-        message_filename)):
+        message_filename)) and not is_remote_storage:
         print('WARNING! file %s does not exist for message %s'
           % (os.path.join(options.local_folder, message_filename),
             message_num))
         print('  this message will be skipped.')
         continue
-      if message_filename.find('s3://') == 0:
-        ###s3.download_file(bucket, objectName, filename)
+      if is_remote_storage:
+        parts = urlparse(message_filename)
+        full_message = downloadS3(parts.netloc, parts.path[1:])
       else :
         f = open(os.path.join(options.local_folder, message_filename), 'rb')
         full_message = f.read()
