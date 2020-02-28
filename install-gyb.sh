@@ -56,7 +56,7 @@ update_profile() {
 
 	grep -F "$alias_line" "$1" > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
-                echo_yellow "Adding gam alias to profile file $1."
+                echo_yellow "Adding gyb alias to profile file $1."
 		echo -e "\n$alias_line" >> "$1"
         else
           echo_yellow "gyb alias already exists in profile file $1. Skipping add."
@@ -132,7 +132,7 @@ case $myos in
       fi
     done
     if [ "$use_macos_ver" == "" ]; then
-      echo_red "Sorry, you need to be running at least MacOS $macos_ver to run GAM"
+      echo_red "Sorry, you need to be running at least MacOS $macos_ver to run GYB"
       exit
     fi
     gybfile="macos-x86_64-$use_macos_ver.tar.xz"
@@ -149,7 +149,7 @@ else
   release_url="https://api.github.com/repos/jay0lee/got-your-back/releases/tags/v$gybversion"
 fi
 
-echo_yellow "Checking GitHub URL $release_url for $gamversion GYB release..."
+echo_yellow "Checking GitHub URL $release_url for $gybversion GYB release..."
 release_json=$(curl -s $release_url 2>&1 /dev/null)
 
 echo_yellow "Getting file and download URL..."
@@ -332,7 +332,7 @@ while $project_created; do
        ;;
      *)
        echo_red "Please answer yes or no."
-       ;;
+       ;;F
   esac
 done
 
