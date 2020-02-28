@@ -57,6 +57,9 @@ import ssl
 import email
 import hashlib
 import re
+import boto3
+from botocore.exceptions import ClientError
+import tempfile
 import string
 from itertools import islice, chain
 import base64
@@ -140,6 +143,9 @@ scope operation against')
     help='Optional: On backup, restore, estimate, local folder to use. \
 Default is GYB-GMail-Backup-<email>',
     default='XXXuse-email-addressXXX')
+  parser.add_argument('--aws-s3',
+    dest='s3_bucket',
+    help='Optional: Store and restore messages from S3 bucket name given, instead of in local storage')    
   parser.add_argument('--label-restored',
     action='append',
     dest='label_restored',
@@ -793,6 +799,26 @@ def writeFile(filename, data, mode='wb', continueOnError=False, displayError=Tru
       return False
     systemErrorExit(6, e)
 
+def uploadS3(filename, bucket, objectName):
+  # Upload the file
+  s3_client = boto3.client('s3')
+  try:
+    response = s3_client.upload_file(filename, bucket, objectName)
+  except ClientError as e:
+      print("\nAn error occurred when uploading a message to S3: " & e)
+      return False
+  return True
+
+def downloadS3(filename, bucket, objectName):
+  # DOwnload the file
+  s3_client = boto3.client('s3')
+  try:
+    response = s3_client.download_file(bucket, objectName, filename)
+  except ClientError as e:
+    print("\nAn error occurred when download a message from S3: " & e)
+    return False
+  return True
+
 def _createClientSecretsOauth2service(projectId):
 
   def _checkClientAndSecret(client_id, client_secret):
@@ -1396,11 +1422,19 @@ def backup_message(request_id, response, exception):
                                      message_rel_filename)
     if not os.path.isdir(message_full_path):
       os.makedirs(message_full_path)
+    if options.s3_bucket:
+      fd, message_full_filename = tempfile.mkstemp()
+      message_s3_filename = os.path.join(options.email, message_rel_filename)
+      os.close(fd)
     f = open(message_full_filename, 'wb')
     raw_message = str(response['raw'])
     full_message = base64.urlsafe_b64decode(raw_message)
     f.write(full_message)
     f.close()
+    if options.s3_bucket:
+      uploadS3(message_full_filename, options.s3_bucket, message_s3_filename)
+      os.unlink(message_full_filename)
+      message_rel_filename = 's3://' + message_rel_filename 
     sqlcur.execute("""
              INSERT INTO messages (
                          message_filename, 
@@ -1687,9 +1721,12 @@ def main(argv):
             message_num))
         print('  this message will be skipped.')
         continue
-      f = open(os.path.join(options.local_folder, message_filename), 'rb')
-      full_message = f.read()
-      f.close()
+      if message_filename.find('s3://') == 0:
+        ###s3.download_file(bucket, objectName, filename)
+      else :
+        f = open(os.path.join(options.local_folder, message_filename), 'rb')
+        full_message = f.read()
+        f.close()
       labels = []
       if not options.strip_labels:
         sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
