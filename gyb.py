@@ -1331,9 +1331,7 @@ def labelsToLabelIds(labels):
       parent_label = label[:label.rfind('/')]
       while True:
         if not parent_label in allLabels:
-          label_result = callGAPI(gmail.users().labels(),
-            'create', userId='me', body={'name': parent_label})
-          allLabels[parent_label] = label_result['id']
+          createLabel(parent_label)
         if parent_label.find('/') == -1:
           break
         parent_label = parent_label[:parent_label.rfind('/')]
