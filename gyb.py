@@ -1248,19 +1248,24 @@ def rewrite_line(mystring):
   print(mystring, end='\r')
 
 def initializeDB(sqlconn, email):
-  sqlconn.executescript('''
-   CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
-                         message_filename TEXT, 
-                         message_internaldate TIMESTAMP);
-   CREATE TABLE labels (message_num INTEGER, label TEXT);
-   CREATE TABLE uids (message_num INTEGER, uid TEXT PRIMARY KEY);
-   CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);
-   CREATE UNIQUE INDEX labelidx ON labels (message_num, label);
-  ''')
+  # Yes, this is overkill with the commits but trying to prevent odd OS caching issues
+  sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
   sqlconn.commit()
-  sqlconn.executemany('INSERT INTO settings (name, value) VALUES (?, ?)', 
-         (('email_address', email),
-          ('db_version', __db_schema_version__)))
+  sqlconn.execute('''INSERT INTO settings (name, value) VALUES (?, ?);''',
+       ('email_address', email))
+  sqlconn.commit()
+  sqlconn.execute('''INSERT INTO settings (name, value) VALUES (?, ?);''',
+       ('db_version', __db_schema_version__))
+  sqlconn.commit()
+  sqlconn.execute('''CREATE TABLE messages(message_num INTEGER PRIMARY KEY,
+                         message_filename TEXT,
+                         message_internaldate TIMESTAMP);''')
+  sqlconn.commit()
+  sqlconn.execute('''CREATE TABLE labels (message_num INTEGER, label TEXT);''')
+  sqlconn.commit()
+  sqlconn.execute('''CREATE TABLE uids (message_num INTEGER, uid TEXT PRIMARY KEY);''')
+  sqlconn.commit()
+  sqlconn.execute('''CREATE UNIQUE INDEX labelidx ON labels (message_num, label);''')
   sqlconn.commit()
 
 def labelIdsToLabels(labelIds):
