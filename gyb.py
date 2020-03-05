@@ -1247,8 +1247,8 @@ def rewrite_line(mystring):
     print()
   print(mystring, end='\r')
 
-def initializeDB(sqlcur, sqlconn, email):
-  sqlcur.executescript('''
+def initializeDB(sqlconn, email):
+  sqlconn.executescript('''
    CREATE TABLE messages(message_num INTEGER PRIMARY KEY, 
                          message_filename TEXT, 
                          message_internaldate TIMESTAMP);
@@ -1257,7 +1257,8 @@ def initializeDB(sqlcur, sqlconn, email):
    CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);
    CREATE UNIQUE INDEX labelidx ON labels (message_num, label);
   ''')
-  sqlcur.executemany('INSERT INTO settings (name, value) VALUES (?, ?)', 
+  sqlconn.commit()
+  sqlconn.executemany('INSERT INTO settings (name, value) VALUES (?, ?)', 
          (('email_address', email),
           ('db_version', __db_schema_version__)))
   sqlconn.commit()
@@ -1546,7 +1547,7 @@ def main(argv):
       sqlconn.text_factory = str
       sqlcur = sqlconn.cursor()
       if newDB:
-        initializeDB(sqlcur, sqlconn, options.email)
+        initializeDB(sqlconn, options.email)
       db_settings = get_db_settings(sqlcur)
       check_db_settings(db_settings, options.action, options.email)
       if options.action not in ['restore', 'restore-group', 'restore-mbox']:
