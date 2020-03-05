@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.35'
+__version__ = '1.36'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -1248,23 +1248,16 @@ def rewrite_line(mystring):
   print(mystring, end='\r')
 
 def initializeDB(sqlconn, email):
-  # Yes, this is overkill with the commits but trying to prevent odd OS caching issues
   sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
-  sqlconn.commit()
   sqlconn.execute('''INSERT INTO settings (name, value) VALUES (?, ?);''',
        ('email_address', email))
-  sqlconn.commit()
   sqlconn.execute('''INSERT INTO settings (name, value) VALUES (?, ?);''',
        ('db_version', __db_schema_version__))
-  sqlconn.commit()
   sqlconn.execute('''CREATE TABLE messages(message_num INTEGER PRIMARY KEY,
                          message_filename TEXT,
                          message_internaldate TIMESTAMP);''')
-  sqlconn.commit()
   sqlconn.execute('''CREATE TABLE labels (message_num INTEGER, label TEXT);''')
-  sqlconn.commit()
   sqlconn.execute('''CREATE TABLE uids (message_num INTEGER, uid TEXT PRIMARY KEY);''')
-  sqlconn.commit()
   sqlconn.execute('''CREATE UNIQUE INDEX labelidx ON labels (message_num, label);''')
   sqlconn.commit()
 
