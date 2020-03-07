@@ -332,7 +332,7 @@ while $project_created; do
        ;;
      *)
        echo_red "Please answer yes or no."
-       ;;F
+       ;;
   esac
 done
 
