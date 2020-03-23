@@ -20,6 +20,7 @@ else
     strip gyb/gyb-staticx
     rm gyb/gyb
     mv gyb/gyb-staticx gyb/gyb
+    chmod 755 gyb/gyb
     tar cfJ $GYB_LEGACY_ARCHIVE gyb/
     echo "Legacy StaticX GYB info:"
     du -h gyb/gyb
