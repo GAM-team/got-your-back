@@ -82,7 +82,6 @@ import labellang
 logger    = logging.getLogger("GYB")
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 
-logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(FORMATTER)
 logger.addHandler(console_handler)
@@ -211,11 +210,12 @@ method breaks Gmail deduplication and threading.')
     action='store_false',
     default=True,
     help='Optional: On backup, skips refreshing labels for existing message')
-  parser.add_argument('--debug',
-    action='store_true',
-    dest='debug',
+  parser.add_argument('-v','--verbosity',
+    required=False,
+    default='INFO',
     help='Turn on verbose debugging and connection information \
-(troubleshooting)')
+(troubleshooting). By default, set to DEBUG. Options in increasing verbosity: \
+CRITICAL, ERROR, WARNING, INFO, DEBUG')
   parser.add_argument('--memory-limit',
     dest='memory_limit',
     type=int,
@@ -1499,8 +1499,18 @@ def getSizeOfMessages(messages, gmail):
 def main(argv):
   global options, gmail
   options = SetupOptionParser(argv)
-  if options.debug:
+
+  acceptable_verbosity_values = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
+  if not (options.verbosity in acceptable_verbosity_values):
+    logger.error('Error: "{}"" is not an excepted verbosity. The options are: {}. \
+e.g. --verbosity=INFO'.format(
+  options.verbosity,
+  ', '.join(acceptable_verbosity_values),
+  ))
+  logger.setLevel(logging[options.verbosity])
+  if options.verbosity == 'DEBUG':
     httplib2.debuglevel = 4
+
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     logger.info(getGYBVersion())
