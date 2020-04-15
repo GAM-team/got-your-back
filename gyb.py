@@ -983,7 +983,7 @@ def doCreateProject():
           break
         try:
           if status['error']['details'][0]['violations'][0]['description'] == 'Callers must accept Terms of Service':
-            logger.info('''Please go to:
+            print('''Please go to:
 https://console.cloud.google.com/start
 and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup, you can return here and press enter.''')
             input()
@@ -1710,7 +1710,7 @@ def main(argv):
       f.close()
       labels = []
       if not options.strip_labels:
-        sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \ 
+        sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
           = ?', (message_num,))
         labels_results = sqlcur.fetchall()
         for l in labels_results:
