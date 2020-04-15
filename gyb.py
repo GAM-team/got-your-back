@@ -1248,6 +1248,9 @@ when authorizing the token in the browser." % auth_as)
   return False
 
 def set_logger(verbosity_level):
+  # sets the global logging level of the package.
+  # Accepted verbosity levels are: 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
+
   global logger
 
   verbosity_level = verbosity_level.upper()
