@@ -30,7 +30,7 @@ __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, logger
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
@@ -78,13 +78,6 @@ import googleapiclient.errors
 
 import fmbox
 import labellang
-
-logger    = logging.getLogger("GYB")
-FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
-
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(FORMATTER)
-logger.addHandler(console_handler)
 
 def getGYBVersion(divider="\n"):
   return ('Got Your Back %s~DIV~%s~DIV~%s - %s~DIV~Python %s.%s.%s %s-bit \
@@ -210,11 +203,16 @@ method breaks Gmail deduplication and threading.')
     action='store_false',
     default=True,
     help='Optional: On backup, skips refreshing labels for existing message')
-  parser.add_argument('-v','--verbosity',
-    required=False,
-    default='INFO',
+  parser.add_argument('--debug',
+    action='store_true',
+    dest='debug',
     help='Turn on verbose debugging and connection information \
-(troubleshooting). By default, set to DEBUG. Options in increasing verbosity: \
+(troubleshooting)')
+  parser.add_argument('--verbosity',
+    required=False,
+    default='DEBUG',
+    dest='verbosity',
+    help='Set the package level verbosity. By default, set to DEBUG. Options in increasing verbosity: \
 CRITICAL, ERROR, WARNING, INFO, DEBUG')
   parser.add_argument('--memory-limit',
     dest='memory_limit',
@@ -1249,6 +1247,30 @@ when authorizing the token in the browser." % auth_as)
   os.remove(cfgFile)
   return False
 
+def set_logger(verbosity_level):
+  global logger
+
+  verbosity_level = verbosity_level.upper()
+
+  acceptable_verbosity_values = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
+
+  if not (verbosity_level in acceptable_verbosity_values):
+    raise ValueError('Error: "{}" is not an excepted verbosity level. The options are: {}. \
+e.g. --verbosity=INFO'.format(
+    verbosity_level,
+    ', '.join(acceptable_verbosity_values),
+  ))
+
+  logger    = logging.getLogger("GYB")
+  formatter = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
+
+  console_handler = logging.StreamHandler(sys.stdout)
+
+  console_handler.setFormatter(formatter)
+  logger.addHandler(console_handler)
+
+  logger.setLevel(getattr(logging, verbosity_level))
+
 def rewrite_line(mystring):
   if not options.debug:
     logger.info(' ' * 80, end='\r')
@@ -1500,15 +1522,9 @@ def main(argv):
   global options, gmail
   options = SetupOptionParser(argv)
 
-  acceptable_verbosity_values = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
-  if not (options.verbosity in acceptable_verbosity_values):
-    logger.error('Error: "{}"" is not an excepted verbosity. The options are: {}. \
-e.g. --verbosity=INFO'.format(
-  options.verbosity,
-  ', '.join(acceptable_verbosity_values),
-  ))
-  logger.setLevel(logging[options.verbosity])
-  if options.verbosity == 'DEBUG':
+  set_logger(options.verbosity)
+
+  if options.debug:
     httplib2.debuglevel = 4
 
   doGYBCheckForUpdates(debug=options.debug)
