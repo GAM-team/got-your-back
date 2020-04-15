@@ -79,6 +79,14 @@ import googleapiclient.errors
 import fmbox
 import labellang
 
+logger    = logging.getLogger("GYB")
+FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
+
+logger.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(FORMATTER)
+logger.addHandler(console_handler)
+
 def getGYBVersion(divider="\n"):
   return ('Got Your Back %s~DIV~%s~DIV~%s - %s~DIV~Python %s.%s.%s %s-bit \
 %s~DIV~google-api-client %s~DIV~%s %s' % (__version__, __website__, __author__, __email__,
@@ -366,16 +374,16 @@ def requestOAuthAccess():
           break
         else:
           os.system(['clear', 'cls'][os.name == 'nt'])
-          print("YOU MUST SELECT AT LEAST ONE SCOPE!\n")
+          logger.error("YOU MUST SELECT AT LEAST ONE SCOPE!\n")
           continue
       else:
         os.system(['clear', 'cls'][os.name == 'nt'])
-        print('NOT A VALID SELECTION!\n')
+        logger.error('NOT A VALID SELECTION!\n')
         continue
       os.system(['clear', 'cls'][os.name == 'nt'])
     except ValueError:
       os.system(['clear', 'cls'][os.name == 'nt'])
-      print('NOT A VALID SELECTION!\n')
+      logger.error('NOT A VALID SELECTION!\n')
       continue
   scopes = ['email',]
   for i in range(0, len(selected_scopes)):
@@ -471,7 +479,7 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     if latest_version[0].lower() == 'v':
       latest_version = latest_version[1:]
     if forceCheck or (latest_version > current_version):
-      print('Version Check:\n Current: {0}\n Latest: {1}'.format(current_version, latest_version))
+      logger.info('Version Check:\n Current: {0}\n Latest: {1}'.format(current_version, latest_version))
     if latest_version <= current_version:
       writeFile(last_update_check_file, str(now_time), continueOnError=True, displayError=forceCheck)
       return
@@ -479,11 +487,11 @@ def doGYBCheckForUpdates(forceCheck=False, debug=False):
     sys.stderr.write('\nGYB %s release notes:\n\n' % latest_version)
     sys.stderr.write(announcement)
     try:
-      print('\n\nHit CTRL+C to visit the GYB website and download the latest release or wait 15 seconds to continue with this boring old version. GYB won\'t bother you with this announcement for 1 week or you can create a file named noupdatecheck.txt in the same location as gyb.py or gyb.exe and GYB won\'t ever check for updates.')
+      logger.warning('\n\nHit CTRL+C to visit the GYB website and download the latest release or wait 15 seconds to continue with this boring old version. GYB won\'t bother you with this announcement for 1 week or you can create a file named noupdatecheck.txt in the same location as gyb.py or gyb.exe and GYB won\'t ever check for updates.')
       time.sleep(15)
     except KeyboardInterrupt:
       webbrowser.open(release_data['html_url'])
-      print('GYB exiting for update...')
+      logger.info('GYB exiting for update...')
       sys.exit(0)
     writeFile(last_update_check_file, str(now_time), continueOnError=True, displayError=forceCheck)
     return
@@ -531,7 +539,7 @@ def buildGAPIObject(api):
       return googleapiclient.discovery.build_from_document(discovery,
         base='https://www.googleapis.com', http=httpc)
     else:
-      print('No online discovery doc and %s does not exist locally'
+      logger.error('No online discovery doc and %s does not exist locally'
         % disc_file)
       raise
 
@@ -672,7 +680,7 @@ def getValidateLoginHint(login_hint):
     login_hint = input('\nWhat is your G Suite admin email address? ').strip()
     if VALIDEMAIL_PATTERN.match(login_hint):
       return login_hint
-    print('Error: that is not a valid email address')
+    logger.error('Error: that is not a valid email address')
 
 def percentage(part, whole):
   return '{0:.2f}'.format(100 * float(part)/float(whole))
@@ -692,7 +700,7 @@ def shorten_url(long_url):
   try:
     return json.loads(content).get('short_url', long_url)
   except Exception as e:
-    print(content)
+    logger.error(content)
     return long_url
 
 class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
@@ -749,7 +757,7 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
   headers = {'User-Agent': getGYBVersion(' | ')}
   s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET', headers=headers)
   if s.status < 200 or s.status > 299:
-    print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
+    logger.error('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
   serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
@@ -761,22 +769,22 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
     for enabled in enabledServices:
       if 'serviceName' in enabled:
         if enabled['serviceName'] in apis:
-          print(' API %s already enabled...' % enabled['serviceName'])
+          logger.info(' API %s already enabled...' % enabled['serviceName'])
           apis.remove(enabled['serviceName'])
         else:
-          print(' API %s (non-GYB) is enabled (which is fine)' % enabled['serviceName'])
+          logger.info(' API %s (non-GYB) is enabled (which is fine)' % enabled['serviceName'])
   for api in apis:
     while True:
-      print(' enabling API %s...' % api)
+      logger.info(' enabling API %s...' % api)
       try:
         callGAPI(serveman.services(), 'enable',
                  throw_reasons=['failedPrecondition'],
                  serviceName=api, body={'consumerId': project_name})
         break
       except googleapiclient.errors.HttpError as e:
-        print('\nThere was an error enabling %s. Please resolve error as described below:' % api)
+        logger.warning('\nThere was an error enabling %s. Please resolve error as described below:' % api)
         print
-        print('\n%s\n' % e)
+        logger.warning('\n%s\n' % e)
         print
         input('Press enter once resolved and we will try enabling the API again.')
 
@@ -808,20 +816,20 @@ def _createClientSecretsOauth2service(projectId):
     try:
       content = json.loads(content.decode('utf-8'))
     except ValueError:
-      print('Unknown error: %s' % content)
+      logger.error('Unknown error: %s' % content)
       return False
     if not 'error' in content or not 'error_description' in content:
-      print('Unknown error: %s' % content)
+      logger.error('Unknown error: %s' % content)
       return False
     if content['error'] == 'invalid_grant':
       return True
     if content['error_description'] == 'The OAuth client was not found.':
-      print('Ooops!!\n\n%s\n\nIs not a valid client ID. Please make sure you are following the directions exactly and that there are no extra spaces in your client ID.' % client_id)
+      logger.error('Ooops!!\n\n%s\n\nIs not a valid client ID. Please make sure you are following the directions exactly and that there are no extra spaces in your client ID.' % client_id)
       return False
     if content['error_description'] == 'Unauthorized':
-      print('Ooops!!\n\n%s\n\nIs not a valid client secret. Please make sure you are following the directions exactly and that there are no extra spaces in your client secret.' % client_secret)
+      logger.error('Ooops!!\n\n%s\n\nIs not a valid client secret. Please make sure you are following the directions exactly and that there are no extra spaces in your client secret.' % client_secret)
       return False
-    print('Unknown error: %s' % content)
+    logger.error('Unknown error: %s' % content)
     return False
 
   console_credentials_url = 'https://console.developers.google.com/apis/credentials/consent/edit?createClient&newAppInternalUser=true&project=%s' % projectId
@@ -877,7 +885,7 @@ def _getLoginHintProjects():
   elif PROJECTID_PATTERN.match(pfilter):
     pfilter = 'id:{0}'.format(pfilter)
   else:
-    print('ERROR: delete-projects action requires --email and a project --search argument')
+    logger.error('ERROR: delete-projects action requires --email and a project --search argument')
     sys.exit(3)
   login_hint = getValidateLoginHint(login_hint)
   crm, _ = getCRMService(login_hint)
@@ -890,13 +898,13 @@ def _getLoginHintProjects():
       cs_json = json.loads(cs_data)
       projects = [{'projectId': cs_json['installed']['project_id']}]
     except (ValueError, IndexError, KeyError):
-      print('The format of your client secrets file:\n\n%s\n\nis incorrect. Please recreate the file.' % client_secrets_file)
+      logger.error('The format of your client secrets file:\n\n%s\n\nis incorrect. Please recreate the file.' % client_secrets_file)
   else:
     projects = _getProjects(crm, pfilter)
   return (crm, login_hint, projects)
 
 def systemErrorExit(code=1, error_text='Unknown Error'):
-  print('ERROR: %s' % error_text)
+  logger.error('ERROR: %s' % error_text)
   sys.exit(code)
 
 def _getProjects(crm, pfilter):
@@ -905,20 +913,20 @@ def _getProjects(crm, pfilter):
 def doDelProjects():
   crm, login_hint, projects = _getLoginHintProjects()
   count = len(projects)
-  print('User: {0}, Delete {1} Projects'.format(login_hint, count))
+  logger.info('User: {0}, Delete {1} Projects'.format(login_hint, count))
   i = 0
   for project in projects:
     i += 1
     projectId = project['projectId']
     callGAPI(crm.projects(), 'delete', projectId=projectId, soft_errors=True)
-    print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
+    logger.info('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
 def doCreateProject():
   service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
   client_secrets_file = os.path.join(getProgPath(), 'client_secrets.json')
   for a_file in [service_account_file, client_secrets_file]:
     if os.path.exists(a_file):
-      print('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
+      logger.error('File %s already exists. Please delete or rename it before attempting to create another project.' % a_file)
       sys.exit(5)
   login_hint = options.email
   login_domain = login_hint[login_hint.find('@')+1:]
@@ -930,44 +938,44 @@ def doCreateProject():
   body = {'projectId': project_id, 'name': 'Got Your Back Project'}
   while True:
     create_again = False
-    print('Creating project "%s"...' % body['name'])
+    logger.info('Creating project "%s"...' % body['name'])
     create_operation = callGAPI(crm.projects(), 'create',
                                 body=body)
     operation_name = create_operation['name']
     time.sleep(5) # Google recommends always waiting at least 5 seconds
     for i in range(1, 5):
-      print('Checking project status...')
+      logger.info('Checking project status...')
       status = callGAPI(crm.operations(), 'get',
                         name=operation_name)
       if 'error' in status:
         if status['error'].get('message', '') == 'No permission to create project in organization':
-          print('Hmm... Looks like you have no rights to your Google Cloud Organization.')
-          print('Attempting to fix that...')
+          logger.info('Hmm... Looks like you have no rights to your Google Cloud Organization.')
+          logger.info('Attempting to fix that...')
           getorg = callGAPI(crm.organizations(), 'search',
                             body={'filter': 'domain:%s' % login_domain})
           try:
             organization = getorg['organizations'][0]['name']
-            print('Your organization name is %s' % organization)
+            logger.debug('Your organization name is %s' % organization)
           except (KeyError, IndexError):
-            print('you have no rights to create projects for your organization and you don\'t seem to be a super admin! Sorry, there\'s nothing more I can do.')
+            logger.error('you have no rights to create projects for your organization and you don\'t seem to be a super admin! Sorry, there\'s nothing more I can do.')
             sys.exit(3)
           org_policy = callGAPI(crm.organizations(), 'getIamPolicy',
                                 resource=organization, body={})
           if 'bindings' not in org_policy:
             org_policy['bindings'] = []
-            print('Looks like no one has rights to your Google Cloud Organization. Attempting to give you create rights...')
+            logger.info('Looks like no one has rights to your Google Cloud Organization. Attempting to give you create rights...')
           else:
-            print('The following rights seem to exist:')
+            logger.debug('The following rights seem to exist:')
             for a_policy in org_policy['bindings']:
               if 'role' in a_policy:
-                print(' Role: %s' % a_policy['role'])
+                logger.debug(' Role: %s' % a_policy['role'])
               if 'members' in a_policy:
-                print(' Members:')
+                logger.debug(' Members:')
                 for member in a_policy['members']:
-                  print('  %s' % member)
+                  logger.debug('  %s' % member)
               print
           my_role = 'roles/resourcemanager.projectCreator'
-          print('Giving %s the role of %s...' % (login_hint, my_role))
+          logger.info('Giving %s the role of %s...' % (login_hint, my_role))
           org_policy['bindings'].append({'role': my_role, 'members': ['user:%s' % login_hint]})
           callGAPI(crm.organizations(), 'setIamPolicy',
                    resource=organization, body={'policy': org_policy})
@@ -975,7 +983,7 @@ def doCreateProject():
           break
         try:
           if status['error']['details'][0]['violations'][0]['description'] == 'Callers must accept Terms of Service':
-            print('''Please go to:
+            logger.info('''Please go to:
 https://console.cloud.google.com/start
 and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup, you can return here and press enter.''')
             input()
@@ -983,27 +991,27 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
             break
         except (IndexError, KeyError):
           pass
-        print(status)
+        logger.error(status)
         sys.exit(1)
       if status.get('done', False):
         break
       sleep_time = i ** 2
-      print('Project still being created. Sleeping %s seconds' % sleep_time)
+      logger.info('Project still being created. Sleeping %s seconds' % sleep_time)
       time.sleep(sleep_time)
     if create_again:
       continue
     if not status.get('done', False):
-      print('Failed to create project: %s' % status)
+      logger.error('Failed to create project: %s' % status)
       sys.exit(1)
     elif 'error' in status:
-      print(status['error'])
+      logger.error(status['error'])
       sys.exit(2)
     break
   enableProjectAPIs(project_name, False, httpc)
   iam = googleapiclient.discovery.build('iam', 'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
-  print('Creating Service Account')
+  logger.info('Creating Service Account')
   service_account = callGAPI(iam.projects().serviceAccounts(), 'create',
                              name='projects/%s' % project_id,
                              body={'accountId': project_id, 'serviceAccount': {'displayName': 'GYB Project Service Account'}})
@@ -1012,7 +1020,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
   _createClientSecretsOauth2service(project_id)
-  print('That\'s it! Your GYB Project is created and ready to use.')
+  logger.info('That\'s it! Your GYB Project is created and ready to use.')
 
 API_SCOPE_MAPPING = {
   'email': ['https://www.googleapis.com/auth/userinfo.email'],
@@ -1026,7 +1034,7 @@ def getSvcAcctCredentials(scopes, act_as):
   try:
     json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
     if not json_string:
-      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      logger.error(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
       systemErrorExit(6, None)
     sa_info = json.loads(json_string)
     credentials = google.oauth2.service_account.Credentials.from_service_account_info(sa_info)
@@ -1036,23 +1044,23 @@ def getSvcAcctCredentials(scopes, act_as):
     credentials.refresh(request)
     return credentials
   except (ValueError, KeyError):
-    print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+    logger.error(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
     systemErrorExit(6, 'oauth2service.json is invalid.')
 
 def getSvcAccountClientId():
   try:
     json_string = readFile(os.path.join(getProgPath(), 'oauth2service.json'), continueOnError=True, displayError=True)
     if not json_string:
-      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      logger.error(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
       systemErrorExit(6, None)
     sa_info = json.loads(json_string)
     client_id = sa_info.get('client_id')
     if not client_id:
-      print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+      logger.error(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
       systemErrorExit(6, None)
     return client_id
   except (ValueError, KeyError):
-    print(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
+    logger.error(MESSAGE_INSTRUCTIONS_OAUTH2SERVICE_JSON)
     systemErrorExit(6, 'oauth2service.json is invalid.')
 
 def doCheckServiceAccount():
@@ -1076,14 +1084,14 @@ def doCheckServiceAccount():
         result = 'FAIL'
         all_scopes_pass = False
     except httplib2.ServerNotFoundError as e:
-      print(e)
+      logger.error(e)
       sys.exit(4)
     except google.auth.exceptions.RefreshError:
       result = 'FAIL'
       all_scopes_pass = False
-    print(' Scope: {0:60} {1}'.format(scope, result))
+    logger.debug(' Scope: {0:60} {1}'.format(scope, result))
   if all_scopes_pass:
-    print('\nAll scopes passed!\nService account %s is fully authorized.' % client_id)
+    logger.info('\nAll scopes passed!\nService account %s is fully authorized.' % client_id)
     return
   user_domain = options.email[options.email.find('@')+1:]
   long_url = (f'https://admin.google.com/{user_domain}/ManageOauthClients'
@@ -1100,7 +1108,7 @@ Scopes fields will be pre-populated. Please click Authorize to allow these
 scopes access. After authorizing it may take some time for this test to pass so
 go grab a cup of coffee and then try this command again.
 '''
-  print(scopes_failed)
+  logger.warning(scopes_failed)
   sys.exit(3)
 
 def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
@@ -1110,9 +1118,9 @@ def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
                 where uid = ?''', ((message_num),))
     except sqlite3.OperationalError as e:
       if e.message == 'no such table: messages':
-        print("\n\nError: your backup database file appears to be corrupted.")
+        logger.error("\n\nError: your backup database file appears to be corrupted.")
       else:
-        print("SQL error:%s" % e)
+        logger.error("SQL error:%s" % e)
       sys.exit(8)
     sqlresults = sqlcur.fetchall()
     for x in sqlresults:
@@ -1128,17 +1136,17 @@ def get_db_settings(sqlcur):
     return db_settings
   except sqlite3.OperationalError as e:
     if e.message == 'no such table: settings':
-      print("\n\nSorry, this version of GYB requires version %s of the \
+      logger.error("\n\nSorry, this version of GYB requires version %s of the \
 database schema. Your backup folder database does not have a version."
  % (__db_schema_version__))
       sys.exit(6)
     else: 
-      print("%s" % e)
+      logger.error("%s" % e)
 
 def check_db_settings(db_settings, action, user_email_address):
   if (db_settings['db_version'] < __db_schema_min_version__  or
       db_settings['db_version'] > __db_schema_version__):
-    print("\n\nSorry, this backup folder was created with version %s of the \
+    logger.error("\n\nSorry, this backup folder was created with version %s of the \
 database schema while GYB %s requires version %s - %s for restores"
 % (db_settings['db_version'], __version__, __db_schema_min_version__,
 __db_schema_version__))
@@ -1148,13 +1156,13 @@ __db_schema_version__))
   # account (can't allow 2 Google Accounts to backup/estimate from same folder)
   if action not in ['restore', 'restore-group', 'restore-mbox']:
     if user_email_address.lower() != db_settings['email_address'].lower():
-      print("\n\nSorry, this backup folder should only be used with the %s \
+      logger.error("\n\nSorry, this backup folder should only be used with the %s \
 account that it was created with for incremental backups. You specified the\
  %s account" % (db_settings['email_address'], user_email_address))
       sys.exit(5)
 
 def convertDB(sqlconn, uidvalidity, oldversion):
-  print("Converting database")
+  logger.info("Converting database")
   try:
     with sqlconn:
       if oldversion < '3':
@@ -1190,9 +1198,9 @@ def convertDB(sqlconn, uidvalidity, oldversion):
                          ('db_version', __db_schema_version__)) )   
       sqlconn.commit()
   except sqlite3.OperationalError as e:
-      print("Conversion error: %s" % e.message)
+      logger.error("Conversion error: %s" % e.message)
 
-  print("GYB database converted to version %s" % __db_schema_version__)
+  logger.info("GYB database converted to version %s" % __db_schema_version__)
 
 def getMessageIDs (sqlconn, backup_folder):   
   sqlcur = sqlconn.cursor()
@@ -1234,7 +1242,7 @@ def doesTokenMatchEmail():
     fields='email')
   if user_info['email'].lower() == auth_as.lower():
     return True
-  print("Error: you did not authorize the OAuth token in the browser with the \
+  logger.error("Error: you did not authorize the OAuth token in the browser with the \
 %s Google Account. Please make sure you are logged in to the correct account \
 when authorizing the token in the browser." % auth_as)
   cfgFile = os.path.join(getProgPath(), '%s.cfg' % auth_as)
@@ -1243,10 +1251,10 @@ when authorizing the token in the browser." % auth_as)
 
 def rewrite_line(mystring):
   if not options.debug:
-    print(' ' * 80, end='\r')
+    logger.info(' ' * 80, end='\r')
   else:
-    print()
-  print(mystring, end='\r')
+    logger.info('')
+  logger.info(mystring, end='\r')
 
 def initializeDB(sqlconn, email):
   sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
@@ -1363,7 +1371,7 @@ def restored_message(request_id, response, exception):
     try:
       error = json.loads(exception.content.decode('utf-8'))
       if error['error']['code'] == 400:
-        print("\nERROR: %s: %s. Skipping message restore, you can retry later with --fast-restore"
+        logger.error("\nERROR: %s: %s. Skipping message restore, you can retry later with --fast-restore"
           % (error['error']['code'], error['error']['errors'][0]['message']))
         return
     except:
@@ -1380,7 +1388,7 @@ def purged_message(request_id, response, exception):
 
 def backup_message(request_id, response, exception):
   if exception is not None:
-    print(exception)
+    logger.error(exception)
   else:
     if 'labelIds' in response:
       labelIds = response['labelIds']
@@ -1485,7 +1493,7 @@ def getSizeOfMessages(messages, gmail):
     rewrite_line("Estimated size %s %s/%s messages" %
       (bytes_to_larger(running_size), estimated_messages,
        estimate_count))
-  print('\n')
+  logger.debug('\n')
   return message_sizes
 
 def main(argv):
@@ -1495,23 +1503,23 @@ def main(argv):
     httplib2.debuglevel = 4
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
-    print(getGYBVersion())
-    print('Path: %s' % getProgPath())
-    print(ssl.OPENSSL_VERSION)
+    logger.info(getGYBVersion())
+    logger.debug('Path: %s' % getProgPath())
+    logger.debug(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
     headers = {'User-Agent': getGYBVersion(' | ')}
     anonhttpc.request('https://www.googleapis.com', headers=headers)
     cipher_name, tls_ver, _ = anonhttpc.connections['https:www.googleapis.com'].sock.cipher()
-    print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
+    logger.debug('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
     sys.exit(0)
   if options.action == 'split-mbox':
-    print('split-mbox is no longer necessary and is deprecated. Mbox file size should not impact restore performance in this version.')
+    logger.warning('split-mbox is no longer necessary and is deprecated. Mbox file size should not impact restore performance in this version.')
     sys.exit(1)
   if not options.email:
-    print('ERROR: --email is required.')
+    logger.error('ERROR: --email is required.')
     sys.exit(1)
   if options.local_folder == 'XXXuse-email-addressXXX':
     options.local_folder = "GYB-GMail-Backup-%s" % options.email
@@ -1535,7 +1543,7 @@ def main(argv):
     if options.action in ['backup',]:
       os.mkdir(options.local_folder)
     elif options.action in ['restore', 'restore-group', 'restore-mbox']:
-      print('ERROR: Folder %s does not exist. Cannot restore.'
+      logger.error('ERROR: Folder %s does not exist. Cannot restore.'
         % options.local_folder)
       sys.exit(3)
 
@@ -1549,7 +1557,7 @@ def main(argv):
   if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
     'quota', 'revoke', 'create-label']:
     if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
-      print("\nUsing backup folder %s" % options.local_folder)
+      logger.info("\nUsing backup folder %s" % options.local_folder)
       global sqlconn
       global sqlcur
       sqlconn = sqlite3.connect(sqldbfile,
@@ -1584,17 +1592,17 @@ def main(argv):
     messages_to_backup = []
     messages_to_refresh = []
     # Determine which messages from the search we haven't processed before.
-    print("GYB needs to examine %s messages" % len(messages_to_process))
+    logger.info("GYB needs to examine %s messages" % len(messages_to_process))
     for message_num in messages_to_process:
       if not newDB and message_is_backed_up(message_num['id'], sqlcur, sqlconn,
         options.local_folder):
         messages_to_refresh.append(message_num['id'])
       else:
         messages_to_backup.append(message_num['id'])
-    print("GYB already has a backup of %s messages" %
+    logger.info("GYB already has a backup of %s messages" %
       (len(messages_to_process) - len(messages_to_backup)))
     backup_count = len(messages_to_backup)
-    print("GYB needs to backup %s messages" % backup_count)
+    logger.info("GYB needs to backup %s messages" % backup_count)
     if options.memory_limit:
       memory_limit = options.memory_limit * 1024 * 1024
       message_sizes = getSizeOfMessages(messages_to_backup, gmail)
@@ -1622,13 +1630,13 @@ def main(argv):
       sqlconn.commit()
       rewrite_line("backed up %s of %s messages" %
         (backed_up_messages, backup_count))
-    print("\n")
+    logger.info("\n")
  
     if not options.refresh:
       messages_to_refresh = []
     refreshed_messages = 0
     refresh_count = len(messages_to_refresh)
-    print("GYB needs to refresh %s messages" % refresh_count)
+    logger.info("GYB needs to refresh %s messages" % refresh_count)
     sqlcur.executescript("""
        CREATE TEMP TABLE current_labels (label TEXT);
     """)
@@ -1650,7 +1658,7 @@ def main(argv):
       sqlconn.commit()
       rewrite_line("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
-    print("\n")
+    logger.info("\n")
 
   # RESTORE #
   elif options.action == 'restore':
@@ -1678,7 +1686,7 @@ def main(argv):
                       message_internaldate DESC''') # All messages
 
     if options.fast_restore:
-      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
+      logger.warning('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
     current = 0
@@ -1692,17 +1700,17 @@ def main(argv):
       message_num = x[0]
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
-        print('WARNING! file %s does not exist for message %s'
+        logger.warning('WARNING! file %s does not exist for message %s'
           % (os.path.join(options.local_folder, message_filename),
             message_num))
-        print('  this message will be skipped.')
+        logger.warning('  this message will be skipped.')
         continue
       f = open(os.path.join(options.local_folder, message_filename), 'rb')
       full_message = f.read()
       f.close()
       labels = []
       if not options.strip_labels:
-        sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
+        sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \ 
           = ?', (message_num,))
         labels_results = sqlcur.fetchall()
         for l in labels_results:
@@ -1774,7 +1782,7 @@ def main(argv):
         current, restore_count))
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
-    print("\n")
+    logger.info("\n")
     sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
@@ -1804,7 +1812,7 @@ def main(argv):
     current_batch_bytes = 5000
     gbatch = gmail.new_batch_http_request()
     if options.fast_restore:
-      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
+      logger.warning('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     max_batch_bytes = 8 * 1024 * 1024
     # Look for Google Vault XML metadata which contains message labels map
     vault_label_map = {}
@@ -1814,8 +1822,8 @@ def main(argv):
           if filename[-4:].lower() != '.xml':
             continue
           file_path = os.path.join(path, filename)
-          print("\nReading Vault labels from %s file %s" % (humansize(file_path), file_path))
-          print("large files may take some time to read...")
+          logger.info("\nReading Vault labels from %s file %s" % (humansize(file_path), file_path))
+          logger.info("large files may take some time to read...")
           for _, elem in etree.iterparse(file_path, events=('end',)):
             if elem.tag == 'Document':
               labels = ''
@@ -1835,7 +1843,7 @@ def main(argv):
           filename[-5:].lower() != '.mbox':
           continue
         file_path = os.path.join(path, filename)
-        print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
+        logger.info("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
         mbox = fmbox.fmbox(file_path)
         current = 0
         while True:
@@ -1952,7 +1960,7 @@ def main(argv):
           rewrite_line( "restoring %s messages (%s)" % (len(gbatch._order), current,))
           callGAPI(gbatch, None, soft_errors=True)
           sqlconn.commit()
-    print('\ndone!')
+    loging.info('\ndone!')
     sqlconn.commit()
     sqlconn.execute('DETACH mbox_resume')
     sqlconn.commit()
@@ -1964,7 +1972,7 @@ def main(argv):
     else:
       gmig = buildGAPIServiceObject('groupsmigration')
     max_message_size = gmig._rootDesc['resources']['archive']['methods']['insert']['mediaUpload']['maxSize']
-    print('Groups supports restore of messages up to %s' % max_message_size)
+    logger.info('Groups supports restore of messages up to %s' % max_message_size)
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -1995,9 +2003,9 @@ def main(argv):
       message_filename = x[2]
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
-        print('WARNING! file %s does not exist for message %s' %
+        logger.warning('WARNING! file %s does not exist for message %s' %
           (os.path.join(options.local_folder, message_filename), message_num))
-        print('  this message will be skipped.')
+        logger.warning('  this message will be skipped.')
         continue
       f = open(os.path.join(options.local_folder, message_filename), 'rb')
       full_message = f.read()
@@ -2009,7 +2017,7 @@ def main(argv):
         callGAPI(gmig.archive(), 'insert',
           groupId=options.email, media_body=media, soft_errors=True)
       except googleapiclient.errors.MediaUploadSizeError as e:
-        print('\n ERROR: Message is to large for groups (%smb limit). \
+        logger.error('\n ERROR: Message is to large for groups (%smb limit). \
           Skipping...' % max_message_size)
         continue
       sqlconn.execute(
@@ -2029,7 +2037,7 @@ def main(argv):
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
       fields='nextPageToken,messages/id')
     estimate_count = len(messages_to_process)
-    print("%s,%s" % (options.email, estimate_count))
+    logger.debug("%s,%s" % (options.email, estimate_count))
 
   # PURGE #
   elif options.action == 'purge':
@@ -2055,7 +2063,7 @@ def main(argv):
         callGAPI(gmail.users().messages(), function='batchDelete',
           userId='me', body={'ids': purge_chunk})
         rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
-    print("\n")
+    logger.info("\n")
 
   # PURGE-LABELS #
   elif options.action == 'purge-labels':
@@ -2077,7 +2085,7 @@ def main(argv):
         rewrite_line('Deleting label %s' % printable_name)
       callGAPI(gmail.users().labels(), 'delete',
         userId='me', id=label_result['id'], soft_errors=True)
-    print('\n')
+    logger.info('\n')
 
   # PRINT-LABELS #
   elif options.action == 'print-labels':
@@ -2091,11 +2099,11 @@ def main(argv):
     for label_list in [all_system_labels, all_user_labels]:
       for label in label_list:
         try:
-          print('%s (%s)' % (label['name'], label['id']))
+          logger.info('%s (%s)' % (label['name'], label['id']))
         except UnicodeEncodeError:
           printable_name = ''.join(c for c in label['name'] if c in safe_chars)
-          print('%s: (%s)' % (printable_name, label['id']))
-    print('\n')
+          logger.debug('%s: (%s)' % (printable_name, label['id']))
+    logger.debug('\n')
 
   # QUOTA #
   elif options.action == 'quota':
@@ -2108,24 +2116,24 @@ def main(argv):
 otaBytesByService,quotaType')
     for key in quota_results:
       if key == 'quotaBytesByService':
-        print('Service Usage:')
+        logger.info('Service Usage:')
         for service in quota_results[key]:
           myval = int(service['bytesUsed'])
           myval = bytes_to_larger(myval)
           service_name = '%s%s' % (service['serviceName'][0],
             service['serviceName'][1:].lower())
-          print(' %s: %s' % (service_name, myval))
+          logger.info(' %s: %s' % (service_name, myval))
         continue
       myval = quota_results[key]
       mysize = ''
       if myval.isdigit():
         myval = bytes_to_larger(myval)
-      print('%s: %s' % (key, myval))
+      logger.info('%s: %s' % (key, myval))
 
   # REVOKE
   elif options.action == 'revoke':
     if options.service_account:
-      print('ERROR: --action revoke does not work with --service-account')
+      logger.error('ERROR: --action revoke does not work with --service-account')
       sys.exit(5)
     auth_as = options.use_admin if options.use_admin else options.email
     oauth2file = os.path.join(getProgPath(), '%s.cfg' % auth_as)
@@ -2163,14 +2171,14 @@ otaBytesByService,quotaType')
       os.mkdir(estimate_path)
     messages_to_estimate = []
     #Determine which messages from the search we haven't processed before.
-    print("GYB needs to examine %s messages" % len(messages_to_process))
+    logger.info("GYB needs to examine %s messages" % len(messages_to_process))
     for message_num in messages_to_process:
       if not newDB and os.path.isfile(sqldbfile) and message_is_backed_up(message_num['id'], sqlcur,
         sqlconn, options.local_folder):
         pass
       else:
         messages_to_estimate.append(message_num['id'])
-    print("GYB already has a backup of %s messages" %
+    logger.info("GYB already has a backup of %s messages" %
       (len(messages_to_process) - len(messages_to_estimate)))
     getSizeOfMessages(messages_to_estimate, gmail)
 
@@ -2182,7 +2190,7 @@ otaBytesByService,quotaType')
 
 if __name__ == '__main__':
   if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-    print('ERROR: GYB requires Python 3.6 or greater.')
+    logger.critical('ERROR: GYB requires Python 3.6 or greater.')
     sys.exit(3)
   elif sys.version_info[1] >= 7:
     sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
@@ -2190,14 +2198,14 @@ if __name__ == '__main__':
   try:
     main(sys.argv[1:])
   except MemoryError:
-    print('''ERROR: GYB ran out of memory during %s. Try the following:
+    logger.critical('''ERROR: GYB ran out of memory during %s. Try the following:
 
 1) Use a 64-bit version of GYB. It has access to more memory.
 2) Add "--memory-limit 100" argument to GYB to reduce memory usage.''' % options.action)
     sys.exit(5)
   except ssl.SSLError as e:
     if e.reason == 'NO_PROTOCOLS_AVAILABLE':
-      print('ERROR: %s - Please adjust your --tls-min-version and --tls-max-version arguments.' % e.reason)
+      logger.critical('ERROR: %s - Please adjust your --tls-min-version and --tls-max-version arguments.' % e.reason)
     else:
       raise
   except KeyboardInterrupt:
