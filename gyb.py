@@ -56,6 +56,7 @@ import sqlite3
 import ssl
 import email
 import hashlib
+import pkg_resources
 import re
 import string
 from itertools import islice, chain
@@ -79,10 +80,11 @@ import fmbox
 import labellang
 
 def getGYBVersion(divider="\n"):
+  api_client_ver = pkg_resources.get_distribution("google-api-python-client").version
   return ('Got Your Back %s~DIV~%s~DIV~%s - %s~DIV~Python %s.%s.%s %s-bit \
 %s~DIV~google-api-client %s~DIV~%s %s' % (__version__, __website__, __author__, __email__,
 sys.version_info[0], sys.version_info[1], sys.version_info[2],
-struct.calcsize('P')*8, sys.version_info[3], googleapiclient.__version__, platform.platform(),
+struct.calcsize('P')*8, sys.version_info[3], api_client_ver, platform.platform(),
 platform.machine())).replace('~DIV~', divider)
 
 USER_AGENT = getGYBVersion(' | ')
