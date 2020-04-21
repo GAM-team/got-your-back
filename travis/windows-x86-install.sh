@@ -1,4 +1,4 @@
-pyinstaller --clean --noupx -F --distpath=gyb windows-gyb.spec
+pyinstaller --clean --noupx -F --distpath=gyb gyb.spec
 export gyb="gyb/gyb"
 export gybpath=$(readlink -e gyb)
 $gyb --version

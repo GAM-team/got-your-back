@@ -2,8 +2,8 @@ if: tag IS blank
 
 env:
   global:
-    - BUILD_OPENSSL_VERSION=1.1.1d
-    - BUILD_PYTHON_VERSION=3.8.1
+    - BUILD_OPENSSL_VERSION=1.1.1g
+    - BUILD_PYTHON_VERSION=3.8.2
     - PYINSTALLER_VERSION=3.5
     - PATCHELF_VERSION=0.9
 
@@ -51,20 +51,6 @@ matrix:
       - ARCH=arm64
       - VMTYPE=build
   - os: linux
-    name: "Linux Ubuntu Trusty x86_64"
-    dist: trusty
-    language: bash
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: linux
-    name: "Linux Ubuntu Precise x86_64"
-    dist: precise
-    language: bash
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: linux
     name: "Python 3.6 Source Testing"
     dist: bionic
     language: python
@@ -96,13 +82,6 @@ matrix:
     env:
       - ARCH=x86_64
       - VMTYPE=test
-  - os: osx
-    name: "MacOS 10.12"
-    language: generic
-    osx_image: xcode9.2
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
   - os: osx
     name: "MacOS 10.13"
     language: generic
