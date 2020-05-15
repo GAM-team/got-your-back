@@ -563,7 +563,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
       e = e.args[0]
     systemErrorExit(5, e)
 
-def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
+def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reasons=[], **kwargs):
   retries = 10
   parameters = kwargs.copy()
   parameters.update(extra_args)
@@ -589,12 +589,13 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], **kwargs):
         message = error['error']['errors'][0]['message']
       except (KeyError, json.decoder.JSONDecodeError):
         http_status = int(e.resp['status'])
-        reason = e.content
+        reason = http_status
         message = e.content
       if reason in throw_reasons:
         raise
       if n != retries and (http_status >= 500 or
-       reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError']):
+       reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError'] or
+       reason in retry_reasons):
         wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
         randomness = float(random.randint(1,1000)) / 1000
         wait_on_fail += randomness
@@ -1005,11 +1006,21 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
+  sa_body = {
+             'accountId': project_id,
+             'serviceAccount': {
+               'displayName': 'GYB Project Service Account'
+             }
+            }
   service_account = callGAPI(iam.projects().serviceAccounts(), 'create',
                              name='projects/%s' % project_id,
-                             body={'accountId': project_id, 'serviceAccount': {'displayName': 'GYB Project Service Account'}})
+                             body=sa_body)
+  key_body = {
+              'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE',
+              'keyAlgorithm': 'KEY_ALG_RSA_2048'
+             }
   key = callGAPI(iam.projects().serviceAccounts().keys(), 'create',
-                 name=service_account['name'], body={'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE', 'keyAlgorithm': 'KEY_ALG_RSA_2048'})
+                 name=service_account['name'], body=key_body, retry_reasons=[404])
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
   _createClientSecretsOauth2service(project_id)
