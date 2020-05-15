@@ -33,6 +33,6 @@ exe = EXE(pyz,
           a.datas,
           name='gyb',
           debug=False,
-          strip=True,
+          strip=None,
           upx=False,
           console=True)
