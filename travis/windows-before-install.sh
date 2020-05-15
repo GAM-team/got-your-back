@@ -36,19 +36,19 @@ until [ -f $python ]; do sleep 1; done
 export PATH=$PATH:/c/python/scripts
 
 # OpenSSL
-echo "Installing OpenSSL..."
-export exefile=Win${BITS}OpenSSL_Light-${BUILD_OPENSSL_VERSION//./_}.exe
-if [ ! -e $exefile ]; then
-  echo "Downloading $exefile..."
-  wget --quiet https://slproweb.com/download/$exefile
-fi
-until powershell ".\\${exefile} /silent /sp- /suppressmsgboxes /DIR=C:\\ssl"; do echo "trying openssl again..."; done
-until cp -v /c/ssl/libcrypto-1_1${OPENSSL_BITS}.dll /c/python/DLLs/; do echo "trying libcrypto copy again..."; sleep 3; done
-until cp -v /c/ssl/libssl-1_1${OPENSSL_BITS}.dll /c/python/DLLs/; do echo "trying libssl copy again..."; done
-if [[ "$PLATFORM" == "x86_64" ]]; then
-  cp -v /c/python/DLLs/libssl-1_1-x64.dll /c/python/DLLs/libssl-1_1.dll
-  cp -v /c/python/DLLs/libcrypto-1_1-x64.dll /c/python/DLLs/libcrypto-1_1.dll
-fi
+#echo "Installing OpenSSL..."
+#export exefile=Win${BITS}OpenSSL_Light-${BUILD_OPENSSL_VERSION//./_}.exe
+#if [ ! -e $exefile ]; then
+#  echo "Downloading $exefile..."
+#  wget --quiet https://slproweb.com/download/$exefile
+#fi
+#until powershell ".\\${exefile} /silent /sp- /suppressmsgboxes /DIR=C:\\ssl"; do echo "trying openssl again..."; done
+#until cp -v /c/ssl/libcrypto-1_1${OPENSSL_BITS}.dll /c/python/DLLs/; do echo "trying libcrypto copy again..."; sleep 3; done
+#until cp -v /c/ssl/libssl-1_1${OPENSSL_BITS}.dll /c/python/DLLs/; do echo "trying libssl copy again..."; done
+#if [[ "$PLATFORM" == "x86_64" ]]; then
+#  cp -v /c/python/DLLs/libssl-1_1-x64.dll /c/python/DLLs/libssl-1_1.dll
+#  cp -v /c/python/DLLs/libcrypto-1_1-x64.dll /c/python/DLLs/libcrypto-1_1.dll
+#fi
 
 # WIX Toolset
 until cinst -y wixtoolset; do echo "trying wix install again..."; done
