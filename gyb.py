@@ -213,7 +213,7 @@ method breaks Gmail deduplication and threading.')
     default='DEBUG',
     dest='verbosity',
     help='Set the package level verbosity. By default, set to DEBUG. Options in increasing verbosity: \
-CRITICAL, ERROR, WARNING, INFO, DEBUG')
+CRITICAL, ERROR, WARNING, INFO, PROGRESS, DEBUG')
   parser.add_argument('--memory-limit',
     dest='memory_limit',
     type=int,
@@ -1247,22 +1247,34 @@ when authorizing the token in the browser." % auth_as)
   os.remove(cfgFile)
   return False
 
+def set_progress_logging_level():
+  '''
+    create new debugging setting inbetween info and debug called "PROGRESS"
+  '''
+
+  # the new progress level should be inbetween info and debug
+  PROGRESS_LEVEL_NUM = (logging.INFO + logging.DEBUG)/2
+
+  logging.addLevelName(PROGRESS_LEVEL_NUM, "PROGRESS")
+
+  def progress_logging(self, message, *args, **kwargs):
+    if self.isEnabledFor(PROGRESS_LEVEL_NUM):
+      # Yes, logger takes its '*args' as 'args'.
+      self._log(PROGRESS_LEVEL_NUM, message, args, **kwargs)
+
+  logging.Logger.progress = progress_logging
+
 def set_logger(verbosity_level):
   # sets the global logging level of the package.
   # Accepted verbosity levels are: 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
 
   global logger
 
+  set_progress_logging_level()
+
   verbosity_level = verbosity_level.upper()
 
-  acceptable_verbosity_values = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
-
-  if not (verbosity_level in acceptable_verbosity_values):
-    raise ValueError('Error: "{}" is not an excepted verbosity level. The options are: {}. \
-e.g. --verbosity=INFO'.format(
-    verbosity_level,
-    ', '.join(acceptable_verbosity_values),
-  ))
+  validate_debug_level(verbosity)
 
   logger    = logging.getLogger("GYB")
   formatter = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
@@ -1272,14 +1284,40 @@ e.g. --verbosity=INFO'.format(
   console_handler.setFormatter(formatter)
   logger.addHandler(console_handler)
 
-  logger.setLevel(getattr(logging, verbosity_level))
+  logger.setLevel(verbosity_level)
 
-def rewrite_line(mystring):
+def validate_debug_level(requested_level):
+  acceptable_verbosity_values = [
+   'CRITICAL',
+   'ERROR',
+   'WARNING',
+   'INFO',
+   'PROGRESS',
+   'DEBUG'
+  ]
+
+  requested_level = requested_level.upper()
+
+  if not (requested_level in acceptable_verbosity_values):
+    raise ValueError('Error: "{}" is not an excepted verbosity level. The options are: {}. \
+e.g. --verbosity=INFO'.format(
+    requested_level,
+    ', '.join(acceptable_verbosity_values),
+  ))
+
+  return True
+
+def rewrite_line(mystring, debug_level="debug"):
+  validate_debug_level(debug_level)
+
+  debug_level = debug_level.lower()
+
   if not options.debug:
-    logger.info(' ' * 80, end='\r')
+    getattr(logger, debug_level)(' ' * 80, end='\r')
   else:
-    logger.info('')
-  logger.info(mystring, end='\r')
+    getattr(logger, debug_level)('')
+
+  getattr(logger, debug_level)(mystring, end='\r')
 
 def initializeDB(sqlconn, email):
   sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
