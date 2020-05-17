@@ -1287,7 +1287,7 @@ def set_logger(verbosity_level):
 
   verbosity_level = verbosity_level.upper()
 
-  validate_debug_level(verbosity)
+  validate_debug_level(verbosity_level)
 
   logger    = logging.getLogger("GYB")
   formatter = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
