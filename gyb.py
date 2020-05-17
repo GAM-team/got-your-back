@@ -607,11 +607,11 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reaso
         randomness = float(random.randint(1,1000)) / 1000
         wait_on_fail += randomness
         if n > 3:
-          logger.error('Temp error %s. Backing off %s seconds...'
+          logger.warning('Temporary error %s. Backing off %s seconds...'
             % (reason, int(wait_on_fail)))
         time.sleep(wait_on_fail)
         if n > 3:
-          logger.error('attempt %s/%s' % (n+1, retries))
+          logger.warning('attempt %s/%s' % (n+1, retries))
         continue
       logger.error('%s: %s - %s' % (http_status, message, reason))
       if soft_errors:
