@@ -191,7 +191,7 @@ Account to authenticate.')
     choices=list(range(1,101)),
     default=0, # default of 0 means use per action default
     help='Optional: Sets the number of operations to perform at once.')
-  parser.add_argument('--noresume', 
+  parser.add_argument('--noresume',
     action='store_true',
     help='Optional: On restores, start from beginning. Default is to resume \
 where last restore left off.')
@@ -1143,7 +1143,7 @@ def message_is_backed_up(message_num, sqlcur, sqlconn, backup_folder):
 def get_db_settings(sqlcur):
   try:
     sqlcur.execute('SELECT name, value FROM settings')
-    db_settings = dict(sqlcur) 
+    db_settings = dict(sqlcur)
     return db_settings
   except sqlite3.OperationalError as e:
     if e.message == 'no such table: settings':
@@ -1151,7 +1151,7 @@ def get_db_settings(sqlcur):
 database schema. Your backup folder database does not have a version."
  % (__db_schema_version__))
       sys.exit(6)
-    else: 
+    else:
       logger.error("%s" % e)
 
 def check_db_settings(db_settings, action, user_email_address):
@@ -1180,9 +1180,9 @@ def convertDB(sqlconn, uidvalidity, oldversion):
         # Convert to schema 3
         sqlconn.executescript('''
           BEGIN;
-          CREATE TABLE uids 
-              (message_num INTEGER, uid INTEGER PRIMARY KEY); 
-          INSERT INTO uids (uid, message_num) 
+          CREATE TABLE uids
+              (message_num INTEGER, uid INTEGER PRIMARY KEY);
+          INSERT INTO uids (uid, message_num)
                SELECT message_num as uid, message_num FROM messages;
           CREATE INDEX labelidx ON labels (message_num);
           CREATE INDEX flagidx ON flags (message_num);
@@ -1205,19 +1205,19 @@ def convertDB(sqlconn, uidvalidity, oldversion):
         getMessageIDs(sqlconn, options.local_folder)
         rebuildUIDTable(sqlconn)
       sqlconn.executemany('REPLACE INTO settings (name, value) VALUES (?,?)',
-                        (('uidvalidity',uidvalidity), 
-                         ('db_version', __db_schema_version__)) )   
+                        (('uidvalidity',uidvalidity),
+                         ('db_version', __db_schema_version__)) )
       sqlconn.commit()
   except sqlite3.OperationalError as e:
       logger.error("Conversion error: %s" % e.message)
 
   logger.info("GYB database converted to version %s" % __db_schema_version__)
 
-def getMessageIDs (sqlconn, backup_folder):   
+def getMessageIDs (sqlconn, backup_folder):
   sqlcur = sqlconn.cursor()
   header_parser = email.parser.HeaderParser()
   for message_num, filename in sqlconn.execute('''
-               SELECT message_num, message_filename FROM messages 
+               SELECT message_num, message_filename FROM messages
                       WHERE rfc822_msgid IS NULL'''):
     message_full_filename = os.path.join(backup_folder, filename)
     if os.path.isfile(message_full_filename):
@@ -1228,7 +1228,7 @@ def getMessageIDs (sqlconn, backup_folder):
           'UPDATE messages SET rfc822_msgid = ? WHERE message_num = ?',
                      (msgid, message_num))
   sqlconn.commit()
- 
+
 def rebuildUIDTable(sqlconn):
   pass
 
@@ -1432,13 +1432,13 @@ def refresh_message(request_id, response, exception):
       sqlcur.executemany(
            'INSERT INTO current_labels (label) VALUES (?)',
               ((label,) for label in labels))
-      sqlcur.execute("""DELETE FROM labels where message_num = 
+      sqlcur.execute("""DELETE FROM labels where message_num =
                    (SELECT message_num from uids where uid = ?)
                     AND label NOT IN current_labels""", ((response['id']),))
-      sqlcur.execute("""INSERT INTO labels (message_num, label) 
-            SELECT message_num, label from uids, current_labels 
-               WHERE uid = ? AND label NOT IN 
-               (SELECT label FROM labels 
+      sqlcur.execute("""INSERT INTO labels (message_num, label)
+            SELECT message_num, label from uids, current_labels
+               WHERE uid = ? AND label NOT IN
+               (SELECT label FROM labels
                   WHERE message_num = uids.message_num)""",
                   ((response['id']),))
 
@@ -1498,7 +1498,7 @@ def backup_message(request_id, response, exception):
     f.close()
     sqlcur.execute("""
              INSERT INTO messages (
-                         message_filename, 
+                         message_filename,
                          message_internaldate) VALUES (?, ?)""",
                         (message_rel_filename,
                          time_for_sqlite))
@@ -1631,7 +1631,7 @@ def main(argv):
   # Do we need to initialize a new database?
   newDB = (not os.path.isfile(sqldbfile)) and \
     (options.action in ['backup', 'restore-mbox'])
-  
+
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
@@ -1711,7 +1711,7 @@ def main(argv):
       rewrite_line("backed up %s of %s messages" %
         (backed_up_messages, backup_count))
     logger.info("\n")
- 
+
     if not options.refresh:
       messages_to_refresh = []
     refreshed_messages = 0
@@ -1743,8 +1743,8 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 15 
-    resumedb = os.path.join(options.local_folder, 
+      options.batch_size = 15
+    resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
       try:
@@ -1754,8 +1754,8 @@ def main(argv):
       except IOError:
         pass
     sqlcur.execute('ATTACH ? as resume', (resumedb,))
-    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages 
-                        (message_num INTEGER PRIMARY KEY); 
+    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
+                        (message_num INTEGER PRIMARY KEY);
                         CREATE TEMP TABLE skip_messages (message_num INTEGER \
                           PRIMARY KEY);''')
     sqlcur.execute('''INSERT INTO skip_messages SELECT message_num from \
@@ -1982,7 +1982,7 @@ def main(argv):
                 cased_labels.append('Chats_restored')
                 continue
               if label == 'DRAFTS':
-                label = 'DRAFT' 
+                label = 'DRAFT'
               cased_labels.append(label)
             else:
               cased_labels.append(label)
@@ -2108,7 +2108,7 @@ def main(argv):
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
 
-  # COUNT 
+  # COUNT
   elif options.action == 'count':
     if options.batch_size == 0:
       options.batch_size = 100
