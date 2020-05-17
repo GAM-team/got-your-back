@@ -1,12 +1,11 @@
-if [ "$VMTYPE" == "test" ]; then
+if [[ "$TRAVIS_JOB_NAME" == *"Testing" ]]; then
   export python="python"
   export pip="pip"
   echo "Travis setup Python $TRAVIS_PYTHON_VERSION"
   echo "running tests with this version"
 else
   export whereibelong=$(pwd)
-  export dist=$(lsb_release --codename --short)
-  echo "We are running on Ubuntu $dist"
+  echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
   export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
@@ -42,7 +41,7 @@ else
     echo "Installing deps for python3"
     sudo cp -v /etc/apt/sources.list /tmp
     sudo chmod a+rwx /tmp/sources.list
-    echo "deb-src http://archive.ubuntu.com/ubuntu/ $dist main" >> /tmp/sources.list
+    echo "deb-src http://archive.ubuntu.com/ubuntu/ $TRAVIS_DIST main" >> /tmp/sources.list
     sudo cp -v /tmp/sources.list /etc/apt
     sudo apt-get -qq --yes update > /dev/null
     sudo apt-get -qq --yes build-dep python3 > /dev/null
@@ -91,9 +90,8 @@ else
   python=~/python/bin/python3
   pip=~/python/bin/pip3
 
-  if [[ "$dist" == "precise" ]]; then
+  if ([ "${TRAVIS_DIST}" == "trusty" ] || [ "${TRAVIS_DIST}" == "xenial" ]) && [ "${PLATFORM}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
-    sudo apt-get install --yes scons
     if [ ! -d patchelf-$PATCHELF_VERSION ]; then
       echo "Downloading PatchELF $PATCHELF_VERSION"
       wget https://nixos.org/releases/patchelf/patchelf-$PATCHELF_VERSION/patchelf-$PATCHELF_VERSION.tar.bz2
@@ -103,8 +101,10 @@ else
       make
       sudo make install
     fi
-    $pip install git+https://github.com/JonathonReinhart/staticx.git@master
+    $pip install staticx
   fi
+
+  $pip install --upgrade git+git://github.com/pyinstaller/pyinstaller.git@$PYINSTALLER_COMMIT
 
   cd $whereibelong
 fi
@@ -112,4 +112,3 @@ fi
 echo "Upgrading pip packages..."
 $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
 $pip install --upgrade -r requirements.txt
-$pip install --upgrade https://github.com/pyinstaller/pyinstaller/archive/develop.tar.gz

@@ -2,7 +2,7 @@ if [ "$VMTYPE" == "test" ]; then
   export gyb="$python gyb.py"
   export gybpath=$(readlink -e .)
 else
-  $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb linux-gyb.spec
+  $python -OO -m PyInstaller --clean --noupx --strip -F --distpath=gyb gyb.spec
   export gyb="gyb/gyb"
   export gybpath=$(readlink -e gyb)
   export GYBVERSION=`$gyb --short-version`
@@ -14,7 +14,7 @@ else
   du -h gyb/gyb
   time $gyb --version
 
-  if [[ "$dist" == "precise" ]]; then
+  if [[ "$dist" == "xenial" ]]; then
     GYB_LEGACY_ARCHIVE=gyb-$GYBVERSION-linux-$ARCH-legacy.tar.xz
     $python -OO -m staticx gyb/gyb gyb/gyb-staticx
     strip gyb/gyb-staticx

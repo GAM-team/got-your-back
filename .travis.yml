@@ -2,10 +2,12 @@ if: tag IS blank
 
 env:
   global:
-    - BUILD_OPENSSL_VERSION=1.1.1d
-    - BUILD_PYTHON_VERSION=3.8.1
-    - PYINSTALLER_VERSION=3.5
-    - PATCHELF_VERSION=0.9
+    - BUILD_PYTHON_VERSION=3.8.3
+    - MIN_PYTHON_VERSION=3.8.3
+    - BUILD_OPENSSL_VERSION=1.1.1g
+    - MIN_OPENSSL_VERSION=1.1.1g
+    - PATCHELF_VERSION=0.10
+    - PYINSTALLER_COMMIT=3010fdfaa037e9b19e936711d0c0be9b314b03c6
 
 cache:
   directories:
@@ -51,20 +53,6 @@ matrix:
       - ARCH=arm64
       - VMTYPE=build
   - os: linux
-    name: "Linux Ubuntu Trusty x86_64"
-    dist: trusty
-    language: bash
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: linux
-    name: "Linux Ubuntu Precise x86_64"
-    dist: precise
-    language: bash
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: linux
     name: "Python 3.6 Source Testing"
     dist: bionic
     language: python
@@ -97,13 +85,6 @@ matrix:
       - ARCH=x86_64
       - VMTYPE=test
   - os: osx
-    name: "MacOS 10.12"
-    language: generic
-    osx_image: xcode9.2
-    env:
-      - ARCH=x86_64
-      - VMTYPE=build
-  - os: osx
     name: "MacOS 10.13"
     language: generic
     osx_image: xcode10.1
@@ -114,6 +95,13 @@ matrix:
     name: "MacOS 10.14"
     language: generic
     osx_image: xcode11.3
+    env:
+      - ARCH=x86_64
+      - VMTYPE=build
+  - os: osx
+    name: "MacOS 10.15"
+    language: generic
+    osx_image: xcode11.4
     env:
       - ARCH=x86_64
       - VMTYPE=build
@@ -137,14 +125,21 @@ matrix:
       - VMTYPE=build
 
 before_install:
-- source travis/$TRAVIS_OS_NAME-$ARCH-before-install.sh
+- if [ "${TRAVIS_JOB_NAME}" == "Windows 32-bit" ]; then
+    export PLATFORM="x86";
+  elif [ "${TRAVIS_CPU_ARCH}" == "amd64" ]; then
+    export PLATFORM="x86_64";
+  else
+    export PLATFORM="${TRAVIS_CPU_ARCH}";
+  fi
+- source travis/$TRAVIS_OS_NAME-before-install.sh
 - export jid="$(cut -d'.' -f2 <<<"$TRAVIS_JOB_NUMBER")"
 - export gyb_user="gyb-travis-$jid@pdl.jaylee.us"
 - export gyb_group="gyb-travis-group-$jid@pdl.jaylee.us"
 - openssl aes-256-cbc -K $encrypted_6c3a5fee0b9c_key -iv $encrypted_6c3a5fee0b9c_iv -in travis/credentials.tar.enc -out travis/credentials.tar -d
 
 install:
-- source travis/$TRAVIS_OS_NAME-$ARCH-install.sh
+- source travis/$TRAVIS_OS_NAME-install.sh
 
 script:
 - tar xvf travis/credentials.tar -C $gybpath
