@@ -1567,7 +1567,7 @@ def getSizeOfMessages(messages, gmail):
     rewrite_line("Estimated size %s %s/%s messages" %
       (bytes_to_larger(running_size), estimated_messages,
        estimate_count))
-  rewrite_line('\n')
+  #rewrite_line('\n')
   return message_sizes
 
 def main(argv):
@@ -1707,7 +1707,7 @@ def main(argv):
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
       rewrite_line("backed up %s of %s messages" % (backed_up_messages, backup_count))
-    rewrite_line('\n')
+    #rewrite_line('\n')
 
     if not options.refresh:
       messages_to_refresh = []
@@ -1735,7 +1735,7 @@ def main(argv):
       sqlconn.commit()
       rewrite_line("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
-    rewrite_line('\n')
+    #rewrite_line('\n')
 
   # RESTORE #
   elif options.action == 'restore':
@@ -1858,7 +1858,7 @@ def main(argv):
         current, restore_count))
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
-    rewrite_line('\n')
+    #rewrite_line('\n')
     sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
@@ -2136,7 +2136,7 @@ def main(argv):
         callGAPI(gmail.users().messages(), function='batchDelete',
           userId='me', body={'ids': purge_chunk})
         rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
-    rewrite_line('\n')
+    #rewrite_line('\n')
 
   # PURGE-LABELS #
   elif options.action == 'purge-labels':
@@ -2158,7 +2158,7 @@ def main(argv):
         rewrite_line('Deleting label %s' % printable_name)
       callGAPI(gmail.users().labels(), 'delete',
         userId='me', id=label_result['id'], soft_errors=True)
-    rewrite_line('\n')
+    #rewrite_line('\n')
 
   # PRINT-LABELS #
   elif options.action == 'print-labels':
