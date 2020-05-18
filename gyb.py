@@ -1323,12 +1323,17 @@ def rewrite_line(mystring, debug_level="debug"):
 
   debug_level = debug_level.lower()
 
+  #handler will overwrite the line
+  logger.handler[0].terminator = ""
+
   if not options.debug:
     getattr(logger, debug_level)(' ' * 80)
   else:
     getattr(logger, debug_level)('')
 
   getattr(logger, debug_level)(mystring)
+
+  logger.handler[0].terminator = "\n"
 
 def initializeDB(sqlconn, email):
   sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
