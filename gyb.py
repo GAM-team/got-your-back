@@ -1324,7 +1324,7 @@ def rewrite_line(mystring, debug_level="debug"):
   debug_level = debug_level.lower()
 
   #handler will overwrite the line
-  logger.handlers[0].terminator = ""
+  logger.handlers[0].terminator = "\r"
 
   if not options.debug:
     getattr(logger, debug_level)(' ' * 80)
