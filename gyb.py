@@ -747,6 +747,7 @@ def getCRMService(login_hint):
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(project_name, checkEnabled, httpc):
+  parent = f'projects/{project_name}'
   anonhttpc = _createHttpObj()
   headers = {'User-Agent': getGYBVersion(' | ')}
   s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET', headers=headers)
@@ -754,26 +755,28 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
-  serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
+  serveu = googleapiclient.discovery.build('serviceusage', 'v1',
           http=httpc, cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   if checkEnabled:
-    enabledServices = callGAPIpages(serveman.services(), 'list', 'services',
-                                    consumerId=project_name, fields='nextPageToken,services(serviceName)')
+    enabledServices = callGAPIpages(serveu.services(), 'list', 'services',
+                                    parent=parent, filter='state:ENABLED',
+                                    fields='nextPageToken,services(name)')
     for enabled in enabledServices:
-      if 'serviceName' in enabled:
-        if enabled['serviceName'] in apis:
-          print(' API %s already enabled...' % enabled['serviceName'])
-          apis.remove(enabled['serviceName'])
-        else:
-          print(' API %s (non-GYB) is enabled (which is fine)' % enabled['serviceName'])
+      service_name = enabled.get('name', '').split('/')[-1]
+      if service_name in apis:
+        print(' API %s already enabled...' % service_name)
+        apis.remove(service_name)
+      elif service_name:
+        print(' API %s (non-GYB) is enabled (which is fine)' % service_name)
   for api in apis:
     while True:
       print(' enabling API %s...' % api)
+      service_name = f'{parent}/services/{api}'
       try:
-        callGAPI(serveman.services(), 'enable',
+        callGAPI(serveu.services(), 'enable',
                  throw_reasons=['failedPrecondition'],
-                 serviceName=api, body={'consumerId': project_name})
+                 name=service_name)
         break
       except googleapiclient.errors.HttpError as e:
         print('\nThere was an error enabling %s. Please resolve error as described below:' % api)
@@ -1001,7 +1004,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       print(status['error'])
       sys.exit(2)
     break
-  enableProjectAPIs(project_name, False, httpc)
+  enableProjectAPIs(project_id, False, httpc)
   iam = googleapiclient.discovery.build('iam', 'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
