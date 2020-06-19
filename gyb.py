@@ -837,7 +837,7 @@ def _createClientSecretsOauth2service(projectId):
 
 1. Enter "GYB" for "Application name".
 2. Leave other fields blank. Click "Save" button.
-3. Choose "Other". Enter a desired value for "Name". Click the blue "Create" button.
+3. Choose "Desktop app". Enter a desired value for "Name". Click the blue "Create" button.
 4. Copy your "client ID" value.
 ''' % console_credentials_url)
 # If you use Firefox to copy the Client ID and Secret, the data has leading and trailing newlines
