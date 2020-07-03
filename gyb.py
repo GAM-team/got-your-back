@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.37'
+__version__ = '1.38'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -754,6 +754,7 @@ def getCRMService(login_hint):
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
 def enableProjectAPIs(project_name, checkEnabled, httpc):
+  parent = f'projects/{project_name}'
   anonhttpc = _createHttpObj()
   headers = {'User-Agent': getGYBVersion(' | ')}
   s, c = anonhttpc.request(GYB_PROJECT_APIS, 'GET', headers=headers)
@@ -761,12 +762,13 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
     logger.error('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
-  serveman = googleapiclient.discovery.build('servicemanagement', 'v1',
+  serveu = googleapiclient.discovery.build('serviceusage', 'v1',
           http=httpc, cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   if checkEnabled:
-    enabledServices = callGAPIpages(serveman.services(), 'list', 'services',
-                                    consumerId=project_name, fields='nextPageToken,services(serviceName)')
+    enabledServices = callGAPIpages(serveu.services(), 'list', 'services',
+                                    parent=parent, filter='state:ENABLED',
+                                    fields='nextPageToken,services(name)')
     for enabled in enabledServices:
       if 'serviceName' in enabled:
         if enabled['serviceName'] in apis:
@@ -777,10 +779,20 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
   for api in apis:
     while True:
       logger.info(' enabling API %s...' % api)
+      service_name = enabled.get('name', '').split('/')[-1]
+      if service_name in apis:
+        print(' API %s already enabled...' % service_name)
+        apis.remove(service_name)
+      elif service_name:
+        print(' API %s (non-GYB) is enabled (which is fine)' % service_name)
+  for api in apis:
+    while True:
+      print(' enabling API %s...' % api)
+      service_name = f'{parent}/services/{api}'
       try:
-        callGAPI(serveman.services(), 'enable',
+        callGAPI(serveu.services(), 'enable',
                  throw_reasons=['failedPrecondition'],
-                 serviceName=api, body={'consumerId': project_name})
+                 name=service_name)
         break
       except googleapiclient.errors.HttpError as e:
         print('\nThere was an error enabling %s. Please resolve error as described below:' % api)
@@ -839,7 +851,7 @@ def _createClientSecretsOauth2service(projectId):
 
 1. Enter "GYB" for "Application name".
 2. Leave other fields blank. Click "Save" button.
-3. Choose "Other". Enter a desired value for "Name". Click the blue "Create" button.
+3. Choose "Desktop app". Enter a desired value for "Name". Click the blue "Create" button.
 4. Copy your "client ID" value.
 ''' % console_credentials_url)
 # If you use Firefox to copy the Client ID and Secret, the data has leading and trailing newlines
@@ -1006,7 +1018,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       logger.error(status['error'])
       sys.exit(2)
     break
-  enableProjectAPIs(project_name, False, httpc)
+  enableProjectAPIs(project_id, False, httpc)
   iam = googleapiclient.discovery.build('iam', 'v1', http=httpc,
           cache_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
