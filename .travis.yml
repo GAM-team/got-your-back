@@ -1,5 +1,6 @@
 if: tag IS blank
 
+group: edge
 env:
   global:
     - BUILD_PYTHON_VERSION=3.8.3
