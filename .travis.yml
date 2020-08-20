@@ -22,12 +22,12 @@ matrix:
     - python: pypy3
   include:
   - os: linux
-      name: "Linux Ubuntu Focal x86_64"
-      dist: focal
-      language: bash
-      env:
-        - ARCH=x86_64
-        - VMTYPE=build
+    name: "Linux Ubuntu Focal x86_64"
+    dist: focal
+    language: bash
+    env:
+      - ARCH=x86_64
+      - VMTYPE=build
   - os: linux
     name: "Linux Ubuntu Bionic x86_64"
     dist: bionic
