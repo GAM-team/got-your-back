@@ -659,7 +659,7 @@ def callGAPIpages(service, function, items='items',
         except (IndexError, KeyError):
           show_message = show_message.replace('%%first_item%%', '')
           show_message = show_message.replace('%%last_item%%', '')
-      rewrite_line(show_message)
+      logger.debug(show_message)
     try:
       all_pages += this_page[items]
       pageToken = this_page[nextPageToken]
@@ -667,7 +667,7 @@ def callGAPIpages(service, function, items='items',
         return all_pages
     except (IndexError, KeyError):
       if page_message:
-        rewrite_line('\n')
+        logger.debug('\n')
       return all_pages
 
 VALIDEMAIL_PATTERN = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
@@ -1318,22 +1318,6 @@ e.g. --verbosity=INFO'.format(
 
   return True
 
-def rewrite_line(mystring, debug_level="debug"):
-  validate_debug_level(debug_level)
-
-  debug_level = debug_level.lower()
-
-  if not options.debug:
-    logger.handlers[0].terminator = "\r"
-    getattr(logger, debug_level)(' ' * 80)
-  else:
-    getattr(logger, debug_level)('')
-
-  logger.handlers[0].terminator = "\r"
-  getattr(logger, debug_level)(mystring)
-
-  logger.handlers[0].terminator = "\n"
-
 def initializeDB(sqlconn, email):
   sqlconn.execute('''CREATE TABLE settings (name TEXT PRIMARY KEY, value TEXT);''')
   sqlconn.execute('''INSERT INTO settings (name, value) VALUES (?, ?);''',
@@ -1373,7 +1357,7 @@ def createLabel(label_name):
   if label_name in allLabels:
     logger.warning(f'Refusing to recreate existing label {label_name}')
     return
-  rewrite_line(f'Creating label {label_name}')
+  logger.info(f'Creating label {label_name}')
   body = {'labelListVisibility': 'labelShow',
           'messageListVisibility': 'show',
           'name': label_name}
@@ -1563,15 +1547,15 @@ def getSizeOfMessages(messages, gmail):
     if len(gbatch._order) == options.batch_size:
       callGAPI(gbatch, None)
       gbatch = gmail.new_batch_http_request()
-      rewrite_line("Estimated size %s %s/%s messages" %
+      logger.info("Estimated size %s %s/%s messages" %
         (bytes_to_larger(running_size), estimated_messages,
          estimate_count))
   if len(gbatch._order) > 0:
     callGAPI(gbatch, None)
-    rewrite_line("Estimated size %s %s/%s messages" %
+    logger.info("Estimated size %s %s/%s messages" %
       (bytes_to_larger(running_size), estimated_messages,
        estimate_count))
-  #rewrite_line('\n')
+
   return message_sizes
 
 def main(argv):
@@ -1586,13 +1570,13 @@ def main(argv):
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     logger.info(getGYBVersion())
-    logger.debug('Path: %s' % getProgPath())
+    logger.info('Path: %s' % getProgPath())
     logger.debug(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
     headers = {'User-Agent': getGYBVersion(' | ')}
     anonhttpc.request('https://www.googleapis.com', headers=headers)
     cipher_name, tls_ver, _ = anonhttpc.connections['https:www.googleapis.com'].sock.cipher()
-    logger.debug('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
+    logger.info('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
@@ -1700,7 +1684,7 @@ def main(argv):
         sqlconn.commit()
         if options.memory_limit:
           request_size = message_sizes[a_message]
-        rewrite_line("backed up %s of %s messages" %
+        logger.info("backed up %s of %s messages" %
           (backed_up_messages, backup_count))
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='raw',
@@ -1710,8 +1694,7 @@ def main(argv):
     if len(gbatch._order) > 0:
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
-      rewrite_line("backed up %s of %s messages" % (backed_up_messages, backup_count))
-    #rewrite_line('\n')
+      logger.info("backed up %s of %s messages" % (backed_up_messages, backup_count))
 
     if not options.refresh:
       messages_to_refresh = []
@@ -1732,14 +1715,13 @@ def main(argv):
         callGAPI(gbatch, None, soft_errors=True)
         gbatch = gmail.new_batch_http_request()
         sqlconn.commit()
-        rewrite_line("refreshed %s of %s messages" %
+        logger.info("refreshed %s of %s messages" %
           (refreshed_messages, refresh_count))
     if len(gbatch._order) > 0:
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
-      rewrite_line("refreshed %s of %s messages" %
+      logger.info("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
-    #rewrite_line('\n')
 
   # RESTORE #
   elif options.action == 'restore':
@@ -1809,7 +1791,7 @@ def main(argv):
       b64_message_size = (len(full_message)/3) * 4
       if b64_message_size > 1 * 1024 * 1024 or options.batch_size == 1:
         # don't batch/raw >1mb messages, just do single
-        rewrite_line('restoring %s message (%s/%s)' %
+        logger.info('restoring %s message (%s/%s)' %
           (humansize(b64_message_size), current, restore_count))
         # Note resumable=True is important here, it prevents errors on (bad)
         # messages that should be ASCII but contain extended chars.
@@ -1826,7 +1808,7 @@ def main(argv):
           exception = e
         restored_message(request_id=str(message_num), response=response,
           exception=exception)
-        rewrite_line('restored single large message (%s/%s)' % (current,
+        logger.info('restored single large message (%s/%s)' % (current,
           restore_count))
         continue
       if b64_message_size > largest_in_batch:
@@ -1838,7 +1820,7 @@ def main(argv):
         current_batch_bytes += len(labelId)
       if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
         # this message would put us over max, execute current batch first
-        rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+        logger.info("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
         callGAPI(gbatch, None, soft_errors=True)
         gbatch = gmail.new_batch_http_request()
@@ -1850,7 +1832,7 @@ def main(argv):
         neverMarkSpam=True), callback=restored_message,
           request_id=str(message_num))
       if len(gbatch._order) == options.batch_size:
-        rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+        logger.info("restoring %s messages (%s/%s)" % (len(gbatch._order),
           current, restore_count))
         callGAPI(gbatch, None, soft_errors=True)
         gbatch = gmail.new_batch_http_request()
@@ -1858,11 +1840,11 @@ def main(argv):
         current_batch_bytes = 5000
         largest_in_batch = 0
     if len(gbatch._order) > 0:
-      rewrite_line("restoring %s messages (%s/%s)" % (len(gbatch._order),
+      logger.info("restoring %s messages (%s/%s)" % (len(gbatch._order),
         current, restore_count))
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
-    #rewrite_line('\n')
+
     sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
@@ -1931,7 +1913,7 @@ def main(argv):
           # shorten request_id to prevent content-id errors
           request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
           if request_id in messages_to_skip:
-            rewrite_line(' skipping already restored message #%s' % (current,))
+            logger.info(' skipping already restored message #%s' % (current,))
             try:
               mbox.skip()
             except StopIteration:
@@ -1986,16 +1968,16 @@ def main(argv):
             else:
               cased_labels.append(label)
           labelIds = labelsToLabelIds(cased_labels)
-          rewrite_line(" message %s - %s%%" % (current, mbox_pct))
+          logger.debug(" message %s - %s%%" % (current, mbox_pct))
           full_message = message.as_bytes()
           body = {}
           if labelIds:
             body['labelIds'] = labelIds
           b64_message_size = (len(full_message)/3) * 4
-          rewrite_line(" reading message %s... - %s%%" % (current, mbox_pct))
+          logger.debug(" reading message %s... - %s%%" % (current, mbox_pct))
           if b64_message_size > 1 * 1024 * 1024:
             # don't batch/raw >1mb messages, just do single
-            rewrite_line(" restoring %s message %s - %s%%" % (humansize(b64_message_size),current,mbox_pct))
+            logger.info(" restoring %s message %s - %s%%" % (humansize(b64_message_size),current,mbox_pct))
             media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
               mimetype='message/rfc822', resumable=True)
             try:
@@ -2010,14 +1992,14 @@ def main(argv):
               exception = e
             restored_message(request_id=request_id, response=response,
               exception=exception)
-            rewrite_line(" restored single large message (%s)" % (current,))
+            logger.info(" restored single large message (%s)" % (current,))
             continue
           raw_message = base64.urlsafe_b64encode(full_message).decode('utf-8')
           body['raw'] = raw_message
           current_batch_bytes += len(raw_message)
           if len(gbatch._order) > 0 and current_batch_bytes > max_batch_bytes:
             # this message would put us over max, execute current batch first
-            rewrite_line(" restoring %s messages %s - %s%%" % (len(gbatch._order), current, mbox_pct))
+            logger.debug(" restoring %s messages %s - %s%%" % (len(gbatch._order), current, mbox_pct))
             callGAPI(gbatch, None, soft_errors=True)
             gbatch = gmail.new_batch_http_request()
             sqlconn.commit()
@@ -2029,14 +2011,14 @@ def main(argv):
             callback=restored_message,
             request_id=request_id)
           if len(gbatch._order) == options.batch_size:
-            rewrite_line(" restoring %s messages (%s) - %s%%" % (len(gbatch._order), current, mbox_pct))
+            logger.debug(" restoring %s messages (%s) - %s%%" % (len(gbatch._order), current, mbox_pct))
             callGAPI(gbatch, None, soft_errors=True)
             gbatch = gmail.new_batch_http_request()
             sqlconn.commit()
             current_batch_bytes = 5000
             largest_in_batch = 0
         if len(gbatch._order) > 0:
-          rewrite_line( "restoring %s messages (%s)" % (len(gbatch._order), current,))
+          logger.debug( "restoring %s messages (%s)" % (len(gbatch._order), current,))
           callGAPI(gbatch, None, soft_errors=True)
           sqlconn.commit()
     loging.info('\ndone!')
@@ -2076,7 +2058,7 @@ def main(argv):
     current = 0
     for x in messages_to_restore_results:
       current += 1
-      rewrite_line("restoring message %s of %s from %s" %
+      logger.debug("restoring message %s of %s from %s" %
         (current, restore_count, x[1]))
       message_num = x[0]
       message_filename = x[2]
@@ -2139,8 +2121,7 @@ def main(argv):
       if purge_chunk: # make sure we actually have some IDs
         callGAPI(gmail.users().messages(), function='batchDelete',
           userId='me', body={'ids': purge_chunk})
-        rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
-    #rewrite_line('\n')
+        logger.info("purged %s of %s messages" % (purged_messages, purge_count))
 
   # PURGE-LABELS #
   elif options.action == 'purge-labels':
@@ -2156,13 +2137,12 @@ def main(argv):
         pattern.search(label_result['name']):
         continue
       try:
-        rewrite_line('Deleting label %s' % label_result['name'])
+        logger.info('Deleting label %s' % label_result['name'])
       except UnicodeEncodeError:
         printable_name = ''.join(c for c in label_result['name'] if c in safe_chars)
-        rewrite_line('Deleting label %s' % printable_name)
+        logger.info('Deleting label %s' % printable_name)
       callGAPI(gmail.users().labels(), 'delete',
         userId='me', id=label_result['id'], soft_errors=True)
-    #rewrite_line('\n')
 
   # PRINT-LABELS #
   elif options.action == 'print-labels':
