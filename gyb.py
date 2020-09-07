@@ -212,9 +212,9 @@ method breaks Gmail deduplication and threading.')
 (troubleshooting)')
   parser.add_argument('--verbosity',
     required=False,
-    default='DEBUG',
+    default='INFO',
     dest='verbosity',
-    help='Set the package level verbosity. By default, set to DEBUG. Options in increasing verbosity: \
+    help='Set the package level verbosity. By default, set to INFO. Options in increasing verbosity: \
 CRITICAL, ERROR, WARNING, INFO, PROGRESS, DEBUG')
   parser.add_argument('--memory-limit',
     dest='memory_limit',
