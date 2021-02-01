@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.39'
+__version__ = '1.40'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -42,6 +42,7 @@ system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
                  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS']
 import argparse
 import importlib
+from io import BytesIO
 import sys
 import os
 import os.path
@@ -194,11 +195,6 @@ Account to authenticate.')
     action='store_true',
     help='Optional: On restores, start from beginning. Default is to resume \
 where last restore left off.')
-  parser.add_argument('--fast-restore',
-    action='store_true',
-    dest='fast_restore',
-    help='DEPRECATED (do not use): On restores, use the fast method. WARNING: using this \
-method breaks Gmail deduplication and threading.')
   parser.add_argument('--fast-incremental',
     dest='refresh',
     action='store_false',
@@ -229,6 +225,14 @@ method breaks Gmail deduplication and threading.')
     dest='ca_file',
     default=None,
     help='specify a certificate authority to use for validating HTTPS hosts.')
+  parser.add_argument('--extra-reserved-labels',
+    dest='extra_reserved_labels',
+    nargs='+',
+    help='extra labels that should be treated as reserved.')
+  parser.add_argument('--extra-system-labels',
+    dest='extra_system_labels',
+    nargs='+',
+    help='extra labels that should be treated as system labels.')
   parser.add_argument('--version',
     action='store_true',
     dest='version',
@@ -1378,7 +1382,7 @@ def restored_message(request_id, response, exception):
     try:
       error = json.loads(exception.content.decode('utf-8'))
       if error['error']['code'] == 400:
-        print("\nERROR: %s: %s. Skipping message restore, you can retry later with --fast-restore"
+        print("\nERROR: %s: %s. Skipping message restore."
           % (error['error']['code'], error['error']['errors'][0]['message']))
         return
     except:
@@ -1503,6 +1507,26 @@ def getSizeOfMessages(messages, gmail):
   print('\n')
   return message_sizes
 
+def restore_msg_to_group(gmig, full_message, message_num, sqlconn):
+    fstr = BytesIO(full_message)
+    media = googleapiclient.http.MediaIoBaseUpload(fstr,
+                                                   mimetype='message/rfc822',
+                                                   chunksize=-1,
+                                                   resumable=True)
+    try:
+        callGAPI(gmig.archive(), 'insert',
+                 groupId=options.email, media_body=media,
+                 soft_errors=True)
+    except googleapiclient.errors.MediaUploadSizeError as e:
+        print('\n ERROR: Message is to large for groups (%smb limit). \
+              Skipping...' % max_message_size)
+        return
+    sqlconn.execute(
+         'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
+         (message_num,))
+    sqlconn.commit()
+
+
 def main(argv):
   global options, gmail
   options = SetupOptionParser(argv)
@@ -1539,6 +1563,12 @@ def main(argv):
   elif options.action == 'check-service-account':
     doCheckServiceAccount()
     sys.exit(0)
+  if options.extra_reserved_labels:
+    global reserved_labels
+    reserved_labels = reserved_labels + options.extra_reserved_labels
+  if options.extra_system_labels:
+    global system_labels
+    system_labels = system_labels + options.extra_system_labels
   if not options.service_account:  # 3-Legged OAuth
     getValidOauth2TxtCredentials()
     if not doesTokenMatchEmail():
@@ -1556,14 +1586,13 @@ def main(argv):
 
   sqldbfile = os.path.join(options.local_folder, 'msg-db.sqlite')
   # Do we need to initialize a new database?
-  newDB = (not os.path.isfile(sqldbfile)) and \
-    (options.action in ['backup', 'restore-mbox'])
+  newDB = not os.path.isfile(sqldbfile)
   
   # If we're not doing a estimate or if the db file actually exists we open it
   # (creates db if it doesn't exist)
   if options.action not in ['count', 'purge', 'purge-labels', 'print-labels',
     'quota', 'revoke', 'create-label']:
-    if options.action not in ['estimate'] or os.path.isfile(sqldbfile):
+    if options.action not in ['estimate', 'restore-mbox', 'restore-group'] or os.path.isfile(sqldbfile):
       print("\nUsing backup folder %s" % options.local_folder)
       global sqlconn
       global sqlcur
@@ -1583,6 +1612,9 @@ def main(argv):
           rebuildUIDTable(sqlconn)
           sqlconn.commit()
           sys.exit(0)
+    else:
+      sqlconn = sqlite3.connect(':memory:')
+      sqlcur = sqlconn.cursor()
 
   # BACKUP #
   if options.action == 'backup':
@@ -1692,8 +1724,6 @@ def main(argv):
                       WHERE message_num NOT IN skip_messages ORDER BY \
                       message_internaldate DESC''') # All messages
 
-    if options.fast_restore:
-      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
     current = 0
@@ -1738,11 +1768,11 @@ def main(argv):
         # don't batch/raw >1mb messages, just do single
         rewrite_line('restoring %s message (%s/%s)' %
           (humansize(b64_message_size), current, restore_count))
-        # Note resumable=True is important here, it prevents errors on (bad)
-        # messages that should be ASCII but contain extended chars.
-        # What's that? No, no idea why
-        media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-          mimetype='message/rfc822', resumable=True)
+        fstr = BytesIO(full_message)
+        media = googleapiclient.http.MediaIoBaseUpload(fstr,
+                                                       mimetype='message/rfc822',
+                                                       chunksize=-1,
+                                                       resumable=True)
         try:
           response = callGAPI(gmail.users().messages(), 'import_',
             userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1818,8 +1848,6 @@ def main(argv):
       messages_to_skip.append(a_message[0])
     current_batch_bytes = 5000
     gbatch = gmail.new_batch_http_request()
-    if options.fast_restore:
-      print('--fast-restore (message insert) is no longer supported by GYB. See https://developers.google.com/gmail/api/release-notes#12_november_2019_new_messageimport_implementation.')
     max_batch_bytes = 8 * 1024 * 1024
     # Look for Google Vault XML metadata which contains message labels map
     vault_label_map = {}
@@ -1924,8 +1952,11 @@ def main(argv):
           if b64_message_size > 1 * 1024 * 1024:
             # don't batch/raw >1mb messages, just do single
             rewrite_line(" restoring %s message %s - %s%%" % (humansize(b64_message_size),current,mbox_pct))
-            media_body = googleapiclient.http.MediaInMemoryUpload(full_message,
-              mimetype='message/rfc822', resumable=True)
+            fstr = BytesIO(full_message)
+            media = googleapiclient.http.MediaIoBaseUpload(fstr,
+                                                           mimetype='message/rfc822',
+                                                           chunksize=-1,
+                                                           resumable=True)
             try:
               response = callGAPI(gmail.users().messages(), 'import_',
                 userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
@@ -1989,48 +2020,81 @@ def main(argv):
         pass
       except IOError:
         pass
-    sqlcur.execute('ATTACH ? as resume', (resumedb,))
-    sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
-                      (message_num INTEGER PRIMARY KEY);
-       CREATE TEMP TABLE skip_messages (message_num INTEGER PRIMARY KEY);''')
-    sqlcur.execute('''INSERT INTO skip_messages SELECT message_num
-      FROM restored_messages''')
-    sqlcur.execute('''SELECT message_num, message_internaldate,
-      message_filename FROM messages
-          WHERE message_num NOT IN skip_messages
-            ORDER BY message_internaldate DESC''')
-    messages_to_restore_results = sqlcur.fetchall()
-    restore_count = len(messages_to_restore_results)
-    current = 0
-    for x in messages_to_restore_results:
-      current += 1
-      rewrite_line("restoring message %s of %s from %s" %
-        (current, restore_count, x[1]))
-      message_num = x[0]
-      message_filename = x[2]
-      if not os.path.isfile(os.path.join(options.local_folder,
-        message_filename)):
-        print('WARNING! file %s does not exist for message %s' %
-          (os.path.join(options.local_folder, message_filename), message_num))
-        print('  this message will be skipped.')
-        continue
-      f = open(os.path.join(options.local_folder, message_filename), 'rb')
-      full_message = f.read()
-      f.close()
-      media = googleapiclient.http.MediaFileUpload(
-        os.path.join(options.local_folder, message_filename),
-        mimetype='message/rfc822', resumable=True)
-      try:
-        callGAPI(gmig.archive(), 'insert',
-          groupId=options.email, media_body=media, soft_errors=True)
-      except googleapiclient.errors.MediaUploadSizeError as e:
-        print('\n ERROR: Message is to large for groups (%smb limit). \
-          Skipping...' % max_message_size)
-        continue
-      sqlconn.execute(
-         'INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)',
-           (message_num,))
-      sqlconn.commit()
+    # if msg-db.sqlite exists assume this is a GYB format folder
+    # otherwise look for mbox files
+    gyb_format = os.path.isfile(os.path.join(options.local_folder, 'msg-db.sqlite'))
+    if gyb_format:
+      sqlcur.execute('ATTACH ? as resume', (resumedb,))
+      sqlcur.executescript('''CREATE TABLE IF NOT EXISTS resume.restored_messages
+                        (message_num INTEGER PRIMARY KEY);
+          CREATE TEMP TABLE skip_messages (message_num INTEGER PRIMARY KEY);''')
+      sqlcur.execute('''INSERT INTO skip_messages SELECT message_num
+        FROM restored_messages''')
+      sqlcur.execute('''SELECT message_num, message_internaldate,
+        message_filename FROM messages
+            WHERE message_num NOT IN skip_messages
+              ORDER BY message_internaldate DESC''')
+      messages_to_restore_results = sqlcur.fetchall()
+      restore_count = len(messages_to_restore_results)
+      current = 0
+      for x in messages_to_restore_results:
+        current += 1
+        rewrite_line("restoring message %s of %s from %s" %
+          (current, restore_count, x[1]))
+        message_num = x[0]
+        message_filename = x[2]
+        if not os.path.isfile(os.path.join(options.local_folder,
+          message_filename)):
+          print('WARNING! file %s does not exist for message %s' %
+            (os.path.join(options.local_folder, message_filename), message_num))
+          print('  this message will be skipped.')
+          continue
+        f = open(os.path.join(options.local_folder, message_filename), 'rb')
+        full_message = f.read()
+        f.close()
+        restore_msg_to_group(gmig, full_message, message_num, sqlconn)
+    else: # mbox format
+        sqlcur.execute('ATTACH ? as resume', (resumedb,))
+        sqlcur.executescript('''CREATE TABLE
+                            IF NOT EXISTS resume.restored_messages
+                            (message_num TEXT PRIMARY KEY)''')
+        sqlcur.execute('SELECT message_num FROM resume.restored_messages')
+        messages_to_skip_results = sqlcur.fetchall()
+        messages_to_skip = []
+        for a_message in messages_to_skip_results:
+          messages_to_skip.append(a_message[0])
+            # Look for and restore mbox files
+        for path, subdirs, files in os.walk(options.local_folder):
+          for filename in files:
+            if filename[-4:].lower() != '.mbx' and \
+              filename[-5:].lower() != '.mbox':
+              continue
+            file_path = os.path.join(path, filename)
+            print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
+            mbox = fmbox.fmbox(file_path)
+            current = 0
+            while True:
+              current += 1
+              message_marker = '%s-%s' % (file_path, current)
+              # shorten request_id to prevent content-id errors
+              request_id = hashlib.md5(message_marker.encode('utf-8')).hexdigest()[:25]
+              if request_id in messages_to_skip:
+                rewrite_line(' skipping already restored message #%s' % (current,))
+                try:
+                  mbox.skip()
+                except StopIteration:
+                  break
+                continue
+              try:
+                message = mbox.next()
+              except StopIteration:
+                break
+              if not message.get_header(b'from', case_insensitive=True):
+                message.set_headers({b'From': b'Not Set <not@set.net>'})
+              mbox_pct = percentage(mbox._mbox_position, mbox._mbox_size)
+              rewrite_line(" message %s - %s%%" % (current, mbox_pct))
+              full_message = message.as_bytes()
+              restore_msg_to_group(gmig, full_message, request_id, sqlconn)
     sqlconn.commit()
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
