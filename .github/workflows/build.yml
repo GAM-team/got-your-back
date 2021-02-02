@@ -185,7 +185,7 @@ jobs:
       - name: Basic Tests all jobs
         run: |
              echo -e "python: $python\npip: $pip\ngyb: $gyb\ngybpath: $gybpath\n"
-             touch "${gampath}/nobrowser.txt"
+             touch "${gybpath}/nobrowser.txt"
              $gyb --version
              export GYBVERSION=$($gyb --short-version )
              echo "GYB Version ${GYBVERSION}"
@@ -194,11 +194,11 @@ jobs:
       - name: Basic Tests build jobs only
         if: matrix.goal != 'test'
         run: |
-             export vline=$($gam version | grep "Python ")
+             export vline=$($gyb --version | grep "Python ")
              export python_line=($vline)
              export this_python=${python_line[1]}
              $python tools/a_atleast_b.py "${this_python}" "${MIN_PYTHON_VERSION}"
-             export vline=$($gam version extended | grep "OpenSSL ")
+             export vline=$($gyb --version extended | grep "OpenSSL ")
              export openssl_line=($vline)
              export this_openssl="${openssl_line[1]}"
              $python tools/a_atleast_b.py "${this_openssl}" "${MIN_OPENSSL_VERSION}"
