@@ -145,7 +145,7 @@ jobs:
         if: matrix.goal != 'test' && steps.cache-primes.outputs.cache-hit != 'true'
         run: |
              set +e
-             source ../.github/actions/${GYBOS}-before-install.sh
+             source .github/actions/${GYBOS}-before-install.sh
              echo "PATH=$PATH" >> $GITHUB_ENV # keep gnutools for MacOS
              echo "python=$python" >> $GITHUB_ENV
              echo "pip=$pip" >> $GITHUB_ENV
@@ -177,7 +177,7 @@ jobs:
         if: matrix.goal != 'test'
         run: |
              set +e
-             source ../.github/actions/${GYBOS}-install.sh
+             source .github/actions/${GYBOS}-install.sh
              echo "gybpath=$gybpath" >> $GITHUB_ENV
              echo "gyb=$gyb" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}\nGYBVERSION: ${GYBVERSION}"
