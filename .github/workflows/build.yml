@@ -1,0 +1,217 @@
+name: Build and test GYB
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '37 22 * * *'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUILD_PYTHON_VERSION: "3.9.1"
+  MIN_PYTHON_VERSION: "3.9.1"
+  BUILD_OPENSSL_VERSION: "1.1.1i"
+  MIN_OPENSSL_VERSION: "1.1.1g"
+  PATCHELF_VERSION: "0.12"
+  PYINSTALLER_VERSION: "4.2"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-16.04
+            jid: 1
+            goal: "build"
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-18.04
+            jid: 2
+            goal: "build"
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-20.04
+            jid: 3
+            goal: "build"
+            gybos: "linux"
+            platform: "x86_64"
+#          - os: [self-hosted, linux, ARM]
+#            jid: 10
+#            goal: "build"
+#            gybos: "linux"
+#            platform: "arm"
+#          - os: [self-hosted, linux, ARM64]
+#            jid: 11
+#            goal: "build"
+#            gybos: "linux"
+#            platform: "arm64"
+          - os: macos-10.15
+            jid: 4
+            goal: "build"
+            gybos: "macos"
+            platform: "x86_64"
+          - os: macos-11.0
+            jid: 12
+            goal: "build"
+            gybos: "macos"
+            platform: "universal2"
+          - os: windows-2019
+            jid: 5
+            goal: "build"
+            gybos: "windows"
+            python: 3.9.1
+            pyarch: "x64" 
+            platform: "x86_64"
+          - os: windows-2019
+            jid: 6
+            goal: "build"
+            gybos: "windows"
+            platform: "x86"
+            python: 3.9.1
+            pyarch: "x86"
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.6"
+            jid: 7
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.7"
+            jid: 8
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.8"
+            jid: 9
+            gybos: "linux"
+            platform: "x86_64"
+
+    steps:
+
+      - uses: actions/checkout@master
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        if: matrix.goal != 'test'
+        with:
+          path: |
+            ~/python
+            ~/ssl
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20210201
+
+      - name: Set env variables
+        env:
+          GYBOS: ${{ matrix.gybos }}
+          GOAL: ${{ matrix.goal }}
+          JID: ${{ matrix.jid }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          echo "GYBOS=${GYBOS}" >> $GITHUB_ENV
+          echo "GOAL=${GOAL}" >> $GITHUB_ENV
+          echo "JID=${JID}" >> $GITHUB_ENV
+          echo "PLATFORM=${PLATFORM}" >> $GITHUB_ENV
+          uname -a
+
+      - name: Use pre-compiled Python for testing and Windows
+        if: matrix.python != ''
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: ${{ matrix.pyarch }}
+
+      - name: Set env variables for pre-compiled Python
+        if: matrix.goal == 'test'
+        run: |
+             export python=$(which python3)
+             export pip=$(which pip3)
+             export gyb="${python} -m gyb"
+             export gybpath="$(readlink -e .)"
+             echo -e "python: $python\npip: $pip\ngyb: $gyb\ngybpath: $gybpath"
+             echo "python=${python}" >> $GITHUB_ENV
+             echo "pip=${pip}" >> $GITHUB_ENV
+             echo "gyb=${gyb}" >> $GITHUB_ENV
+             echo "gybpath=${gybpath}" >> $GITHUB_ENV
+
+      - name: Build and install Python, OpenSSL and PyInstaller
+        if: matrix.goal != 'test' && steps.cache-primes.outputs.cache-hit != 'true'
+        run: |
+             set +e
+             source ../.github/actions/${GYBOS}-before-install.sh
+             echo "PATH=$PATH" >> $GITHUB_ENV # keep gnutools for MacOS
+             echo "python=$python" >> $GITHUB_ENV
+             echo "pip=$pip" >> $GITHUB_ENV
+             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+             echo -e "Python: $python\nPip: $pip\nLD_LIB...: $LD_LIBRARY_PATH"
+             export url="https://codeload.github.com/pyinstaller/pyinstaller/tar.gz/v${PYINSTALLER_VERSION}"
+             echo "Downloading ${url}"
+             curl -o pyinstaller.tar.gz --compressed "${url}"
+             tar xf pyinstaller.tar.gz
+             cd "pyinstaller-${PYINSTALLER_VERSION}/bootloader"
+             if [ "${PLATFORM}" == "x86" ]; then
+               BITS="32"
+             else
+               BITS="64"
+             fi
+             $python ./waf all --target-arch=${BITS}bit
+             cd ..
+             $python setup.py install
+             #$pip install pyinstaller
+
+      - name: Install pip requirements
+        if: matrix.os != 'self-hosted'
+        run: |
+             set +e
+             $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U --force-reinstall
+             $pip install --upgrade -r requirements.txt
+
+      - name: Build GYB with PyInstaller
+        if: matrix.goal != 'test'
+        run: |
+             set +e
+             source ../.github/actions/${GYBOS}-install.sh
+             echo "gybpath=$gybpath" >> $GITHUB_ENV
+             echo "gyb=$gyb" >> $GITHUB_ENV
+             echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}\nGYBVERSION: ${GYBVERSION}"
+
+      - name: Basic Tests all jobs
+        run: |
+             echo -e "python: $python\npip: $pip\ngyb: $gyb\ngybpath: $gybpath\n"
+             touch "${gampath}/nobrowser.txt"
+             $gyb --version
+             export GYBVERSION=$($gyb --short-version )
+             echo "GYB Version ${GYBVERSION}"
+             echo "GYBVERSION=${GYBVERSION}" >> $GITHUB_ENV
+
+      - name: Basic Tests build jobs only
+        if: matrix.goal != 'test'
+        run: |
+             export vline=$($gam version | grep "Python ")
+             export python_line=($vline)
+             export this_python=${python_line[1]}
+             $python tools/a_atleast_b.py "${this_python}" "${MIN_PYTHON_VERSION}"
+             export vline=$($gam version extended | grep "OpenSSL ")
+             export openssl_line=($vline)
+             export this_openssl="${openssl_line[1]}"
+             $python tools/a_atleast_b.py "${this_openssl}" "${MIN_OPENSSL_VERSION}"
+
+
+      - name: Live API tests push only
+        if: github.event_name == 'push' || github.event_name == 'schedule'
+        env: # Or as an environment variable
+          PASSCODE: ${{ secrets.PASSCODE }}
+        run: |
+               $gyb --version
+
+      - name: Upload to Google Drive, build only.
+        if: github.event_name == 'push' && matrix.goal != 'test'
+        run: |
+               $gyb --version
