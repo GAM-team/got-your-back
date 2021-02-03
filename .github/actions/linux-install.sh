@@ -8,14 +8,14 @@ else
   export GYBVERSION=`$gyb --short-version`
   cp LICENSE gyb
   this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
-  GYB_ARCHIVE=gyb-$GYBVERSION-linux-$ARCH-glibc$this_glibc_ver.tar.xz
+  GYB_ARCHIVE=gyb-$GYBVERSION-linux-$PLATFORM-glibc$this_glibc_ver.tar.xz
   tar cfJ $GYB_ARCHIVE gyb/
   echo "PyInstaller GYB info:"
   du -h gyb/gyb
   time $gyb --version
 
   if [[ "$dist" == "xenial" ]]; then
-    GYB_LEGACY_ARCHIVE=gyb-$GYBVERSION-linux-$ARCH-legacy.tar.xz
+    GYB_LEGACY_ARCHIVE=gyb-$GYBVERSION-linux-$PLATFORM-legacy.tar.xz
     $python -OO -m staticx gyb/gyb gyb/gyb-staticx
     strip gyb/gyb-staticx
     rm gyb/gyb
