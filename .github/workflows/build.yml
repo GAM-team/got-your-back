@@ -241,9 +241,9 @@ jobs:
         run: |
               # Use GAM to upload archive to Drive
               bash <(curl -s -S -L https://git.io/install-gam) -l
-              for gybfile in gyb-$GYBVERSION=*; do
+              for gybfile in gyb-$GYBVERSION-*; do
                 echo "Uploading file ${gybfile} to Google Drive..."
-                export OAUTHSERVICEFILE="${gybdir}/oauth2service.json"
+                export OAUTHSERVICEFILE="${gybpath}/oauth2service.json"
                 fileid=$(~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefile localfile $gybfile drivefilename $GYBVERSION-${GITHUB_SHA:0:7}-$gybfile parentid 1nM76gFy3aW1orENiyJGW1v4wmtoNAkQO returnidonly)
                 echo "file uploaded as ${fileid}, setting ACL..."
                 ~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefileacl $fileid anyone role reader withlink
