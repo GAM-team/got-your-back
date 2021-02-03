@@ -103,7 +103,6 @@ $python -V
 
 cd $whereibelong
 
-#export PATH=/usr/local/opt/python/libexec/bin:$PATH
 $pip install --upgrade pip
 $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U
 $pip install --upgrade -r requirements.txt
