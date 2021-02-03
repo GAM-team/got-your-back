@@ -215,16 +215,16 @@ jobs:
               $gyb --action check-service-account --email $gyb_user
               $gyb --action purge --email $gyb_user
               $gyb --action purge-labels --email $gyb_user
-              $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
-              $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume
-              $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
-              $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
+              $gyb --action restore --local-folder samples/gyb-format --email $gyb_user
+              $gyb --action restore --local-folder samples/gyb-format --email $gyb_user --service-account --noresume
+              $gyb --action restore-group --local-folder samples/gyb-format --email $gyb_group --use-admin $gyb_user
+              $gyb --action restore-group --local-folder samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
               $gyb --action restore-group --local-folder samples/google-takeout --email $gyb_group --use-admin $gyb_user
               $gyb --action restore-group --local-folder samples/vault-export-mbox --email $gyb_group --use-admin $gyb_user --service-account
-              $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
-              $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume
-              $gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user
-              $gyb --action restore-mbox --local-folder travis/samples/vault-export-mbox --email $gyb_user
+              $gyb --action restore-mbox --local-folder samples/historic-public-mbox --email $gyb_user
+              $gyb --action restore-mbox --local-folder samples/historic-public-mbox --email $gyb_user --service-account --noresume
+              $gyb --action restore-mbox --local-folder samples/google-takeout --email $gyb_user
+              $gyb --action restore-mbox --local-folder samples/vault-export-mbox --email $gyb_user
               $gyb --action count --email $gyb_user
               $gyb --action count --email $gyb_user --service-account
               $gyb --action quota --email $gyb_user
