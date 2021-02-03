@@ -239,7 +239,7 @@ jobs:
       - name: Upload to Google Drive, build only.
         if: github.event_name == 'push' && matrix.goal != 'test'
         env:
-          GHCLIENT: ${{ secrets.GHCLIENTt }}
+          GHCLIENT: ${{ secrets.GHCLIENT }}
         run: |
               # Use GAM to upload archive to Drive
               bash <(curl -s -S -L https://git.io/install-gam) -l
