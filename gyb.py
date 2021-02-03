@@ -514,9 +514,10 @@ def getAPIScope(api):
   elif api == 'drive':
     return ['https://www.googleapis.com/auth/drive.appdata']
 
-def buildGAPIObject(api):
-  credentials = getValidOauth2TxtCredentials()
-  httpc = google_auth_httplib2.AuthorizedHttp(credentials, _createHttpObj())
+def buildGAPIObject(api, httpc=None):
+  if not httpc:
+    credentials = getValidOauth2TxtCredentials()
+    httpc = google_auth_httplib2.AuthorizedHttp(credentials, _createHttpObj())
   if options.debug:
     extra_args['prettyPrint'] = True
   if os.path.isfile(os.path.join(getProgPath(), 'extra-args.txt')):
@@ -833,7 +834,7 @@ def _createClientSecretsOauth2service(projectId):
     print('Unknown error: %s' % content)
     return False
 
-  console_credentials_url = 'https://console.developers.google.com/apis/credentials/consent/edit?createClient&newAppInternalUser=true&project=%s' % projectId
+  console_credentials_url = f'https://console.cloud.google.com/apis/credentials/oauthclient?project={projectId}'
   while True:
     print('''Please go to:
 
@@ -921,6 +922,20 @@ def doDelProjects():
     projectId = project['projectId']
     callGAPI(crm.projects(), 'delete', projectId=projectId, soft_errors=True)
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
+
+def setGAMProjectConsentScreen(httpObj, projectId, login_hint):
+    print('Setting project consent screen...')
+    iap = buildGAPIObject('iap', httpObj)
+    body = {'applicationTitle': 'GYB', 'supportEmail': login_hint}
+    throw_reasons = []
+    try:
+        callGAPI(iap.projects().brands(),
+                  'create',
+                  parent=f'projects/{projectId}',
+                  body=body,
+                  throw_reasons=throw_reasons)
+    except googleapiclient.errors.HttpError:
+        pass
 
 def doCreateProject():
   service_account_file = os.path.join(getProgPath(), 'oauth2service.json')
@@ -1030,6 +1045,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
                  name=service_account['name'], body=key_body, retry_reasons=[404])
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
+  setGAMProjectConsentScreen(httpc, project_id, login_hint)
   _createClientSecretsOauth2service(project_id)
   print('That\'s it! Your GYB Project is created and ready to use.')
 

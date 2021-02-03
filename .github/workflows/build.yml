@@ -209,7 +209,32 @@ jobs:
         env: # Or as an environment variable
           PASSCODE: ${{ secrets.PASSCODE }}
         run: |
-               $gyb --version
+              export gyb_user="gyb-gha-${JID}@pdl.jaylee.us"
+              export gyb_group="gyb-travis-group-${JID}@pdl.jaylee.us"
+              source .github/actions/decrypt.sh .github/actions/creds.tar.gpg creds.tar
+              $gyb --action check-service-account --email $gyb_user
+              $gyb --action purge --email $gyb_user
+              $gyb --action purge-labels --email $gyb_user
+              $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user
+              $gyb --action restore --local-folder travis/samples/gyb-format --email $gyb_user --service-account --noresume
+              $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user
+              $gyb --action restore-group --local-folder travis/samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
+              $gyb --action restore-group --local-folder samples/google-takeout --email $gyb_group --use-admin $gyb_user
+              $gyb --action restore-group --local-folder samples/vault-export-mbox --email $gyb_group --use-admin $gyb_user --service-account
+              $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user
+              $gyb --action restore-mbox --local-folder travis/samples/historic-public-mbox --email $gyb_user --service-account --noresume
+              $gyb --action restore-mbox --local-folder travis/samples/google-takeout --email $gyb_user
+              $gyb --action restore-mbox --local-folder travis/samples/vault-export-mbox --email $gyb_user
+              $gyb --action count --email $gyb_user
+              $gyb --action count --email $gyb_user --service-account
+              $gyb --action quota --email $gyb_user
+              $gyb --action quota --email $gyb_user --service-account
+              $gyb --action estimate --email $gyb_user
+              $gyb --action estimate --email $gyb_user --service-account
+              $gyb --action print-labels --email $gyb_user
+              $gyb --action print-labels --email $gyb_user --service-account
+              $gyb --action backup --email $gyb_user
+              $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
         if: github.event_name == 'push' && matrix.goal != 'test'
