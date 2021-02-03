@@ -1791,7 +1791,7 @@ def main(argv):
                                                        resumable=True)
         try:
           response = callGAPI(gmail.users().messages(), 'import_',
-            userId='me', throw_reasons=['invalidArgument',], media_body=media_body, body=body,
+            userId='me', throw_reasons=['invalidArgument',], media_body=media, body=body,
             deleted=options.vault, soft_errors=True, neverMarkSpam=True)
           exception = None
         except (googleapiclient.errors.HttpError, googleapiclient.errors.MediaUploadSizeError) as e:
