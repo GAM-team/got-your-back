@@ -149,7 +149,13 @@ else
   release_url="https://api.github.com/repos/jay0lee/got-your-back/releases/tags/v$gybversion"
 fi
 
-echo_yellow "Checking GitHub URL $release_url for $gybversion GYB release..."
+if [ -z ${GHCLIENT+x} ]; then
+  check_type="unauthenticated"
+else
+  check_type="authenticated"
+fi
+
+echo_yellow "Checking GitHub URL $release_url for $gybversion GYB release ($check_type)..."
 release_json=$(curl -s $GHCLIENT $release_url 2>&1 /dev/null)
 
 echo_yellow "Getting file and download URL..."
@@ -207,7 +213,7 @@ if [[ ${name:0:5} = "ERROR" ]]; then
 fi
 # Temp dir for archive
 temp_archive_dir=$(mktemp -d 2>/dev/null || mktemp -d -t 'mytmpdir')
-echo_yellow "Downloading file $name from $browser_download_url to $temp_archive_dir."
+echo_yellow "Downloading file $name from $browser_download_url to $temp_archive_dir ($check_type)..."
 # Save archive to temp w/o losing our path
 (cd $temp_archive_dir && curl -O -L $GHCLIENT $browser_download_url)
 
