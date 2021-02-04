@@ -205,7 +205,7 @@ jobs:
 
 
       - name: Live API tests push only
-        if: github.event_name == 'push' || github.event_name == 'schedule'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'jay0lee'
         env:
           PASSCODE: ${{ secrets.PASSCODE }}
         run: |
@@ -237,7 +237,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
-        if: github.event_name == 'push' && matrix.goal != 'test'
+        if: github.event_name == 'push' && matrix.goal != 'test' && github.repository_owner == 'jay0lee'
         env:
           GHCLIENT: ${{ secrets.GHCLIENT }}
         run: |
