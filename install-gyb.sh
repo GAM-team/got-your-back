@@ -29,7 +29,6 @@ gybversion="latest"
 adminuser=""
 regularuser=""
 glibc_vers="2.27 2.23 2.19 2.15"
-macos_vers="10.15.4 10.14.46 10.13.6"
 
 while getopts "hd:a:o:b:lp:u:r:v:" OPTION
 do
@@ -123,19 +122,7 @@ case $myos in
       this_macos_ver=$osversion
     fi
     echo_green "You are running MacOS $this_macos_ver"
-    use_macos_ver=""
-    for macos_ver in $macos_vers; do
-      if version_gt $this_macos_ver $macos_ver; then
-        use_macos_ver="MacOS$macos_ver"
-        echo_green "Using GYB compiled on $use_macos_ver"
-        break
-      fi
-    done
-    if [ "$use_macos_ver" == "" ]; then
-      echo_red "Sorry, you need to be running at least MacOS $macos_ver to run GYB"
-      exit
-    fi
-    gybfile="macos-x86_64-$use_macos_ver.tar.xz"
+    gybfile="macos-x86_64.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
