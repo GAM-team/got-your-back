@@ -927,7 +927,7 @@ def setGAMProjectConsentScreen(httpObj, projectId, login_hint):
     print('Setting project consent screen...')
     iap = buildGAPIObject('iap', httpObj)
     body = {'applicationTitle': 'GYB', 'supportEmail': login_hint}
-    throw_reasons = ['badRequest']
+    throw_reasons = ['badRequest', '400', 400]
     try:
         callGAPI(iap.projects().brands(),
                   'create',
