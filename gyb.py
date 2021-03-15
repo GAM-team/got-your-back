@@ -67,6 +67,7 @@ import xml.etree.ElementTree as etree
 from urllib.parse import urlencode
 import configparser
 import webbrowser
+import threading
 
 import httplib2
 import google.oauth2.service_account
@@ -245,6 +246,92 @@ where last restore left off.')
     action='help',
     help='Display this message.')
   return parser.parse_args(argv)
+
+# from:
+# https://developers.google.com/gmail/api/reference/quota
+# https://developers.google.com/admin-sdk/groups-migration/v1/reference/archive/insert
+GOOGLEQUOTAS = {
+  "groupsmigration": 1,
+  "labels.create": 5,
+  "labels.delete": 5,
+  "labels.list": 1,
+  "messages.batchDelete": 50,
+  "messages.get": 5,
+  "messages.import": 25,
+  "messages.insert": 25,
+  "messages.list": 5,
+}
+
+
+class QuotaBucket:
+  """
+  basic token bucket for Google's rate limiting.
+
+  https://developers.google.com/gmail/api/reference/quota
+  https://developers.google.com/admin-sdk/groups-migration/v1/reference/archive/insert
+  """
+
+  def __init__(self, size, interval, refill_size):
+    """
+    Parameters:
+     size (int): how many total tokens the bucket can hold. It will start with this many.
+     interval (float): How many seconds between refilling the bucket.
+     refill_size (int): How many tokens to add during each refill.
+    """
+    self.size = size
+    self.interval = interval
+    self.refill_size = refill_size
+
+    self.tokens = size
+    self.lock = threading.Lock()
+    self.fill_event = threading.Event()
+
+    self.set_timer()
+
+  def set_timer(self):
+    t = threading.Timer(self.interval, self.fill)
+    t.daemon = True
+    t.start()
+
+  def fill(self):
+    self.set_timer()
+
+    with self.lock:
+      self.tokens = min(self.size, self.tokens + self.refill_size)
+      self.fill_event.set()
+      self.fill_event = threading.Event()
+
+  def get(self, method):
+    """
+    Blocks until it has obtained enough tokens for the given method.
+
+    Parameters:
+      method (str): name of the API method to be called
+    """
+    try:
+      needed = GOOGLEQUOTAS[method]
+    except KeyError:
+      systemErrorExit(1, "missing quota data for method: " + method)
+
+    while True:
+      my_event = None
+
+      with self.lock:
+        self.tokens -= needed
+        if self.tokens >= 0:
+          return
+
+        needed = abs(self.tokens)
+        self.tokens = 0
+        my_event = self.fill_event
+
+      # wait for the next fill to happen
+      my_event.wait()
+
+
+gmail_bucket = QuotaBucket(250, 0.5, 125)
+groups_bucket = QuotaBucket(10, 1, 10)
+
 
 def getProgPath():
   if os.environ.get('STATICX_PROG_PATH', False):
@@ -1303,6 +1390,7 @@ def labelIdsToLabels(labelIds):
   for labelId in labelIds:
     if labelId not in allLabelIds:
       # refresh allLabelIds from Google
+      gmail_bucket.get("labels.list")
       label_results = callGAPI(gmail.users().labels(), 'list',
         userId='me', fields='labels(name,id,type)')
       allLabelIds = dict()
@@ -1328,6 +1416,7 @@ def createLabel(label_name):
           'name': label_name}
   label_results = None
   try:
+    gmail_bucket.get("labels.create")
     label_results = callGAPI(gmail.users().labels(), 'create',
                              body=body, userId='me', fields='id',
                              throw_reasons=['aborted'])
@@ -1338,6 +1427,7 @@ def createLabel(label_name):
 def labelsToLabelIds(labels):
   global allLabels
   if len(allLabels) < 1: # first fetch of all labels from Google
+    gmail_bucket.get("labels.list")
     label_results = callGAPI(gmail.users().labels(), 'list',
       userId='me', fields='labels(name,id,type)')
     allLabels = dict()
@@ -1504,6 +1594,7 @@ def getSizeOfMessages(messages, gmail):
   message_sizes = {}
   running_size = 0
   for a_message in messages:
+    gmail_bucket.get("messages.get")
     gbatch.add(gmail.users().messages().get(userId='me',
       id=a_message, format='minimal',
         fields='id,sizeEstimate'),
@@ -1530,6 +1621,7 @@ def restore_msg_to_group(gmig, full_message, message_num, sqlconn):
                                                    chunksize=-1,
                                                    resumable=True)
     try:
+        groups_bucket.get("groupsmigration")
         callGAPI(gmig.archive(), 'insert',
                  groupId=options.email, media_body=media,
                  soft_errors=True)
@@ -1637,6 +1729,7 @@ def main(argv):
     if options.batch_size == 0:
       options.batch_size = 100
     page_message = 'Got %%total_items%% Message IDs'
+    gmail_bucket.get("messages.list")
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', page_message=page_message, maxResults=500,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
@@ -1675,6 +1768,7 @@ def main(argv):
           request_size = message_sizes[a_message]
         rewrite_line("backed up %s of %s messages" %
           (backed_up_messages, backup_count))
+      gmail_bucket.get("messages.get")
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='raw',
         fields='id,labelIds,internalDate,raw'),
@@ -1697,6 +1791,7 @@ def main(argv):
     """)
     gbatch = gmail.new_batch_http_request()
     for a_message in messages_to_refresh:
+      gmail_bucket.get("messages.get")
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='minimal',
         fields='id,labelIds'),
@@ -1790,6 +1885,7 @@ def main(argv):
                                                        chunksize=-1,
                                                        resumable=True)
         try:
+          gmail_bucket.get("messages.import")
           response = callGAPI(gmail.users().messages(), 'import_',
             userId='me', throw_reasons=['invalidArgument',], media_body=media, body=body,
             deleted=options.vault, soft_errors=True, neverMarkSpam=True)
@@ -1818,6 +1914,7 @@ def main(argv):
         sqlconn.commit()
         current_batch_bytes = 5000
         largest_in_batch = 0
+      gmail_bucket.get("messages.import")
       gbatch.add(gmail.users().messages().import_(userId='me',
         body=body, fields='id', deleted=options.vault,
         neverMarkSpam=True), callback=restored_message,
@@ -1974,6 +2071,7 @@ def main(argv):
                                                            chunksize=-1,
                                                            resumable=True)
             try:
+              gmail_bucket.get("messages.import")
               response = callGAPI(gmail.users().messages(), 'import_',
                 userId='me', throw_reasons=['invalidArgument',], media_body=media, body=body,
                 deleted=deleted, soft_errors=True, neverMarkSpam=True)
@@ -1998,6 +2096,7 @@ def main(argv):
             sqlconn.commit()
             current_batch_bytes = 5000
             largest_in_batch = 0
+          gmail_bucket.get("messages.import")
           gbatch.add(gmail.users().messages().import_(userId='me',
             body=body, fields='id',
             deleted=deleted, neverMarkSpam=True),
@@ -2119,6 +2218,7 @@ def main(argv):
   elif options.action == 'count':
     if options.batch_size == 0:
       options.batch_size = 100
+    gmail_bucket.get("messages.list")
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', maxResults=500,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
@@ -2131,6 +2231,7 @@ def main(argv):
     if options.batch_size == 0:
       options.batch_size = 1000
     page_message = 'Got %%total_items%% Message IDs'
+    gmail_bucket.get("messages.list")
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', page_message=page_message,
       userId='me', includeSpamTrash=True, q=options.gmail_search,
@@ -2147,6 +2248,7 @@ def main(argv):
       purged_messages += 1
     for purge_chunk in purge_chunks:
       if purge_chunk: # make sure we actually have some IDs
+        gmail_bucket.get("messages.batchDelete")
         callGAPI(gmail.users().messages(), function='batchDelete',
           userId='me', body={'ids': purge_chunk})
         rewrite_line("purged %s of %s messages" % (purged_messages, purge_count))
@@ -2159,6 +2261,7 @@ def main(argv):
     if pattern == '-is:chat':
       pattern = '.*'
     pattern = re.compile(pattern)
+    gmail_bucket.get("labels.list")
     existing_labels = callGAPI(gmail.users().labels(), 'list',
       userId='me', fields='labels(id,name,type)')
     for label_result in existing_labels['labels']:
@@ -2170,6 +2273,7 @@ def main(argv):
       except UnicodeEncodeError:
         printable_name = ''.join(c for c in label_result['name'] if c in safe_chars)
         rewrite_line('Deleting label %s' % printable_name)
+      gmail_bucket.get("labels.delete")
       callGAPI(gmail.users().labels(), 'delete',
         userId='me', id=label_result['id'], soft_errors=True)
     print('\n')
@@ -2177,6 +2281,7 @@ def main(argv):
   # PRINT-LABELS #
   elif options.action == 'print-labels':
     safe_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    gmail_bucket.get("labels.list")
     labels = callGAPI(gmail.users().labels(), 'list',
                                userId='me', fields='labels(id,name,type)')
     all_system_labels = [label for label in labels.get('labels') if label['type'] == 'system']
@@ -2249,6 +2354,7 @@ otaBytesByService,quotaType')
     if options.batch_size == 0:
       options.batch_size = 100
     page_message = 'Got %%total_items%% Message IDs'
+    gmail_bucket.get("messages.list")
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', page_message=page_message,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
