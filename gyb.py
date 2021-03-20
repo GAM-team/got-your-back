@@ -354,8 +354,14 @@ class QuotaBucket:
       my_event.wait()
 
 
+class UnlimitedBucket:
+  def get(self, method):
+    return
+
+
 # bucket names are the first segment of the method ID
 buckets = {
+    "drive": UnlimitedBucket(),
     "gmail": QuotaBucket(250, 0.5, 125),
     "groupsmigration": QuotaBucket(10, 1, 10),
 }
