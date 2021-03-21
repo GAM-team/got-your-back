@@ -67,6 +67,7 @@ import xml.etree.ElementTree as etree
 from urllib.parse import urlencode
 import configparser
 import webbrowser
+import threading
 
 import httplib2
 import google.oauth2.service_account
@@ -245,6 +246,123 @@ where last restore left off.')
     action='help',
     help='Display this message.')
   return parser.parse_args(argv)
+
+# from:
+# https://developers.google.com/gmail/api/reference/quota
+# https://developers.google.com/admin-sdk/groups-migration/v1/reference/archive/insert
+GOOGLEQUOTAS = {
+  "groupsmigration.archive.insert": 1,
+  "gmail.users.labels.create": 5,
+  "gmail.users.labels.delete": 5,
+  "gmail.users.labels.list": 1,
+  "gmail.users.messages.batchDelete": 50,
+  "gmail.users.messages.get": 5,
+  "gmail.users.messages.import": 25,
+  "gmail.users.messages.insert": 25,
+  "gmail.users.messages.list": 5,
+}
+
+
+def getQuota(method):
+  """
+  Blocks until it has obtained enough tokens for the given method.
+
+  Parameters:
+    method (googleapiclient.http.HttpRequest | googleapiclient.http.BatchHttpRequest):
+      a method API request that needs quota prior to sending.
+  """
+  if isinstance(method, googleapiclient.http.BatchHttpRequest):
+    method_ids = [m.methodId for m in method._requests.values()]
+  else:
+    method_ids = [method.methodId]
+
+  for m in method_ids:
+    try:
+      bucket_name = m.split(".")[0]
+      bucket = buckets[bucket_name]
+    except KeyError:
+      # the base API group does not have quota support
+      continue
+    except IndexError:
+      systemErrorExit(1, "empty method ID")
+
+    bucket.get(m)
+
+
+class QuotaBucket:
+  """
+  basic token bucket for Google's rate limiting.
+
+  https://developers.google.com/gmail/api/reference/quota
+  https://developers.google.com/admin-sdk/groups-migration/v1/reference/archive/insert
+  """
+
+  def __init__(self, size, interval, refill_size):
+    """
+    Parameters:
+     size (int): how many total tokens the bucket can hold. It will start with this many.
+     interval (float): How many seconds between refilling the bucket.
+     refill_size (int): How many tokens to add during each refill.
+    """
+    self.size = size
+    self.interval = interval
+    self.refill_size = refill_size
+
+    self.tokens = size
+    self.lock = threading.Lock()
+    self.fill_event = threading.Event()
+
+    self.set_timer()
+
+  def set_timer(self):
+    t = threading.Timer(self.interval, self.fill)
+    t.daemon = True
+    t.start()
+
+  def fill(self):
+    self.set_timer()
+
+    with self.lock:
+      self.tokens = min(self.size, self.tokens + self.refill_size)
+      self.fill_event.set()
+      self.fill_event = threading.Event()
+
+  def get(self, method):
+    """
+    Blocks until it has obtained enough tokens for the given method.
+
+    Parameters:
+      method (str): name of the API method to be called
+    """
+    try:
+      needed = GOOGLEQUOTAS[method]
+    except KeyError:
+      systemErrorExit(1, "missing quota data for method: " + method)
+
+    while True:
+      my_event = None
+
+      with self.lock:
+        self.tokens -= needed
+        if self.tokens >= 0:
+          return
+
+        needed = abs(self.tokens)
+        self.tokens = 0
+        my_event = self.fill_event
+
+      # wait for the next fill to happen
+      my_event.wait()
+
+
+# Bucket names are the first segment of the method ID. Start here if you need
+# to add rate limiting for an API group. Then add methods to the GOOGLEQUOTAS
+# dictionary above.
+buckets = {
+    "gmail": QuotaBucket(250, 0.5, 125),
+    "groupsmigration": QuotaBucket(10, 1, 10),
+}
+
 
 def getProgPath():
   if os.environ.get('STATICX_PROG_PATH', False):
@@ -578,6 +696,9 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reaso
         method = getattr(service, function)(**parameters)
       else:
         method = service
+       
+      getQuota(method)
+
       return method.execute()
     except googleapiclient.errors.MediaUploadSizeError as e:
       sys.stderr.write('\nERROR: %s' % (e))
