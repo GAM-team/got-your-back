@@ -280,10 +280,11 @@ def getQuota(method):
     try:
       bucket_name = m.split(".")[0]
       bucket = buckets[bucket_name]
+    except KeyError:
+      # the base API group does not have quota support
+      continue
     except IndexError:
       systemErrorExit(1, "empty method ID")
-    except KeyError:
-      systemErrorExit(1, "no quota bucket for " + bucket_name)
 
     bucket.get(m)
 
@@ -354,14 +355,10 @@ class QuotaBucket:
       my_event.wait()
 
 
-class UnlimitedBucket:
-  def get(self, method):
-    return
-
-
-# bucket names are the first segment of the method ID
+# Bucket names are the first segment of the method ID. Start here if you need
+# to add rate limiting for an API group. Then add methods to the GOOGLEQUOTAS
+# dictionary above.
 buckets = {
-    "drive": UnlimitedBucket(),
     "gmail": QuotaBucket(250, 0.5, 125),
     "groupsmigration": QuotaBucket(10, 1, 10),
 }
