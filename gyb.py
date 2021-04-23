@@ -645,7 +645,12 @@ def buildGAPIObject(api, httpc=None):
     extra_args.update(dict(config.items('extra-args')))
   version = getAPIVer(api)
   try:
-    return googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
+    return googleapiclient.discovery.build(
+            api,
+            version,
+            http=httpc,
+            cache_discovery=False,
+            static_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
     disc_file = os.path.join(getProgPath(), '%s-%s.json' % (api, version))
     if os.path.isfile(disc_file):
@@ -676,7 +681,12 @@ def buildGAPIServiceObject(api, soft_errors=False):
   credentials.refresh(request)
   version = getAPIVer(api)
   try:
-    service = googleapiclient.discovery.build(api, version, http=httpc, cache_discovery=False)
+    service = googleapiclient.discovery.build(
+            api,
+            version,
+            http=httpc,
+            cache_discovery=False,
+            static_discovery=False)
     service._http = google_auth_httplib2.AuthorizedHttp(credentials, http=httpc)
     return service
   except (httplib2.ServerNotFoundError, RuntimeError) as e:
@@ -866,9 +876,13 @@ def getCRMService(login_hint):
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
   credentials = _run_oauth_flow(client_id, client_secret, scope, 'online', login_hint)
   httpc = google_auth_httplib2.AuthorizedHttp(credentials)
-  crm = googleapiclient.discovery.build('cloudresourcemanager', 'v1',
-      http=httpc, cache_discovery=False,
-      discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
+  crm = googleapiclient.discovery.build(
+          'cloudresourcemanager',
+          'v1',
+          http=httpc,
+          cache_discovery=False,
+          static_discovery=False,
+          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   return (crm, httpc)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
@@ -881,8 +895,12 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
-  serveu = googleapiclient.discovery.build('serviceusage', 'v1',
-          http=httpc, cache_discovery=False,
+  serveu = googleapiclient.discovery.build(
+          'serviceusage',
+          'v1',
+          http=httpc,
+          cache_discovery=False,
+          static_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   if checkEnabled:
     enabledServices = callGAPIpages(serveu.services(), 'list', 'services',
@@ -1145,8 +1163,12 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       sys.exit(2)
     break
   enableProjectAPIs(project_id, False, httpc)
-  iam = googleapiclient.discovery.build('iam', 'v1', http=httpc,
+  iam = googleapiclient.discovery.build(
+          'iam',
+          'v1',
+          http=httpc,
           cache_discovery=False,
+          static_discovery=False,
           discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
   print('Creating Service Account')
   sa_body = {

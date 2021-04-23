@@ -1,5 +1,5 @@
-httplib2>=0.13.0
-google-api-python-client>=1.7.10
-google-auth
+httplib2>=0.17.0
+google-api-python-client>=2.0
+google-auth>=1.11.2
 google-auth-httplib2
 google-auth-oauthlib>=0.4.1
