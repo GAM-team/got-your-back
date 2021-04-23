@@ -1220,7 +1220,7 @@ def doCheckServiceAccount():
   all_scopes.sort()
   all_scopes_pass = True
   client_id = getSvcAccountClientId()
-  oa2 = googleapiclient.discovery.build('oauth2', 'v2', _createHttpObj())
+  oa2 = buildGAPIObject('oauth2', httpc=_createHttpObj())
   for scope in all_scopes:
     try:
       credentials = getSvcAcctCredentials([scope, 'https://www.googleapis.com/auth/userinfo.email'], options.email)
