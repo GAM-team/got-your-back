@@ -28,7 +28,7 @@ upgrade_only=false
 gybversion="latest"
 adminuser=""
 regularuser=""
-glibc_vers="2.27 2.23 2.19 2.15"
+glibc_vers="2.31 2.27 2.23"
 
 while getopts "hd:a:o:b:lp:u:r:v:" OPTION
 do
