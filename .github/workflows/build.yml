@@ -11,12 +11,12 @@ defaults:
     shell: bash
 
 env:
-  BUILD_PYTHON_VERSION: "3.9.1"
-  MIN_PYTHON_VERSION: "3.9.1"
-  BUILD_OPENSSL_VERSION: "1.1.1j"
-  MIN_OPENSSL_VERSION: "1.1.1g"
+  BUILD_PYTHON_VERSION: "3.9.4"
+  MIN_PYTHON_VERSION: "3.9.4"
+  BUILD_OPENSSL_VERSION: "1.1.1k"
+  MIN_OPENSSL_VERSION: "1.1.1k"
   PATCHELF_VERSION: "0.12"
-  PYINSTALLER_VERSION: "4.2"
+  PYINSTALLER_VERSION: "4.3"
 
 jobs:
   build:
@@ -39,56 +39,46 @@ jobs:
             goal: "build"
             gybos: "linux"
             platform: "x86_64"
-#          - os: [self-hosted, linux, ARM]
-#            jid: 10
-#            goal: "build"
-#            gybos: "linux"
-#            platform: "arm"
-#          - os: [self-hosted, linux, ARM64]
-#            jid: 11
-#            goal: "build"
-#            gybos: "linux"
-#            platform: "arm64"
           - os: macos-10.15
             jid: 4
             goal: "build"
             gybos: "macos"
             platform: "x86_64"
-#          - os: macos-11.0
-#            jid: 12
-#            goal: "build"
-#            gybos: "macos"
-#            platform: "universal2"
-          - os: windows-2019
-            jid: 5
+          - os: macos-11.0
+            jid: 5 
             goal: "build"
-            gybos: "windows"
-            python: 3.9.1
-            pyarch: "x64" 
-            platform: "x86_64"
+            gybos: "macos"
+            platform: "universal2"
           - os: windows-2019
             jid: 6
             goal: "build"
             gybos: "windows"
+            python: 3.9.4
+            pyarch: "x64" 
+            platform: "x86_64"
+          - os: windows-2019
+            jid: 7
+            goal: "build"
+            gybos: "windows"
             platform: "x86"
-            python: 3.9.1
+            python: 3.9.4
             pyarch: "x86"
           - os: ubuntu-20.04
             goal: "test"
             python: "3.6"
-            jid: 7
-            gybos: "linux"
-            platform: "x86_64"
-          - os: ubuntu-20.04
-            goal: "test"
-            python: "3.7"
             jid: 8
             gybos: "linux"
             platform: "x86_64"
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.8"
+            python: "3.7"
             jid: 9
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.8"
+            jid: 10
             gybos: "linux"
             platform: "x86_64"
 
@@ -106,7 +96,7 @@ jobs:
           path: |
             ~/python
             ~/ssl
-          key: ${{ matrix.os }}-${{ matrix.jid }}-20210217
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20210423
 
       - name: Set env variables
         env:
