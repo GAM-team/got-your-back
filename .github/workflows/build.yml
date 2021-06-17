@@ -16,7 +16,7 @@ env:
   BUILD_OPENSSL_VERSION: "1.1.1k"
   MIN_OPENSSL_VERSION: "1.1.1i"
   PATCHELF_VERSION: "0.12"
-  PYINSTALLER_VERSION: "4.3"
+  PYINSTALLER_VERSION: "000275e409640320cdd995a7f077abfdece86749"
 
 jobs:
   build:
@@ -141,18 +141,23 @@ jobs:
              echo "pip=$pip" >> $GITHUB_ENV
              echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
              echo -e "Python: $python\nPip: $pip\nLD_LIB...: $LD_LIBRARY_PATH"
-             export url="https://codeload.github.com/pyinstaller/pyinstaller/tar.gz/v${PYINSTALLER_VERSION}"
+             export url="https://codeload.github.com/pyinstaller/pyinstaller/tar.gz/${PYINSTALLER_VERSION}"
              echo "Downloading ${url}"
              curl -o pyinstaller.tar.gz --compressed "${url}"
              tar xf pyinstaller.tar.gz
-             cd "pyinstaller-${PYINSTALLER_VERSION}/bootloader"
-             if [ "${PLATFORM}" == "x86" ]; then
-               BITS="32"
-             else
-               BITS="64"
+             cd "pyinstaller-${PYINSTALLER_VERSION}/"
+             if [ $GYBOS == "windows" ]; then
+               # remove pre-compiled bootloaders so we fail if bootloader compile fails
+               rm -rf PyInstaller/bootloader/*bit
+               cd bootloader
+               if [ "${PLATFORM}" == "x86" ]; then
+                 TARGETARCH="--target-arch=32bit"
+               else
+                 TARGETARCH=""
+               fi
+               $python ./waf all $TARGETARCH
+               cd ..
              fi
-             $python ./waf all --target-arch=${BITS}bit
-             cd ..
              $python setup.py install
              #$pip install pyinstaller
 
