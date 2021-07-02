@@ -11,12 +11,12 @@ defaults:
     shell: bash
 
 env:
-  BUILD_PYTHON_VERSION: "3.9.4"
-  MIN_PYTHON_VERSION: "3.9.4"
+  BUILD_PYTHON_VERSION: "3.9.6"
+  MIN_PYTHON_VERSION: "3.9.6"
   BUILD_OPENSSL_VERSION: "1.1.1k"
   MIN_OPENSSL_VERSION: "1.1.1i"
   PATCHELF_VERSION: "0.12"
-  PYINSTALLER_VERSION: "000275e409640320cdd995a7f077abfdece86749"
+  PYINSTALLER_VERSION: "0f2b2e921433ab5a510c7efdb21d9c1d7cfbc645"
 
 jobs:
   build:
@@ -53,7 +53,7 @@ jobs:
             jid: 6
             goal: "build"
             gybos: "windows"
-            python: 3.9.4
+            python: 3.9.6
             pyarch: "x64" 
             platform: "x86_64"
           - os: windows-2019
@@ -61,7 +61,7 @@ jobs:
             goal: "build"
             gybos: "windows"
             platform: "x86"
-            python: 3.9.4
+            python: 3.9.6
             pyarch: "x86"
           - os: ubuntu-20.04
             goal: "test"
