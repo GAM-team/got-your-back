@@ -24,11 +24,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-16.04
-            jid: 1
-            goal: "build"
-            gybos: "linux"
-            platform: "x86_64"
           - os: ubuntu-18.04
             jid: 2
             goal: "build"
