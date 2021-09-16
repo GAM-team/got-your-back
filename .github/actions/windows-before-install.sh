@@ -13,8 +13,8 @@ echo "This is a ${BITS}-bit build for ${PLATFORM}"
 export mypath=$(pwd)
 cd ~
 
-export python="python"
-export pip="pip"
+export python="/c/python/python.exe"
+export pip="/c/python/Scripts/pip.exe"
 
 # Python
 #echo "Installing Python..."
