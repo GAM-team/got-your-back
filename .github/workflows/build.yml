@@ -154,8 +154,7 @@ jobs:
                $python ./waf all $TARGETARCH
                cd ..
              fi
-             $python setup.py install
-             #$pip install pyinstaller
+             $pip install .
 
       - name: Install pip requirements
         if: matrix.os != 'self-hosted'
