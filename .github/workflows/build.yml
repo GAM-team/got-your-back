@@ -34,11 +34,6 @@ jobs:
             goal: "build"
             gybos: "linux"
             platform: "x86_64"
-          - os: macos-10.15
-            jid: 4
-            goal: "build"
-            gybos: "macos"
-            platform: "x86_64"
           - os: macos-11.0
             jid: 5 
             goal: "build"
