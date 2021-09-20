@@ -72,7 +72,7 @@ class fmbox():
   def __init__(self, path):
     try:
       self._mbox_size = os.stat(path).st_size
-      self._file = open(path, 'rb+')
+      self._file = open(path, 'rb')
     except IOError:
       raise NoSuchMailboxError(path)
     self._mbox_position = self._file.tell()
