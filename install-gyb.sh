@@ -122,7 +122,7 @@ case $myos in
       this_macos_ver=$osversion
     fi
     echo_green "You are running MacOS $this_macos_ver"
-    gybfile="macos-x86_64.tar.xz"
+    gybfile="macos-universal2-MacOS11.6.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
