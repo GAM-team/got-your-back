@@ -155,7 +155,7 @@ jobs:
              tar xf pyinstaller.tar.gz
              cd "pyinstaller-${PYINSTALLER_VERSION}/"
              # remove pre-compiled bootloaders so we fail if bootloader compile fails
-             rm -rf PyInstaller/bootloader/*
+             rm -rf PyInstaller/bootloader/!(images)
              cd bootloader
              if [ "${PLATFORM}" == "x86" ]; then
                TARGETARCH="--target-arch=32bit"
