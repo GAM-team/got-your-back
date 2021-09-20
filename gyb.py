@@ -1698,9 +1698,9 @@ def main(argv):
     print(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
     headers = {'User-Agent': getGYBVersion(' | ')}
-    anonhttpc.request('https://www.googleapis.com', headers=headers)
-    cipher_name, tls_ver, _ = anonhttpc.connections['https:www.googleapis.com'].sock.cipher()
-    print('www.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
+    anonhttpc.request('https://gmail.googleapis.com', headers=headers)
+    cipher_name, tls_ver, _ = anonhttpc.connections['https:gmail.googleapis.com'].sock.cipher()
+    print('gmail.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
