@@ -156,7 +156,7 @@ uploaded messages with a gyb-restored label.',
                       dest='label_prefix',
                       help='Optional: On restore, all labels will additionally receive \
   this prefix label. For example, "--label-prefix gyb-archive" will become main label of all \
-  uploaded labels with a gyb-prefix label. \
+  uploaded labels with a gyb-archive label. \
   ATTENTION - This is not compatible with --label-strip \
   ATTENTION - this will also create one INBOX and SENT specific label',
                       default=[])
