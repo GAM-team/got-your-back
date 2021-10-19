@@ -94,7 +94,7 @@ else
       cd patchelf-$PATCHELF_VERSION
       ./configure
       make
-      sudo make install
+      sudo LD_LIBRARY_PATH=/usr/local/lib make install
     fi
     $pip install staticx
   fi

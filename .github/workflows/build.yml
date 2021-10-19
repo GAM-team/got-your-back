@@ -80,8 +80,7 @@ jobs:
         if: matrix.goal != 'test'
         with:
           path: |
-            ~/python
-            ~/ssl
+            /usr/local
           key: ${{ matrix.os }}-${{ matrix.jid }}-20211020
 
       - name: Set env variables
