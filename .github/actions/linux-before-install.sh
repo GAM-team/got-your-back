@@ -78,7 +78,7 @@ else
       echo "Sticking with safe Python for now..."
     fi
     echo "Installing Python..."
-    make install > /dev/null
+    sudo make install > /dev/null
     cd ~
   fi
 
