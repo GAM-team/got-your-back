@@ -11,12 +11,12 @@ defaults:
     shell: bash
 
 env:
-  BUILD_PYTHON_VERSION: "3.9.7"
-  MIN_PYTHON_VERSION: "3.9.7"
+  BUILD_PYTHON_VERSION: "3.10.0"
+  MIN_PYTHON_VERSION: "3.10.0"
   BUILD_OPENSSL_VERSION: "1.1.1l"
   MIN_OPENSSL_VERSION: "1.1.1l"
   PATCHELF_VERSION: "0.12"
-  PYINSTALLER_VERSION: "5a02f55c696f16b98f23a8b487f3daa8f644a8d2"
+  PYINSTALLER_VERSION: "d53be0c8c9c961952ea1a08646d29fc920f12537"
 
 jobs:
   build:
@@ -51,12 +51,6 @@ jobs:
             platform: "x86"
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.6"
-            jid: 8
-            gybos: "linux"
-            platform: "x86_64"
-          - os: ubuntu-20.04
-            goal: "test"
             python: "3.7"
             jid: 9
             gybos: "linux"
@@ -65,6 +59,12 @@ jobs:
             goal: "test"
             python: "3.8"
             jid: 10
+            gybos: "linux"
+            platform: "x86_64"
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.9"
+            jid: 11
             gybos: "linux"
             platform: "x86_64"
 
@@ -82,7 +82,7 @@ jobs:
           path: |
             ~/python
             ~/ssl
-          key: ${{ matrix.os }}-${{ matrix.jid }}-20210723
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20211019
 
       - name: Set env variables
         env:
