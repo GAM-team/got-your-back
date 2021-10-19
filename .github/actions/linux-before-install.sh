@@ -82,8 +82,8 @@ else
     cd ~
   fi
 
-  python=~python3
-  pip=~pip3
+  python=/usr/local/bin/python3
+  pip=/usr/local/bin/pip3
 
   if ([ "${TRAVIS_DIST}" == "bionic" ]) && [ "${PLATFORM}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
