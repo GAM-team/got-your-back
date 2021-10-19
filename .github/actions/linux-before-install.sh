@@ -6,7 +6,6 @@ if [[ "$TRAVIS_JOB_NAME" == *"Testing" ]]; then
 else
   export whereibelong=$(pwd)
   echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
-  export LD_LIBRARY_PATH=~/ssl/lib:~/python/lib
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
   SSLVER=$(~/ssl/bin/openssl version)
@@ -28,10 +27,6 @@ else
       echo "pyver not equal to..."
     fi
     cd ~
-    rm -rf ssl
-    rm -rf python
-    mkdir ssl
-    mkdir python
     echo "RUNNING: apt update..."
     sudo apt-get -qq --yes update > /dev/null
     echo "RUNNING: apt dist-upgrade..."
@@ -47,16 +42,16 @@ else
     sudo apt-get -qq --yes build-dep python3 > /dev/null
 
     # Compile latest OpenSSL
-    wget --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
+    curl -O -L --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
     echo "Extracting OpenSSL..."
     tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
     cd openssl-$BUILD_OPENSSL_VERSION
     echo "Compiling OpenSSL $BUILD_OPENSSL_VERSION..."
-    ./config shared --prefix=$HOME/ssl
+    ./config shared
     echo "Running make for OpenSSL..."
     make -j$cpucount -s
     echo "Running make install for OpenSSL..."
-    make install > /dev/null
+    sudo make install > /dev/null
     cd ~
 
     # Compile latest Python
@@ -66,13 +61,13 @@ else
     tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
     cd Python-$BUILD_PYTHON_VERSION
     echo "Compiling Python $BUILD_PYTHON_VERSION..."
-    safe_flags="--with-openssl=$HOME/ssl --enable-shared --prefix=$HOME/python --with-ensurepip=upgrade"
+    safe_flags="--enable-shared --with-ensurepip=upgrade"
     unsafe_flags="--enable-optimizations --with-lto"
     if [ ! -e Makefile ]; then
       echo "running configure with safe and unsafe"
       ./configure $safe_flags $unsafe_flags > /dev/null
     fi
-    make -j$cpucount PROFILE_TASK="-m test.regrtest --pgo -j$(( $cpucount * 2 ))" -s
+    make -j$cpucount
     RESULT=$?
     echo "First make exited with $RESULT"
     if [ $RESULT != 0 ]; then
@@ -87,8 +82,8 @@ else
     cd ~
   fi
 
-  python=~/python/bin/python3
-  pip=~/python/bin/pip3
+  python=~python3
+  pip=~pip3
 
   if ([ "${TRAVIS_DIST}" == "bionic" ]) && [ "${PLATFORM}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
