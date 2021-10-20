@@ -34,15 +34,10 @@ else
     echo "Installing build tools..."
     sudo apt-get -qq --yes install build-essential
     echo "Installing deps for python3"
-    sudo cp -v /etc/apt/sources.list /tmp
-    sudo chmod a+rwx /tmp/sources.list
-    echo "deb-src http://archive.ubuntu.com/ubuntu/ $TRAVIS_DIST main" >> /tmp/sources.list
-    sudo cp -v /tmp/sources.list /etc/apt
-    sudo apt-get -qq --yes update > /dev/null
     sudo apt-get -qq --yes build-dep python3 > /dev/null
 
     # Compile latest OpenSSL
-    curl -O -L --quiet https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
+    curl -O -L https://www.openssl.org/source/openssl-$BUILD_OPENSSL_VERSION.tar.gz
     echo "Extracting OpenSSL..."
     tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
     cd openssl-$BUILD_OPENSSL_VERSION
