@@ -84,6 +84,7 @@ else
 
   python=/usr/local/bin/python3
   pip=/usr/local/bin/pip3
+  export LD_LIBRARY_PATH=/usr/local/lib
 
   if ([ "${TRAVIS_DIST}" == "bionic" ]) && [ "${PLATFORM}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
