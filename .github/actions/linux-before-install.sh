@@ -8,7 +8,7 @@ else
   export openssl=/usr/local/bin/openssl
   export python=/usr/local/bin/python3
   export pip=/usr/local/bin/pip3
-  export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
+  export LD_LIBRARY_PATH=/usr/local/lib
   echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
@@ -46,7 +46,7 @@ else
     tar xf openssl-$BUILD_OPENSSL_VERSION.tar.gz
     cd openssl-$BUILD_OPENSSL_VERSION
     echo "Compiling OpenSSL $BUILD_OPENSSL_VERSION..."
-    ./config shared
+    ./Configure --libdir=lib
     echo "Running make for OpenSSL..."
     make -j$cpucount -s
     echo "Running make install for OpenSSL..."
@@ -61,7 +61,7 @@ else
     tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
     cd Python-$BUILD_PYTHON_VERSION
     echo "Compiling Python $BUILD_PYTHON_VERSION..."
-    safe_flags="--enable-shared --with-ensurepip=upgrade --with-openssl=/usr/local --with-openssl-rpath=/usr/local/lib64"
+    safe_flags="--enable-shared --with-ensurepip=upgrade --with-openssl=/usr/local --with-openssl-rpath=/usr/local/lib"
     unsafe_flags="--enable-optimizations --with-lto"
     if [ ! -e Makefile ]; then
       echo "running configure with safe and unsafe"
@@ -83,7 +83,7 @@ else
     $python -V
   fi
 
-  if ([ "${TRAVIS_DIST}" == "bionic" ]) && [ "${PLATFORM}" == "x86_64" ]; then
+  if ([ "${ImageOS}" == "ubuntu20" ]) && [ "${HOSTTYPE}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
     if [ ! -d patchelf-$PATCHELF_VERSION ]; then
       echo "Downloading PatchELF $PATCHELF_VERSION"
