@@ -8,9 +8,9 @@ else
   echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
-  SSLVER=$(~/ssl/bin/openssl version)
+  SSLVER=$(/usr/local/bin/openssl version)
   SSLRESULT=$?
-  PYVER=$(~/python/bin/python3 -V)
+  PYVER=$(/usr/local/bin/python3 -V)
   PYRESULT=$?
   if [ $SSLRESULT -ne 0 ] || [[ "$SSLVER" != "OpenSSL $BUILD_OPENSSL_VERSION "* ]] || [ $PYRESULT -ne 0 ] || [[ "$PYVER" != "Python $BUILD_PYTHON_VERSION"* ]]; then
     echo "SSL Result: $SSLRESULT - SSL Ver: $SSLVER - Py Result: $PYRESULT - Py Ver: $PYVER"
@@ -48,7 +48,8 @@ else
     echo "Running make install for OpenSSL..."
     sudo make install > /dev/null
     cd ~
-
+    /usr/local/bin/openssl version
+    
     # Compile latest Python
     echo "Downloading Python $BUILD_PYTHON_VERSION..."
     curl -O https://www.python.org/ftp/python/$BUILD_PYTHON_VERSION/Python-$BUILD_PYTHON_VERSION.tar.xz
@@ -75,6 +76,7 @@ else
     echo "Installing Python..."
     sudo make install > /dev/null
     cd ~
+    /usr/local/bin/python3 -V
   fi
 
   python=/usr/local/bin/python3
