@@ -33,8 +33,8 @@ else
     cd ~
     echo "RUNNING: apt update..."
     sudo apt-get -qq --yes update > /dev/null
-    echo "RUNNING: apt dist-upgrade..."
-    sudo apt-get -qq --yes dist-upgrade > /dev/null
+    #echo "RUNNING: apt dist-upgrade..."
+    #sudo apt-get -qq --yes dist-upgrade > /dev/null
     echo "Installing build tools..."
     sudo apt-get -qq --yes install build-essential
     echo "Installing deps for python3"
@@ -61,7 +61,7 @@ else
     tar xf Python-$BUILD_PYTHON_VERSION.tar.xz
     cd Python-$BUILD_PYTHON_VERSION
     echo "Compiling Python $BUILD_PYTHON_VERSION..."
-    safe_flags="--enable-shared --with-ensurepip=upgrade"
+    safe_flags="--enable-shared --with-ensurepip=upgrade --with-openssl=/usr/local --with-openssl-rpath=/usr/local/lib64"
     unsafe_flags="--enable-optimizations --with-lto"
     if [ ! -e Makefile ]; then
       echo "running configure with safe and unsafe"
