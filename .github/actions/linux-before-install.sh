@@ -52,7 +52,6 @@ else
     echo "Running make install for OpenSSL..."
     sudo make install > /dev/null
     cd ~
-    ls -alRF /usr/local
     $openssl version
     
     # Compile latest Python
@@ -66,7 +65,7 @@ else
     unsafe_flags="--enable-optimizations --with-lto"
     if [ ! -e Makefile ]; then
       echo "running configure with safe and unsafe"
-      ./configure $safe_flags $unsafe_flags > /dev/null
+      ./configure $safe_flags $unsafe_flags
     fi
     make -j$cpucount
     RESULT=$?
