@@ -5,12 +5,16 @@ if [[ "$TRAVIS_JOB_NAME" == *"Testing" ]]; then
   echo "running tests with this version"
 else
   export whereibelong=$(pwd)
+  export openssl=/usr/local/bin/openssl
+  export python=/usr/local/bin/python3
+  export pip=/usr/local/bin/pip3
+  export LD_LIBRARY_PATH=/usr/local/lib
   echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
-  SSLVER=$(/usr/local/bin/openssl version)
+  SSLVER=$($openssl version)
   SSLRESULT=$?
-  PYVER=$(/usr/local/bin/python3 -V)
+  PYVER=$($python -V)
   PYRESULT=$?
   if [ $SSLRESULT -ne 0 ] || [[ "$SSLVER" != "OpenSSL $BUILD_OPENSSL_VERSION "* ]] || [ $PYRESULT -ne 0 ] || [[ "$PYVER" != "Python $BUILD_PYTHON_VERSION"* ]]; then
     echo "SSL Result: $SSLRESULT - SSL Ver: $SSLVER - Py Result: $PYRESULT - Py Ver: $PYVER"
@@ -48,7 +52,7 @@ else
     echo "Running make install for OpenSSL..."
     sudo make install > /dev/null
     cd ~
-    /usr/local/bin/openssl version
+    $openssl version
     
     # Compile latest Python
     echo "Downloading Python $BUILD_PYTHON_VERSION..."
@@ -76,12 +80,8 @@ else
     echo "Installing Python..."
     sudo make install > /dev/null
     cd ~
-    /usr/local/bin/python3 -V
+    $python -V
   fi
-
-  python=/usr/local/bin/python3
-  pip=/usr/local/bin/pip3
-  export LD_LIBRARY_PATH=/usr/local/lib
 
   if ([ "${TRAVIS_DIST}" == "bionic" ]) && [ "${PLATFORM}" == "x86_64" ]; then
     echo "Installing deps for StaticX..."
@@ -92,7 +92,7 @@ else
       cd patchelf-$PATCHELF_VERSION
       ./configure
       make
-      sudo LD_LIBRARY_PATH=/usr/local/lib make install
+      sudo make install
     fi
     $pip install staticx
   fi
