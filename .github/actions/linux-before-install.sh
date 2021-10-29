@@ -8,7 +8,7 @@ else
   export openssl=/usr/local/bin/openssl
   export python=/usr/local/bin/python3
   export pip=/usr/local/bin/pip3
-  export LD_LIBRARY_PATH=/usr/local/lib
+  export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64
   echo "We are running on Ubuntu $TRAVIS_DIST $PLATFORM"
   cpucount=$(nproc --all)
   echo "This device has $cpucount CPUs for compiling..."
@@ -52,6 +52,7 @@ else
     echo "Running make install for OpenSSL..."
     sudo make install > /dev/null
     cd ~
+    ls -alRF /usr/local
     $openssl version
     
     # Compile latest Python
