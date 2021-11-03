@@ -1234,6 +1234,7 @@ def getSvcAccountClientId():
     systemErrorExit(6, 'oauth2service.json is invalid.')
 
 def doCheckServiceAccount():
+  print(f'Checking service account DwD for {options.email}...')
   all_scopes = []
   for _, scopes in API_SCOPE_MAPPING.items():
     for scope in scopes:
