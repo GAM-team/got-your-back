@@ -11,8 +11,8 @@ defaults:
     shell: bash
 
 env:
-  PYTHON_VERSION: "3.10.0"
-  OPENSSL_VERSION: "3.0.0"
+  PYTHON_VERSION: "v3.10.0"
+  OPENSSL_VERSION: "opensl-3.0"
 
 jobs:
   build:
