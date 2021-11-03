@@ -21,28 +21,28 @@ jobs:
       matrix:
         include:
           - os: ubuntu-20.04
-            jid: 0
-          - os: macos-10.15
             jid: 1
-          - os: windows-latest
+          - os: macos-10.15
             jid: 2
+          - os: windows-latest
+            jid: 3
             python: "3.9" # needed for build
           - os: ubuntu-20.04
             goal: "test"
             python: "3.6"
-            jid: 3
-          - os: ubuntu-20.04
-            goal: "test"
-            python: "3.7"
             jid: 4
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.8"
+            python: "3.7"
             jid: 5
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.9"
+            python: "3.8"
             jid: 6
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.9"
+            jid: 7
 
     steps:
 
