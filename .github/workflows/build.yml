@@ -276,6 +276,7 @@ jobs:
              if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
              else
+               brew install coreutils
                realpath=grealpath
              fi
              echo "gybpath=$(${realpath} ./gyb/)" >> $GITHUB_ENV
