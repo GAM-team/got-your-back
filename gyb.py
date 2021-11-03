@@ -115,7 +115,7 @@ google_auth_httplib2.AuthorizedHttp.request = _request_with_user_agent(
 def SetupOptionParser(argv):
   tls_choices = []
   if getattr(ssl, 'TLSVersion', False):
-    tls_min_default = 'TLSv1_2'
+    tls_min_default = 'TLSv1_3'
     tls_vals = list(ssl.TLSVersion)[1:-1]
     tls_choices = []
     for val in tls_vals:
