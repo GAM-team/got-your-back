@@ -298,6 +298,7 @@ jobs:
              export vline=$($gyb --version | grep "Python ")
              export python_line=($vline)
              export this_python=${python_line[1]}
+             $pip install packaging
              $python tools/a_atleast_b.py "${this_python}" "${PYTHON_VERSION}"
              export vline=$($gyb --version | grep "OpenSSL ")
              export openssl_line=($vline)
