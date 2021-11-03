@@ -273,7 +273,7 @@ jobs:
         if: matrix.goal != 'test'
         run: |
              $pyinstaller --clean --noupx --strip --onefile --distpath=gyb gyb.spec
-             if ! [ -x "$(command -v realpath)" ]; then
+             if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
              else
                realpath=grealpath
