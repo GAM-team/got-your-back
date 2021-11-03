@@ -11,12 +11,8 @@ defaults:
     shell: bash
 
 env:
-  BUILD_PYTHON_VERSION: "3.10.0"
-  MIN_PYTHON_VERSION: "3.10.0"
-  BUILD_OPENSSL_VERSION: "3.0.0"
-  MIN_OPENSSL_VERSION: "1.1.1l"
-  PATCHELF_VERSION: "0.13"
-  PYINSTALLER_VERSION: "6eae2c7cf93a968ddc054339e0cb3063f90d0e64"
+  PYTHON_VERSION: "3.10.0"
+  OPENSSL_VERSION: "3.0.0"
 
 jobs:
   build:
@@ -24,49 +20,29 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-18.04
-            jid: 2
-            goal: "build"
-            gybos: "linux"
-            platform: "x86_64"
           - os: ubuntu-20.04
+            jid: 0
+          - os: macos-10.15
+            jid: 1
+          - os: windows-latest
+            jid: 2
+            python: "3.9" # needed for build
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.6"
             jid: 3
-            goal: "build"
-            gybos: "linux"
-            platform: "x86_64"
-          - os: macos-11.0
-            jid: 5 
-            goal: "build"
-            gybos: "macos"
-            platform: "universal2"
-          - os: windows-2019
-            jid: 6
-            goal: "build"
-            gybos: "windows"
-            platform: "x86_64"
-          - os: windows-2019
-            jid: 7
-            goal: "build"
-            gybos: "windows"
-            platform: "x86"
           - os: ubuntu-20.04
             goal: "test"
             python: "3.7"
-            jid: 9
-            gybos: "linux"
-            platform: "x86_64"
+            jid: 4
           - os: ubuntu-20.04
             goal: "test"
             python: "3.8"
-            jid: 10
-            gybos: "linux"
-            platform: "x86_64"
+            jid: 5
           - os: ubuntu-20.04
             goal: "test"
             python: "3.9"
-            jid: 11
-            gybos: "linux"
-            platform: "x86_64"
+            jid: 6
 
     steps:
 
@@ -80,48 +56,17 @@ jobs:
         if: matrix.goal != 'test'
         with:
           path: |
-            /usr/local
-          key: ${{ matrix.os }}-${{ matrix.jid }}-20211020
+            ~/ssl
+            ~/openssl
+            ~/python
+            ~/cpython
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20211103
 
-      - name: Set env variables
-        env:
-          GYBOS: ${{ matrix.gybos }}
-          GOAL: ${{ matrix.goal }}
-          JID: ${{ matrix.jid }}
-          PLATFORM: ${{ matrix.platform }}
-        run: |
-          echo "GYBOS=${GYBOS}" >> $GITHUB_ENV
-          echo "GOAL=${GOAL}" >> $GITHUB_ENV
-          echo "JID=${JID}" >> $GITHUB_ENV
-          echo "PLATFORM=${PLATFORM}" >> $GITHUB_ENV
-          uname -a
-
-      - name: Use pre-compiled Python for testing
+      - name: Use pre-compiled Python
         if: matrix.python != ''
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-          architecture: ${{ matrix.pyarch }}
-
-      - name: Install Python on Windows
-        if: matrix.os == 'windows-2019'
-        run: |
-          if ( ${Env:PLATFORM} -eq "x86_64" )
-          {
-            Set-Variable -name py_arch -value "-amd64"
-          }
-          else
-          {
-            Set-Variable -name py_arch -value ""
-          }
-          Write-Output "py_arch: $py_arch"
-          Set-Variable -name python_file -value "python-${Env:BUILD_PYTHON_VERSION}${py_arch}.exe"
-          Write-Output "python_file: $python_file"
-          Set-Variable -name python_url -value "https://www.python.org/ftp/python/${Env:BUILD_PYTHON_VERSION}/${python_file}"
-          Write-Output "python_url: $python_url"
-          Invoke-WebRequest -Uri $python_url -OutFile $python_file
-          Start-Process -wait -FilePath $python_file -ArgumentList "/quiet","InstallAllUsers=0","TargetDir=c:\\python","AssociateFiles=1","PrependPath=1"
-        shell: pwsh
 
       - name: Set env variables for pre-compiled Python
         if: matrix.goal == 'test'
@@ -136,39 +81,183 @@ jobs:
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo "gybpath=${gybpath}" >> $GITHUB_ENV
 
-      - name: Build and install Python, OpenSSL and PyInstaller
-        if: matrix.goal != 'test' && steps.cache-primes.outputs.cache-hit != 'true'
+      - name: Bash Env Variables
+        if: matrix.goal != 'test'
         run: |
-             set +e
-             source .github/actions/${GYBOS}-before-install.sh
-             echo "PATH=$PATH" >> $GITHUB_ENV # keep gnutools for MacOS
-             echo "python=$python" >> $GITHUB_ENV
-             echo "pip=$pip" >> $GITHUB_ENV
-             echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
-             echo -e "Python: $python\nPip: $pip\nLD_LIB...: $LD_LIBRARY_PATH"
-             $pip install --upgrade pip
-             $pip install wheel
-             export url="https://codeload.github.com/pyinstaller/pyinstaller/tar.gz/${PYINSTALLER_VERSION}"
-             echo "Downloading ${url}"
-             curl -o pyinstaller.tar.gz --compressed "${url}"
-             tar xf pyinstaller.tar.gz
-             cd "pyinstaller-${PYINSTALLER_VERSION}/"
-             # remove pre-compiled bootloaders so we fail if bootloader compile fails
-             mv PyInstaller/bootloader/images /tmp
-             rm -rf PyInstaller/bootloader/*
-             mv /tmp/images PyInstaller/bootloader/
-             cd bootloader
-             if [ "${PLATFORM}" == "x86" ]; then
-               TARGETARCH="--target-arch=32bit"
-             else
-               TARGETARCH=""
-             fi
-             $python ./waf all $TARGETARCH
-             cd ..
-             $pip install .
+          cd "${HOME}"
+          mkdir -p ssl
+          mkdir -p python
+          OPENSSL_INSTALL_DIR="${HOME}/ssl"
+          OPENSSL_SOURCE_DIR="${HOME}/openssl"
+          PYTHON_INSTALL_DIR="${HOME}/python"
+          PYTHON_SOURCE_DIR="${HOME}/cpython"
+          echo "OPENSSL_SOURCE_DIR=${OPENSSL_SOURCE_DIR}" >> $GITHUB_ENV
+          echo "OPENSSL_INSTALL_DIR=${OPENSSL_INSTALL_DIR}" >> $GITHUB_ENV
+          echo "PYTHON_SOURCE_DIR=${PYTHON_SOURCE_DIR}" >> $GITHUB_ENV
+          echo "PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_DIR}/lib:${PYTHON_INSTALL_DIR}/lib" >> $GITHUB_ENV
+          echo "python=${PYTHON_INSTALL_DIR}/bin/python3" >> $GITHUB_ENV
+
+      - name: PowerShell Env Variables
+        if: matrix.os == 'windows-latest' && matrix.goal != 'test'
+        shell: powershell
+        run: |
+          Add-Content -Path $env:GITHUB_ENV -Value "PS_OPENSSL_INSTALL_DIR=$HOME\ssl"
+          Add-Content -Path $env:GITHUB_ENV -Value "PS_OPENSSL_SOURCE_DIR=$HOME\openssl"
+          Add-Content -Path $env:GITHUB_ENV -Value "PS_PYTHON_INSTALL_DIR=$HOME\python"
+          Add-Content -Path $env:GITHUB_ENV -Value "PS_PYTHON_SOURCE_DIR=$HOME\cpython"
+          Add-Content -Path $env:GITHUB_ENV -Value "PYTHON=$env:PYTHON_SOURCE_DIR/release/amd64/binaries/python.exe"
+
+      - name: Download OpenSSL
+        if: matrix.goal != 'test' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${HOME}"
+          git clone https://github.com/openssl/openssl.git
+          cd openssl
+          git checkout "${OPENSSL_VERSION}"
+
+      - name: Unix Config OpenSSL
+        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${HOME}"
+          cd "${OPENSSL_SOURCE_DIR}"
+          echo "MAKE=make" >> $GITHUB_ENV
+          echo "OPENSSL_MAKE_OPTS=-j$(nproc)" >> $GITHUB_ENV
+          ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_DIR}"
+
+      - name: Windows Config OpenSSL
+        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          choco install nasm
+          $env:PATH="$ENV:PATH;c:\Program Files\NASM\"
+          cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
+          Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
+           if ($_ -match "^(.*?)=(.*)$") {
+             Set-Content "env:\$($matches[1])" $matches[2]
+             Add-Content -Path $env:GITHUB_ENV -Value "$($matches[1])=$($matches[2])"
+           }
+          }
+          pwd
+          echo $env:PS_OPENSSL_SOURCE_DIR
+          cd $env:PS_OPENSSL_SOURCE_DIR
+          pwd
+          perl ./Configure VC-WIN64A --prefix="$env:PS_OPENSSL_INSTALL_DIR"
+
+      - name: Rename GNU link on Windows
+        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        run: mv /usr/bin/link /usr/bin/gnulink
+
+      - name: Make OpenSSL
+        if: matrix.goal != 'test' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${OPENSSL_SOURCE_DIR}"
+          $MAKE $OPENSSL_MAKE_OPTS
+
+      - name: Install OpenSSL
+        if: matrix.goal != 'test' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${OPENSSL_SOURCE_DIR}"
+          $MAKE install
+
+      - name: Run OpenSSL
+        if: matrix.goal != 'test'
+        run: |
+          "${OPENSSL_INSTALL_DIR}/bin/openssl" version
+
+      - name: Download Python
+        if: matrix.goal != 'test' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${HOME}"
+          git clone https://github.com/python/cpython.git
+          cd cpython
+          PYTHON_SOURCE_DIR=$(pwd)
+          git checkout "${PYTHON_VERSION}"
+          echo "PYTHON_SOURCE_DIR=${PYTHON_SOURCE_DIR}" >> $GITHUB_ENV
+
+      - name: Mac/Linux Configure Python
+        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          export PYTHON_INSTALL_DIR="${HOME}/python"
+          mkdir -p "${PYTHON_INSTALL_DIR}"
+          echo "PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR}" >> $GITHUB_ENV
+          cd "${PYTHON_SOURCE_DIR}"
+          ./configure --with-openssl="${OPENSSL_INSTALL_DIR}" \
+                      --prefix="${PYTHON_INSTALL_DIR}" \
+                      --enable-shared \
+                      --with-ensurepip=upgrade \
+                      --enable-optimizations \
+                      --with-lto
+
+      - name: Windows Config/Build/Install Python
+        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          cd $env:PS_PYTHON_SOURCE_DIR
+          $env:PYTHON = (gcm python).Path
+          $env:PIP = (gcm pip).Path
+          $env:PYTHONPATH = Resolve-Path -Path $env:PYTHON\..
+          echo "PYTHONPATH: $env:PYTHONPATH"
+          Invoke-Expression "$env:PYTHON -V"
+          Invoke-Expression "$env:PIP install --upgrade --user pip"
+          Invoke-Expression "$env:PIP install --upgrade --user sphinx"
+          $env:SPHINXBUILD = (gcm sphinx-build).Path
+          echo "Sphinx Build location: $env:SPHINXBUILD"
+          Invoke-Expression "$env:SPHINXBUILD --version"
+          Add-Content -Path $env:GITHUB_ENV -Value "SPHINXBUILD=${env:SPHINXBUILD}"
+          $env:DefaultWindowsSDKVersion = "10.0.20348.0"
+          PCBuild\get_externals.bat
+          echo "delete..."
+          Get-ChildItem -Path externals\openssl-bin-1.1.1l\amd64\ -Include *.* -File -Recurse | foreach { $_.Delete()}
+          echo "copy..."
+          cp "$HOME\ssl\lib\*" externals\openssl-bin-1.1.1l\amd64\
+          cp "$HOME\ssl\bin\*" externals\openssl-bin-1.1.1l\amd64\
+          echo "ls afterwards..."
+          ls externals\openssl-bin-1.1.1l\amd64
+          echo "ssl/include"
+          gci -r -Path "$HOME/ssl/include" | select -exp FullName
+          cp "$HOME\ssl\include\openssl\*" externals\openssl-bin-1.1.1l\amd64\include\openssl\
+          cp "$HOME\ssl\include\openssl\applink.c" externals\openssl-bin-1.1.1l\amd64\include\
+          echo "INCLUDE OPENSSL"
+          gci -r -Path externals\openssl-bin-1.1.1l\amd64\include\openssl\ | select -exp FullName
+          cp "$env:GITHUB_WORKSPACE/openssl.props" PCBuild\
+          gci -r -Path PCBuild\ | select -exp FullName
+          Tools\msi\buildrelease.bat -x64 --out release --skip-msi --skip-nuget
+          echo "In release:"
+          dir release\
+          dir release\amd64\
+          dir release\amd64\binaries\
+          $env:python = Resolve-Path -Path release\amd64\binaries\python.exe
+          Add-Content -Path $env:GITHUB_ENV -Value "python=${env:python}"
+
+      - name: Mac/Linux Build Python
+        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${PYTHON_SOURCE_DIR}"
+          $MAKE -j$(nproc)
+          
+      - name: Mac/Linux Install Python
+        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache-python.outputs.cache-hit != 'true'
+        run: |
+          cd "${PYTHON_SOURCE_DIR}"
+          $MAKE install
+
+      - name: Run Python
+        run: |
+          "${python}" -V
+          
+      - name: Install PIP and PyInstaller
+        if: matrix.goal != 'test'
+        run: |
+          curl -O https://bootstrap.pypa.io/get-pip.py
+          "${python}" get-pip.py
+          "${python}" -m pip install --upgrade pip
+          "${python}" -m pip install --upgrade setuptools
+          "${python}" -m pip install --upgrade pyinstaller
+          echo "pip=${python} -m pip" >> $GITHUB_ENV
+          echo "pyinstaller=${python} -m PyInstaller" >> $GITHUB_ENV
 
       - name: Install pip requirements
-        if: matrix.os != 'self-hosted'
         run: |
              set +e
              $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U --force-reinstall
@@ -177,11 +266,10 @@ jobs:
       - name: Build GYB with PyInstaller
         if: matrix.goal != 'test'
         run: |
-             set +e
-             source .github/actions/${GYBOS}-install.sh
-             echo "gybpath=$gybpath" >> $GITHUB_ENV
-             echo "gyb=$gyb" >> $GITHUB_ENV
-             echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}\nGYBVERSION: ${GYBVERSION}"
+             $pyinstaller -OO --clean --noupx --strip --onefile --distpath=gyb gyb.spec
+             echo "gybpath=$(realpath ./gyb/)" >> $GITHUB_ENV
+             echo "gyb=$(realpath ./gyb/gyb)" >> $GITHUB_ENV
+             echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
       - name: Basic Tests all jobs
         run: |
@@ -198,12 +286,11 @@ jobs:
              export vline=$($gyb --version | grep "Python ")
              export python_line=($vline)
              export this_python=${python_line[1]}
-             $python tools/a_atleast_b.py "${this_python}" "${MIN_PYTHON_VERSION}"
+             $python tools/a_atleast_b.py "${this_python}" "${PYTHON_VERSION}"
              export vline=$($gyb --version | grep "OpenSSL ")
              export openssl_line=($vline)
              export this_openssl="${openssl_line[1]}"
-             $python tools/a_atleast_b.py "${this_openssl}" "${MIN_OPENSSL_VERSION}"
-
+             $python tools/a_atleast_b.py "${this_openssl}" "${OPENSSL_VERSION}"
 
       - name: Live API tests push only
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'jay0lee'
