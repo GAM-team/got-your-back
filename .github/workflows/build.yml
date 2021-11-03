@@ -291,6 +291,33 @@ jobs:
              export GYBVERSION=$($gyb --short-version )
              echo "GYB Version ${GYBVERSION}"
              echo "GYBVERSION=${GYBVERSION}" >> $GITHUB_ENV
+             cp LICENSE gyb/
+
+      - name: Linux package GYB
+        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        run: |
+          this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
+          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-x86_64-glibc${this_glibc_ver}.tar.xz"
+          tar cfJ $GYB_ARCHIVE gyb/
+
+      - name: MacOS package GYB
+        if: matrix.os == 'macos-10.15' && matrix.goal != 'test'
+        run: |
+          MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
+          GYB_ARCHIVE="gyb-${GYBVERSION}-macos-x86_64-MacOS${MACOSVERSION}.tar.xz"
+          tar cfJ $GYB_ARCHIVE gyb/
+
+      - name: Windows package GYB
+        if: matrix.os == 'windows-latest' && matrix.goal != 'test'
+        run: |
+          cp gyb-setup.bat gyb
+          GYB_ARCHIVE=gyb-$GYBVERSION-windows-x86_64.zip
+          /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn
+          mkdir gyb-64
+          cp -rf gyb/* gyb-64/;
+          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 windows-gyb.wxs
+          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-$PLATFORM.msi || true;
+          rm *.wixpdb
 
       - name: Basic Tests build jobs only
         if: matrix.goal != 'test'
