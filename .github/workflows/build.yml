@@ -12,7 +12,7 @@ defaults:
 
 env:
   PYTHON_VERSION: "v3.10.0"
-  OPENSSL_VERSION: "opensl-3.0"
+  OPENSSL_VERSION: "openssl-3.0"
 
 jobs:
   build:
