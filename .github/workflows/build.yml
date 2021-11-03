@@ -70,6 +70,8 @@ jobs:
 
       - name: Set env variables for pre-compiled Python
         if: matrix.goal == 'test'
+        env:
+          JID: ${{ matrix.jid }}
         run: |
              export python=$(which python3)
              export pip=$(which pip3)
@@ -80,9 +82,12 @@ jobs:
              echo "pip=${pip}" >> $GITHUB_ENV
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo "gybpath=${gybpath}" >> $GITHUB_ENV
+             echo "JID=${JID}" >> $GITHUB_ENV
 
       - name: Bash Env Variables
         if: matrix.goal != 'test'
+        env:
+          JID: ${{ matrix.jid }}
         run: |
           cd "${HOME}"
           mkdir -p ssl
@@ -97,6 +102,7 @@ jobs:
           echo "PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_DIR}/lib:${PYTHON_INSTALL_DIR}/lib" >> $GITHUB_ENV
           echo "python=${PYTHON_INSTALL_DIR}/bin/python3" >> $GITHUB_ENV
+          echo "JID=${JID}" >> $GITHUB_ENV
 
       - name: PowerShell Env Variables
         if: matrix.os == 'windows-latest' && matrix.goal != 'test'
