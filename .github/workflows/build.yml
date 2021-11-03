@@ -273,8 +273,13 @@ jobs:
         if: matrix.goal != 'test'
         run: |
              $pyinstaller --clean --noupx --strip --onefile --distpath=gyb gyb.spec
-             echo "gybpath=$(realpath ./gyb/)" >> $GITHUB_ENV
-             echo "gyb=$(realpath ./gyb/gyb)" >> $GITHUB_ENV
+             if ! [ -x "$(command -v realpath)" ]; then
+               realpath=realpath
+             else
+               realpath=grealpath
+             fi
+             echo "gybpath=$(${realpath} ./gyb/)" >> $GITHUB_ENV
+             echo "gyb=$(${realpath} ./gyb/gyb)" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
       - name: Basic Tests all jobs
