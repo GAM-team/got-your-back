@@ -291,7 +291,9 @@ jobs:
              export GYBVERSION=$($gyb --short-version )
              echo "GYB Version ${GYBVERSION}"
              echo "GYBVERSION=${GYBVERSION}" >> $GITHUB_ENV
-             cp LICENSE gyb/
+             if [ -d "gyb" ]; then
+               cp LICENSE gyb/
+             fi
 
       - name: Linux package GYB
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
