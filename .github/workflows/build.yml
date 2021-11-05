@@ -311,6 +311,29 @@ jobs:
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
+      - name: Linux install patchelf/staticx
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          "${pip}" --upgrade patchelf-wrapper
+          "${pip}" install --upgrade staticx
+
+      - name: Linux Make Static GYB
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          "${python}" -m staticx gyb/gyb gyb/gyb-staticx
+          
+      - name: Linux Run StaticX-ed GYB
+        if: matrix.os == 'ubuntu-20.04'
+        run: |
+          gyb/gyb-staticx
+          mv gyb/gyb-staticx gyb/gyb
+
+      - name: Linux package staticx GYB
+        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        run: |
+          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-x86_64-legacy.tar.xz"
+          tar cfJ $GYB_ARCHIVE gyb/
+
       - name: MacOS package GYB
         if: matrix.os == 'macos-10.15' && matrix.goal != 'test'
         run: |
