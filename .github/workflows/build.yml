@@ -22,27 +22,33 @@ jobs:
         include:
           - os: ubuntu-20.04
             jid: 1
+            goal: "build"
           - os: macos-10.15
             jid: 2
+            goal: "build"
           - os: windows-latest
             jid: 3
+            goal: "build"
             python: "3.9" # needed for build
+          - os: self-hosted
+            jid: 4
+            goal: "self-build"
           - os: ubuntu-20.04
             goal: "test"
             python: "3.6"
-            jid: 4
-          - os: ubuntu-20.04
-            goal: "test"
-            python: "3.7"
             jid: 5
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.8"
+            python: "3.7"
             jid: 6
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.9"
+            python: "3.8"
             jid: 7
+          - os: ubuntu-20.04
+            goal: "test"
+            python: "3.9"
+            jid: 8
 
     steps:
 
@@ -54,7 +60,7 @@ jobs:
       - name: Cache
         id: cache
         uses: actions/cache@v2
-        if: matrix.goal != 'test'
+        if: matrix.goal == 'build'
         with:
           path: |
             ~/ssl
@@ -69,8 +75,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Set env variables for pre-compiled Python
-        if: matrix.goal == 'test'
+      - name: Set env variables for test and self-build
+        if: matrix.goal != 'build'
         env:
           JID: ${{ matrix.jid }}
         run: |
@@ -86,7 +92,7 @@ jobs:
              echo "JID=${JID}" >> $GITHUB_ENV
 
       - name: Bash Env Variables
-        if: matrix.goal != 'test'
+        if: matrix.goal == 'build'
         env:
           JID: ${{ matrix.jid }}
         run: |
@@ -106,7 +112,7 @@ jobs:
           echo "JID=${JID}" >> $GITHUB_ENV
 
       - name: PowerShell Env Variables
-        if: matrix.os == 'windows-latest' && matrix.goal != 'test'
+        if: matrix.os == 'windows-latest' && matrix.goal == 'build'
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_ENV -Value "PS_OPENSSL_INSTALL_DIR=$HOME\ssl"
@@ -116,7 +122,7 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "PYTHON=$env:PYTHON_SOURCE_DIR/release/amd64/binaries/python.exe"
 
       - name: Download OpenSSL
-        if: matrix.goal != 'test' && steps.cache.outputs.cache-hit == 'false'
+        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit == 'false'
         run: |
           cd "${HOME}"
           git clone https://github.com/openssl/openssl.git
@@ -124,7 +130,7 @@ jobs:
           git checkout "${OPENSSL_VERSION}"
 
       - name: Unix Config OpenSSL
-        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${HOME}"
           cd "${OPENSSL_SOURCE_DIR}"
@@ -133,7 +139,7 @@ jobs:
           ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_DIR}"
 
       - name: Windows Config OpenSSL
-        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           choco install nasm
@@ -152,28 +158,28 @@ jobs:
           perl ./Configure VC-WIN64A --prefix="$env:PS_OPENSSL_INSTALL_DIR"
 
       - name: Rename GNU link on Windows
-        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         run: mv /usr/bin/link /usr/bin/gnulink
 
       - name: Make OpenSSL
-        if: matrix.goal != 'test' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_DIR}"
           $MAKE $OPENSSL_MAKE_OPTS
 
       - name: Install OpenSSL
-        if: matrix.goal != 'test' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_DIR}"
           $MAKE install
 
       - name: Run OpenSSL
-        if: matrix.goal != 'test'
+        if: matrix.goal == 'build'
         run: |
           "${OPENSSL_INSTALL_DIR}/bin/openssl" version
 
       - name: Download Python
-        if: matrix.goal != 'test' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${HOME}"
           git clone https://github.com/python/cpython.git
@@ -183,7 +189,7 @@ jobs:
           echo "PYTHON_SOURCE_DIR=${PYTHON_SOURCE_DIR}" >> $GITHUB_ENV
 
       - name: Mac/Linux Configure Python
-        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         run: |
           export PYTHON_INSTALL_DIR="${HOME}/python"
           mkdir -p "${PYTHON_INSTALL_DIR}"
@@ -197,7 +203,7 @@ jobs:
                       --with-lto
 
       - name: Windows Config/Build/Install Python
-        if: matrix.goal != 'test' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd $env:PS_PYTHON_SOURCE_DIR
@@ -238,13 +244,13 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "python=${env:python}"
 
       - name: Mac/Linux Build Python
-        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_DIR}"
           $MAKE -j$(nproc)
           
       - name: Mac/Linux Install Python
-        if: matrix.goal != 'test' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_DIR}"
           $MAKE install
