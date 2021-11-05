@@ -314,13 +314,13 @@ jobs:
       - name: Linux install patchelf/staticx
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
-          "${pip}" --upgrade patchelf-wrapper
-          "${pip}" install --upgrade staticx
+          $pip install --upgrade patchelf-wrapper
+          $pip install --upgrade staticx
 
       - name: Linux Make Static GYB
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
-          "${python}" -m staticx gyb/gyb gyb/gyb-staticx
+          $python -m staticx gyb/gyb gyb/gyb-staticx
           
       - name: Linux Run StaticX-ed GYB
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
