@@ -301,6 +301,8 @@ jobs:
              if [ -d "gyb" ]; then
                cp LICENSE gyb/
              fi
+             rm "${gybpath}/nobrowser.txt"
+             rm "${gybpath}/lastcheck.txt"
 
       - name: Linux package GYB
         if: matrix.os != 'windows-latest' && matrix.os != 'macos-10.15' && matrix.goal != 'test'
