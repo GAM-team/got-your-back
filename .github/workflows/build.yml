@@ -306,7 +306,7 @@ jobs:
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
           this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
-          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-x86_64-glibc${this_glibc_ver}.tar.xz"
+          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
@@ -374,7 +374,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
-        if: github.event_name == 'push' && matrix.goal != 'test' && github.repository_owner == 'jay0lee'
+        if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'jay0lee'
         env:
           GHCLIENT: ${{ secrets.GHCLIENT }}
         run: |
@@ -387,3 +387,13 @@ jobs:
                 echo "file uploaded as ${fileid}, setting ACL..."
                 ~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefileacl $fileid anyone role reader withlink
               done
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        if: github.event_name == 'push' && matrix.goal != 'test'
+        with:
+          name: gyb-binaries
+          path: |
+            *.tar.xz
+            *.zip
+            *.msi
