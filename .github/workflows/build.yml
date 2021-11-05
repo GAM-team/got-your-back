@@ -312,18 +312,18 @@ jobs:
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Linux install patchelf/staticx
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
           "${pip}" --upgrade patchelf-wrapper
           "${pip}" install --upgrade staticx
 
       - name: Linux Make Static GYB
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
           "${python}" -m staticx gyb/gyb gyb/gyb-staticx
           
       - name: Linux Run StaticX-ed GYB
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
           gyb/gyb-staticx
           mv gyb/gyb-staticx gyb/gyb
