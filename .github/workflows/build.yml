@@ -325,7 +325,7 @@ jobs:
       - name: Linux Run StaticX-ed GYB
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
-          gyb/gyb-staticx
+          gyb/gyb-staticx --version
           mv gyb/gyb-staticx gyb/gyb
 
       - name: Linux package staticx GYB
