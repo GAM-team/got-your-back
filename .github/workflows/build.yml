@@ -304,8 +304,8 @@ jobs:
              if [ -d "gyb" ]; then
                cp LICENSE gyb/
              fi
-             rm "${gybpath}/nobrowser.txt"
-             rm "${gybpath}/lastcheck.txt"
+             rm -f "${gybpath}/nobrowser.txt"
+             rm -f "${gybpath}/lastcheck.txt"
 
       - name: Linux package GYB
         if: matrix.os != 'windows-latest' && matrix.os != 'macos-10.15' && matrix.goal != 'test'
@@ -354,7 +354,7 @@ jobs:
           cp -rf gyb/* gyb-64/;
           /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/candle.exe -arch x64 windows-gyb.wxs
           /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.11/bin/WixUIExtension.dll windows-gyb.wixobj -o gyb-$GYBVERSION-windows-x86_64.msi || true;
-          rm *.wixpdb
+          rm -f *.wixpdb
 
       - name: Basic Tests build jobs only
         if: matrix.goal != 'test'
