@@ -33,6 +33,9 @@ jobs:
           - os: [self-hosted, linux, arm64]
             jid: 4
             goal: "self-build"
+          - os: [self-hosted, linux, arm]
+            jid: 9
+            goal: "self-build"
           - os: ubuntu-20.04
             goal: "test"
             python: "3.6"
