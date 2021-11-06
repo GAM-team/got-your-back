@@ -28,7 +28,7 @@ upgrade_only=false
 gybversion="latest"
 adminuser=""
 regularuser=""
-glibc_vers="2.31 2.27 2.23"
+glibc_vers="2.31"
 
 while getopts "hd:a:o:b:lp:u:r:v:" OPTION
 do
@@ -109,7 +109,7 @@ case $myos in
     done
     case $myarch in
       x86_64) gybfile="linux-x86_64-$useglibc.tar.xz";;
-      arm64|aarch64) gybfile="linux-arm64-$useglibc.tar.xz";;
+      arm64|aarch64) gybfile="linux-aarch64-glibc2.28.tar.xz";;
       *)
         echo_red "ERROR: this installer currently only supports x86_64 and aarch64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
         exit
@@ -122,7 +122,7 @@ case $myos in
       this_macos_ver=$osversion
     fi
     echo_green "You are running MacOS $this_macos_ver"
-    gybfile="macos-universal2-MacOS11.6.tar.xz"
+    gybfile="macos-x86_64-MacOS10.15.7.tar.xz"
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
