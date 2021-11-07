@@ -83,6 +83,7 @@ jobs:
         env:
           JID: ${{ matrix.jid }}
         run: |
+             whoami
              export python=$(which python3)
              export pip=$(which pip3)
              export gyb="${python} -m gyb"
