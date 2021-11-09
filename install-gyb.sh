@@ -110,6 +110,7 @@ case $myos in
     case $myarch in
       x86_64) gybfile="linux-x86_64-$useglibc.tar.xz";;
       arm64|aarch64) gybfile="linux-aarch64-glibc2.28.tar.xz";;
+      armv7l) gybfile="linux-armv7l-glibc2.28.tar.xz";;
       *)
         echo_red "ERROR: this installer currently only supports x86_64 and aarch64. Looks like you're running on $gybarch. You'll need to try the Python source. Exiting."
         exit
