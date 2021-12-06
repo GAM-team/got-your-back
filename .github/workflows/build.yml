@@ -70,7 +70,7 @@ jobs:
             ~/openssl
             ~/python
             ~/cpython
-          key: ${{ matrix.os }}-${{ matrix.jid }}-20211206
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20211206-1
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
