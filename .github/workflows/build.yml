@@ -96,7 +96,7 @@ jobs:
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo "gybpath=${gybpath}" >> $GITHUB_ENV
              echo "JID=${JID}" >> $GITHUB_ENV
-             echo "ACTIONS_CACHE=${ACTIONS_GOAL}" >> $GITHUB_ENV
+             echo "ACTIONS_CACHE=${ACTIONS_CACHE}" >> $GITHUB_ENV
              echo "ACTIONS_GOAL=${ACTIONS_GOAL}" >> $GITHUB_ENV
 
       - name: Bash Env Variables
@@ -120,7 +120,7 @@ jobs:
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_DIR}/lib:${PYTHON_INSTALL_DIR}/lib" >> $GITHUB_ENV
           echo "python=${PYTHON_INSTALL_DIR}/bin/python3" >> $GITHUB_ENV
           echo "JID=${JID}" >> $GITHUB_ENV
-          echo "ACTIONS_CACHE=${ACTIONS_GOAL}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE=${ACTIONS_CACHE}" >> $GITHUB_ENV
           echo "ACTIONS_GOAL=${ACTIONS_GOAL}" >> $GITHUB_ENV
 
       - name: PowerShell Env Variables
@@ -156,7 +156,13 @@ jobs:
         run: |
           choco install nasm
           $env:PATH="$ENV:PATH;c:\Program Files\NASM\"
-          cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\"
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022"
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise"
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC"
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary"
+          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary\Build"
+          cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
           Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
            if ($_ -match "^(.*?)=(.*)$") {
              Set-Content "env:\$($matches[1])" $matches[2]
