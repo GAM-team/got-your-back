@@ -279,8 +279,8 @@ jobs:
           "${python}" get-pip.py
           pip="${python} -m pip"
           echo "pip=${pip}" >> $GITHUB_ENV
-          "${pip}" install --upgrade pip
-          "${pip}" install --upgrade setuptools
+          "${python}" -m pip install --upgrade pip
+          "${python}" -m pip install --upgrade setuptools
           
       - name: Install PyInstaller
         if: matrix.goal != 'test'
@@ -291,7 +291,7 @@ jobs:
           rm -rf PyInstaller/bootloader/*bit
           cd bootloader
           $python ./waf all
-          $pip install .
+          $python -m pip install .
           echo "pyinstaller=${python} -OO -m PyInstaller" >> $GITHUB_ENV
 
       - name: Install pip requirements
