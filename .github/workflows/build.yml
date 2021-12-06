@@ -82,6 +82,8 @@ jobs:
         if: matrix.goal != 'build'
         env:
           JID: ${{ matrix.jid }}
+          ACTIONS_CACHE: ${{ steps.cache.outputs.cache-hit }}
+          ACTIONS_GOAL: ${{ matrix.goal }}
         run: |
              whoami
              export python=$(which python3)
@@ -94,11 +96,15 @@ jobs:
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo "gybpath=${gybpath}" >> $GITHUB_ENV
              echo "JID=${JID}" >> $GITHUB_ENV
+             echo "ACTIONS_CACHE=${ACTIONS_GOAL}" >> $GITHUB_ENV
+             echo "ACTIONS_GOAL=${ACTIONS_GOAL}" >> $GITHUB_ENV
 
       - name: Bash Env Variables
         if: matrix.goal == 'build'
         env:
           JID: ${{ matrix.jid }}
+          ACTIONS_CACHE: ${{ steps.cache.outputs.cache-hit }}
+          ACTIONS_GOAL: ${{ matrix.goal }}
         run: |
           cd "${HOME}"
           mkdir -p ssl
@@ -114,6 +120,8 @@ jobs:
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_DIR}/lib:${PYTHON_INSTALL_DIR}/lib" >> $GITHUB_ENV
           echo "python=${PYTHON_INSTALL_DIR}/bin/python3" >> $GITHUB_ENV
           echo "JID=${JID}" >> $GITHUB_ENV
+          echo "ACTIONS_CACHE=${ACTIONS_GOAL}" >> $GITHUB_ENV
+          echo "ACTIONS_GOAL=${ACTIONS_GOAL}" >> $GITHUB_ENV
 
       - name: PowerShell Env Variables
         if: matrix.os == 'windows-2022' && matrix.goal == 'build'
