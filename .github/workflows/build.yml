@@ -291,6 +291,7 @@ jobs:
           rm -rf PyInstaller/bootloader/*bit
           cd bootloader
           $python ./waf all
+          cd ..
           $python -m pip install .
           echo "pyinstaller=${python} -OO -m PyInstaller" >> $GITHUB_ENV
 
