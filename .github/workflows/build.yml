@@ -11,7 +11,7 @@ defaults:
     shell: bash
 
 env:
-  PYTHON_VERSION: "v3.10.0"
+  PYTHON_VERSION: "3.10"
   OPENSSL_VERSION: "openssl-3.0"
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
           - os: macos-10.15
             jid: 2
             goal: "build"
-          - os: windows-latest
+          - os: windows-2022
             jid: 3
             goal: "build"
             python: "3.9" # needed for build
@@ -70,7 +70,7 @@ jobs:
             ~/openssl
             ~/python
             ~/cpython
-          key: ${{ matrix.os }}-${{ matrix.jid }}-20211103-02
+          key: ${{ matrix.os }}-${{ matrix.jid }}-20211206
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -116,7 +116,7 @@ jobs:
           echo "JID=${JID}" >> $GITHUB_ENV
 
       - name: PowerShell Env Variables
-        if: matrix.os == 'windows-latest' && matrix.goal == 'build'
+        if: matrix.os == 'windows-2022' && matrix.goal == 'build'
         shell: powershell
         run: |
           Add-Content -Path $env:GITHUB_ENV -Value "PS_OPENSSL_INSTALL_DIR=$HOME\ssl"
@@ -134,7 +134,7 @@ jobs:
           git checkout "${OPENSSL_VERSION}"
 
       - name: Unix Config OpenSSL
-        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${HOME}"
           cd "${OPENSSL_SOURCE_DIR}"
@@ -143,7 +143,7 @@ jobs:
           ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_DIR}"
 
       - name: Windows Config OpenSSL
-        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           choco install nasm
@@ -162,7 +162,7 @@ jobs:
           perl ./Configure VC-WIN64A --prefix="$env:PS_OPENSSL_INSTALL_DIR"
 
       - name: Rename GNU link on Windows
-        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         run: mv /usr/bin/link /usr/bin/gnulink
 
       - name: Make OpenSSL
@@ -193,7 +193,7 @@ jobs:
           echo "PYTHON_SOURCE_DIR=${PYTHON_SOURCE_DIR}" >> $GITHUB_ENV
 
       - name: Mac/Linux Configure Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         run: |
           export PYTHON_INSTALL_DIR="${HOME}/python"
           mkdir -p "${PYTHON_INSTALL_DIR}"
@@ -207,7 +207,7 @@ jobs:
                       --with-lto
 
       - name: Windows Config/Build/Install Python
-        if: matrix.goal == 'build' && matrix.os == 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd $env:PS_PYTHON_SOURCE_DIR
@@ -248,13 +248,13 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "python=${env:python}"
 
       - name: Mac/Linux Build Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_DIR}"
           $MAKE -j$(nproc)
           
       - name: Mac/Linux Install Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-latest' && steps.cache.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_DIR}"
           $MAKE install
@@ -309,7 +309,7 @@ jobs:
              rm -f "${gybpath}/lastcheck.txt"
 
       - name: Linux package GYB
-        if: matrix.os != 'windows-latest' && matrix.os != 'macos-10.15' && matrix.goal != 'test'
+        if: matrix.os != 'windows-2022' && matrix.os != 'macos-10.15' && matrix.goal != 'test'
         run: |
           this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
@@ -346,7 +346,7 @@ jobs:
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Windows package GYB
-        if: matrix.os == 'windows-latest' && matrix.goal != 'test'
+        if: matrix.os == 'windows-2922' && matrix.goal != 'test'
         run: |
           cp gyb-setup.bat gyb
           GYB_ARCHIVE=gyb-$GYBVERSION-windows-x86_64.zip
