@@ -155,10 +155,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           distribution: strawberry
-        run: |
-          cpanm --installdeps .
-          prove -lv t
-       
+
       - name: Windows Config OpenSSL
         if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
