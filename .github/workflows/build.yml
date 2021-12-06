@@ -150,10 +150,13 @@ jobs:
           echo "OPENSSL_MAKE_OPTS=-j$(nproc)" >> $GITHUB_ENV
           ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_DIR}"
 
+      - name: Windows Perl Install
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
+        uses: shogo82148/actions-setup-perl@v1
+
       - name: Windows Config OpenSSL
         if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
-        uses: shogo82148/actions-setup-perl@v1
         run: |
           choco install nasm --no-progress
           $env:PATH="$ENV:PATH;c:\Program Files\NASM\"
