@@ -278,7 +278,7 @@ jobs:
           curl -O https://bootstrap.pypa.io/get-pip.py
           "${python}" get-pip.py
           pip="${python} -m pip"
-          echo "pip=${python} -m pip" >> $GITHUB_ENV
+          echo "pip=${pip}" >> $GITHUB_ENV
           "${pip}" install --upgrade pip
           "${pip}" install --upgrade setuptools
           
