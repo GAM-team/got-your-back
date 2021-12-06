@@ -134,7 +134,7 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "PYTHON=$env:PYTHON_SOURCE_DIR/release/amd64/binaries/python.exe"
 
       - name: Download OpenSSL
-        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit == 'false'
+        if: matrix.goal == 'build' && steps.cache.outputs.cache-hit != 'true'
         run: |
           cd "${HOME}"
           git clone https://github.com/openssl/openssl.git
