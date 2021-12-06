@@ -156,13 +156,13 @@ jobs:
         run: |
           choco install nasm
           $env:PATH="$ENV:PATH;c:\Program Files\NASM\"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary"
-          ls "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary\Build"
-          cmd /c 'call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
+          ls "C:\Program Files\Microsoft Visual Studio\"
+          ls "C:\Program Files\Microsoft Visual Studio\2022"
+          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC"
+          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary"
+          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxilary\Build"
+          cmd /c 'call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
           Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
            if ($_ -match "^(.*?)=(.*)$") {
              Set-Content "env:\$($matches[1])" $matches[2]
