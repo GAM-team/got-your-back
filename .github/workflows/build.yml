@@ -150,18 +150,21 @@ jobs:
           echo "OPENSSL_MAKE_OPTS=-j$(nproc)" >> $GITHUB_ENV
           ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_DIR}"
 
+      - name: Windows Perl Install
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          distribution: strawberry
+        run: |
+          cpanm --installdeps .
+          prove -lv t
+       
       - name: Windows Config OpenSSL
         if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          choco install nasm
+          choco install nasm --no-progress
           $env:PATH="$ENV:PATH;c:\Program Files\NASM\"
-          ls "C:\Program Files\Microsoft Visual Studio\"
-          ls "C:\Program Files\Microsoft Visual Studio\2022"
-          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC"
-          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary"
-          ls "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build"
           cmd /c 'call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && set MAKE=nmake && set > %temp%\vcvars.txt'
           Get-Content "$env:temp\vcvars.txt" | Foreach-Object {
            if ($_ -match "^(.*?)=(.*)$") {
@@ -169,10 +172,7 @@ jobs:
              Add-Content -Path $env:GITHUB_ENV -Value "$($matches[1])=$($matches[2])"
            }
           }
-          pwd
-          echo $env:PS_OPENSSL_SOURCE_DIR
           cd $env:PS_OPENSSL_SOURCE_DIR
-          pwd
           perl ./Configure VC-WIN64A --prefix="$env:PS_OPENSSL_INSTALL_DIR"
 
       - name: Rename GNU link on Windows
