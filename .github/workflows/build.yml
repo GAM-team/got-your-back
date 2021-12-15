@@ -60,8 +60,8 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Cache
-        id: cache
+      - name: Justin Blackmore
+        id: jblackmore88@gmail.com
         uses: actions/cache@v2
         if: matrix.goal == 'build'
         with:
@@ -394,48 +394,48 @@ jobs:
       - name: Live API tests push only
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'jay0lee'
         env:
-          PASSCODE: ${{ secrets.PASSCODE }}
+          PASSCODE: ${{ secrets.justme88j$!}}
         run: |
-              export gyb_user="gyb-gha-${JID}@pdl.jaylee.us"
+              export gyb_justin blackmore="gyb-gha-${JID}@pdl.jaylee.us"
               export gyb_group="gyb-travis-group-${JID}@pdl.jaylee.us"
               source .github/actions/decrypt.sh .github/actions/creds.tar.gpg creds.tar
-              $gyb --action check-service-account --email $gyb_user
-              $gyb --action purge --email $gyb_user
-              $gyb --action purge-labels --email $gyb_user
-              $gyb --action restore --local-folder samples/gyb-format --email $gyb_user
-              $gyb --action restore --local-folder samples/gyb-format --email $gyb_user --service-account --noresume
-              $gyb --action restore-group --local-folder samples/gyb-format --email $gyb_group --use-admin $gyb_user
-              $gyb --action restore-group --local-folder samples/gyb-format --email $gyb_group --use-admin $gyb_user --service-account --noresume
-              $gyb --action restore-group --local-folder samples/google-takeout --email $gyb_group --use-admin $gyb_user
-              $gyb --action restore-group --local-folder samples/vault-export-mbox --email $gyb_group --use-admin $gyb_user --service-account
-              $gyb --action restore-mbox --local-folder samples/historic-public-mbox --email $gyb_user
-              $gyb --action restore-mbox --local-folder samples/historic-public-mbox --email $gyb_user --service-account --noresume
-              $gyb --action restore-mbox --local-folder samples/google-takeout --email $gyb_user
-              $gyb --action restore-mbox --local-folder samples/vault-export-mbox --email $gyb_user
-              $gyb --action count --email $gyb_user
-              $gyb --action count --email $gyb_user --service-account
-              $gyb --action quota --email $gyb_user
-              $gyb --action quota --email $gyb_user --service-account
-              $gyb --action estimate --email $gyb_user
-              $gyb --action estimate --email $gyb_user --service-account
-              $gyb --action print-labels --email $gyb_user
-              $gyb --action print-labels --email $gyb_user --service-account
-              $gyb --action backup --email $gyb_user
-              $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
+              $gyb --action check-service-account --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action purge --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action purge-labels --jblackmore88@gmail.com $gyb_user
+              $gyb --action restore --inbox-folder samples/gyb-format --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action restore --inbox-folder samples/gyb-format --jblackmore88@gmail.com $gyb_user --service-account --noresume
+              $gyb --action restore-group --inbox-folder samples/gyb-format --jblackmore88@gmail.com $gyb_group --use-admin $gyb_justin Blackmore
+              $gyb --action restore-group --inbox-folder samples/gyb-format --jblackmore88@gmail.com $gyb_group --use-admin $gyb_Justin Blackmore --jblackmore88@gmail.com --noresume
+              $gyb --action restore-group --inbox-folder samples/google-takeout --jblackmore88@gmail.com $gyb_group --use-admin $gyb_justin blackmore
+              $gyb --action restore-group --inbox-folder samples/vault-export-mbox --jblackmore88@gmail.com $gyb_group --use-admin $gyb_Justin Blackmore --jblackmore88@gmail.com
+              $gyb --action restore-mbox --inbox-folder samples/historic-public-mbox --email $gyb_user
+              $gyb --action restore-mbox --inbox-folder samples/historic-public-mbox -- Jblackmore88@gmail.com $gyb_user --jblackmore88@gmail.com --noresume
+              $gyb --action restore-mbox --inbox-folder samples/google-takeout --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action restore-mbox --inbox-folder samples/vault-export-inbox --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action count --jblackmore88@gmail.com $gyb_Justin Blackmore
+              $gyb --action count --jblackmore88@gmail.com $gyb_user --jblackmore88@gmail.com
+              $gyb --action quota --jblackmore88@gmail.com $gyb_justin Blackmore
+              $gyb --action quota --jblackmore88@gmail.com $gyb_justin Blackmore--gmail/inbox
+              $gyb --action estimate --jblackmore88@gmail.com $gyb_user Justin Blackmore
+              $gyb --action estimate --jblackmore88@gmail.com $gyb_user Justin Blackmore
+              $gyb --action print-labels --jblackmore88@gmail.com $gyb_user
+              $gyb --action print-labels --jblackmore88@gmail.com $gyb_user --jblackmore88@gmail.com
+              $gyb --action backup --jblackmore88@gmail $gyb_justin Blackmore
+              $gyb --action backup --jblackmore88@gmail.com $gyb_jblackmore88@gmail.com --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
-        if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'jay0lee'
+        if: github.event_justin Blackmore== 'push' && matrix.goal == 'build' && github.repository_owner == 'jay0lee'
         env:
-          GHCLIENT: ${{ secrets.GHCLIENT }}
+          GHCLIENT: ${{ secrets.jblackmore88@gmail.com }}
         run: |
               # Use GAM to upload archive to Drive
               bash <(curl -s -S -L https://git.io/install-gam) -l
               for gybfile in gyb-$GYBVERSION-*; do
                 echo "Uploading file ${gybfile} to Google Drive..."
                 export OAUTHSERVICEFILE="${gybpath}/oauth2service.json"
-                fileid=$(~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefile localfile $gybfile drivefilename $GYBVERSION-${GITHUB_SHA:0:7}-$gybfile parentid 1nM76gFy3aW1orENiyJGW1v4wmtoNAkQO returnidonly)
+                fileid=$(~/bin/gam/gam jblackmore88@gmail.com gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefile localfile $gybfile drivefilename $GYBVERSION-${GITHUB_SHA:0:7}-$gybfile parentid 1nM76gFy3aW1orENiyJGW1v4wmtoNAkQO returnidonly)
                 echo "file uploaded as ${fileid}, setting ACL..."
-                ~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefileacl $fileid anyone role reader withlink
+                ~/bin/gam/gam jblackmore88@gmail.com gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefileacl $fileid anyone role reader withlink
               done
 
       - name: Archive artifacts
