@@ -279,8 +279,8 @@ jobs:
           "${python}" get-pip.py
           pip="${python} -m pip"
           echo "pip=${pip}" >> $GITHUB_ENV
-          "${python}" -m pip install --upgrade pip
-          "${python}" -m pip install --upgrade setuptools
+          #"${python}" -m pip install --upgrade pip
+          #"${python}" -m pip install --upgrade setuptools
           
       - name: Install PyInstaller
         if: matrix.goal != 'test'
