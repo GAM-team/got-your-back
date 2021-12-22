@@ -278,13 +278,9 @@ jobs:
           curl -O https://bootstrap.pypa.io/get-pip.py
           "${python}" get-pip.py
 
-        name: Upgrade PIP and SetupTools
+      - name: Upgrade PIP and SetupTools
         if: matrix.goal != 'test'
         run: |
-          #curl -O https://bootstrap.pypa.io/get-pip.py
-          #"${python}" get-pip.py
-          pip="${python} -m pip"
-          echo "pip=${pip}" >> $GITHUB_ENV
           "${python}" -m pip install --upgrade pip
           "${python}" -m pip install --upgrade setuptools
           
