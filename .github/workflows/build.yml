@@ -272,7 +272,13 @@ jobs:
         run: |
           "${python}" -V
           
-      - name: Install PIP
+      - name: Windows Install PIP
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -O https://bootstrap.pypa.io/get-pip.py
+          "${python}" get-pip.py
+
+        name: Upgrade PIP and SetupTools
         if: matrix.goal != 'test'
         run: |
           #curl -O https://bootstrap.pypa.io/get-pip.py
