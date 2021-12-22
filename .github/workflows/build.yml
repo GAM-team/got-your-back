@@ -292,16 +292,16 @@ jobs:
           ls -alRF PyInstaller/bootloader
           rm -rf PyInstaller/bootloader/*bit
           cd bootloader
-          $python ./waf all
+          "${python}" ./waf all
           cd ..
-          $python -m pip install .
+          "${python}" -m pip install .
           echo "pyinstaller=${python} -OO -m PyInstaller" >> $GITHUB_ENV
 
       - name: Install pip requirements
         run: |
              set +e
-             $pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U --force-reinstall
-             $pip install --upgrade -r requirements.txt
+             "${python}" -m pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 $pip install -U --force-reinstall
+             "${python}" -m pip install --upgrade -r requirements.txt
 
       - name: Build GYB with PyInstaller
         if: matrix.goal != 'test'
@@ -319,7 +319,7 @@ jobs:
 
       - name: Basic Tests all jobs
         run: |
-             echo -e "python: $python\npip: $pip\ngyb: $gyb\ngybpath: $gybpath\n"
+             echo -e "python: $python\ngyb: $gyb\ngybpath: $gybpath\n"
              touch "${gybpath}/nobrowser.txt"
              $gyb --version
              export GYBVERSION=$($gyb --short-version )
@@ -341,8 +341,8 @@ jobs:
       - name: Linux install patchelf/staticx
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
         run: |
-          $pip install --upgrade patchelf-wrapper
-          $pip install --upgrade staticx
+          "${python}" -m pip install --upgrade patchelf-wrapper
+          "${python}" -m pip install --upgrade staticx
 
       - name: Linux Make Static GYB
         if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
@@ -386,7 +386,7 @@ jobs:
              export vline=$($gyb --version | grep "Python ")
              export python_line=($vline)
              export this_python=${python_line[1]}
-             $pip install packaging
+             "${python}" -m pip install packaging
              $python tools/a_atleast_b.py "${this_python}" "${PYTHON_VERSION}"
              export vline=$($gyb --version | grep "OpenSSL ")
              export openssl_line=($vline)
