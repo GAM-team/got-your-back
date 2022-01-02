@@ -2421,8 +2421,8 @@ otaBytesByService,quotaType')
       createLabel(label)
 
 if __name__ == '__main__':
-  if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-    print('ERROR: GYB requires Python 3.6 or greater.')
+  if sys.version_info[0] < 3 or sys.version_info[1] < 7:
+    print('ERROR: GYB requires Python 3.7 or greater.')
     sys.exit(3)
   elif sys.version_info[1] >= 7:
     sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
