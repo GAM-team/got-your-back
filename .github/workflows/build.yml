@@ -38,10 +38,6 @@ jobs:
             goal: "self-build"
           - os: ubuntu-20.04
             goal: "test"
-            python: "3.6"
-            jid: 5
-          - os: ubuntu-20.04
-            goal: "test"
             python: "3.7"
             jid: 6
           - os: ubuntu-20.04
