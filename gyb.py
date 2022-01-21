@@ -1716,7 +1716,7 @@ def main(argv):
     print('ERROR: --email is required.')
     sys.exit(1)
   if options.action in ['restore', 'restore-group', 'restore-mbox'] and \
-     options.search != '-is:chat':
+     options.gmail_search != '-is:chat':
     print('ERROR: --search does not work with restores.')
     sys.exit(1)
   if options.local_folder == 'XXXuse-email-addressXXX':
