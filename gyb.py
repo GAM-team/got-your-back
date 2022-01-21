@@ -529,7 +529,10 @@ def writeCredentials(creds):
 def _decodeIdToken(credentials=None):
   credentials = credentials if credentials is not None else getValidOauth2TxtCredentials()
   httpc = google_auth_httplib2.Request(_createHttpObj())
-  return google.oauth2.id_token.verify_oauth2_token(credentials.id_token, httpc)
+  return google.oauth2.id_token.verify_oauth2_token(
+    credentials.id_token,
+    httpc,
+    clock_skew_in_seconds=10)
 
 def _getValueFromOAuth(field, credentials=None):
   id_token = _decodeIdToken(credentials)
