@@ -170,7 +170,7 @@ jobs:
         if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
-        if: matrix.goal == 'build && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
           # --libdir=lib is needed so Python can find OpenSSL libraries
