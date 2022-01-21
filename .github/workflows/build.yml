@@ -73,8 +73,8 @@ jobs:
         if: matrix.goal == 'build'
         with:
           path: |
-            ~/ssl
-            ~/python
+            ./ssl
+            ./python
           key: ${{ matrix.jid }}-20220121
 
       - name: Use pre-compiled Python
