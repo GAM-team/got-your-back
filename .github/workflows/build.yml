@@ -291,12 +291,14 @@ jobs:
         run: |
           "${PYTHON}" -V
 
-      - name: Upgrade PIP and SetupTools
-        if: matrix.goal != 'test'
+      - name: Upgrade pip, wheel, etc
         run: |
+          curl -O https://bootstrap.pypa.io/get-pip.py
+          "${PYTHON}" get-pip.py
           "${PYTHON}" -m pip install --upgrade pip
+          "${PYTHON}" -m pip install --upgrade wheel
           "${PYTHON}" -m pip install --upgrade setuptools
-          
+    
       - name: Install PyInstaller
         if: matrix.goal == 'build'
         run: |
