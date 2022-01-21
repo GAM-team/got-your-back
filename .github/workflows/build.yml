@@ -400,7 +400,7 @@ jobs:
           rm -f *.wixpdb
 
       - name: Basic Tests build jobs only
-        if: matrix.goal == 'build'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           export voutput=$($gyb --version)
           export python_line=$(echo -e "${voutput}" | grep "Python ")
