@@ -419,7 +419,7 @@ jobs:
           echo "We successfully compiled Python ${this_python} and OpenSSL ${this_openssl}"
 
       - name: Live API tests push only
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'jay0lee'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'GAM-team'
         env:
           PASSCODE: ${{ secrets.PASSCODE }}
         run: |
@@ -451,7 +451,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
-        if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'jay0lee'
+        if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'GAM-team'
         env:
           GHCLIENT: ${{ secrets.GHCLIENT }}
         run: |
