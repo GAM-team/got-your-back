@@ -27,7 +27,7 @@ jobs:
             jid: 1
             goal: build
             arch: x86_64
-          - os: macos-10.15
+          - os: macos-11
             jid: 2
             goal: build
             arch: x86_64
@@ -402,14 +402,14 @@ jobs:
         if: matrix.goal == 'build'
         run: |
           export voutput=$($gyb --version)
-          export python_line=$(echo -e "${voutput}" | grep "Python: ")
+          export python_line=$(echo -e "${voutput}" | grep "Python ")
           export python_arr=($python_line)
           export this_python=${python_arr[1]}
           if [[ "${this_python}" != "${COMPILED_PYTHON_VERSION}" ]]; then
             echo "ERROR: Tried to compile Python ${COMPILED_PYTHON_VERSION} but ended up with ${this_python}"
             exit 1
           fi
-          export openssl_line=$(echo -e "${voutput}" | grep "OpenSSL: ")
+          export openssl_line=$(echo -e "${voutput}" | grep "OpenSSL ")
           export openssl_arr=($openssl_line)
           export this_openssl=${openssl_arr[2]}
           if [[ "${this_openssl}" != "${COMPILED_OPENSSL_VERSION}" ]]; then
