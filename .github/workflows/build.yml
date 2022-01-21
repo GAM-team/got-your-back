@@ -139,7 +139,7 @@ jobs:
             OPENSSL_CONFIG_TARGET="VC-WIN32"
           fi
           echo "We'll run make with: ${MAKEOPT}"
-          echo "jid=${jid}" >> $GITHUB_ENV
+          echo "JID=${jid}" >> $GITHUB_ENV
           echo "arch=${arch}" >> $GITHUB_ENV
           echo "MAKE=${MAKE}" >> $GITHUB_ENV
           echo "MAKEOPT=${MAKEOPT}" >> $GITHUB_ENV
