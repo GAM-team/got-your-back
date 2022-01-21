@@ -289,7 +289,7 @@ jobs:
 
       - name: Run Python
         run: |
-          "${PYTHON}" helloworld.py
+          "${PYTHON}" gyb.py --version
 
       - name: Upgrade PIP and SetupTools
         if: matrix.goal != 'test'
