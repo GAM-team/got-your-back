@@ -67,15 +67,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Cache
-        id: cache
+      - name: Cache the build
+        id: cache-python-ssl
         uses: actions/cache@v2
-        if: matrix.goal == 'build'
         with:
           path: |
             ./ssl
             ./python
-          key: ${{ matrix.jid }}-20220121
+          key: ${{ matrix.jid }}-20220121-01
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -87,7 +86,7 @@ jobs:
         if: matrix.goal == 'test'
         env:
           JID: ${{ matrix.jid }}
-          ACTIONS_CACHE: ${{ steps.cache.outputs.cache-hit }}
+          ACTIONS_CACHE: ${{ steps.cache-python-ssl.outputs.cache-hit }}
           ACTIONS_GOAL: ${{ matrix.goal }}
         run: |
              export PYTHON=$(which python3)
@@ -150,7 +149,7 @@ jobs:
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_PATH}/lib:${PYTHON_INSTALL_PATH}/lib" >> $GITHUB_ENV
 
       - name: Get latest stable OpenSSL source
-        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/openssl/openssl.git
           cd "${OPENSSL_SOURCE_PATH}"
@@ -161,34 +160,34 @@ jobs:
           echo "COMPILED_OPENSSL_VERSION=${COMPILED_OPENSSL_VERSION}" >> $GITHUB_ENV
       - name: Windows Configure VCode
         uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         with:
           arch: ${{ matrix.arch }}
 
       - name: Windows NASM Install
         uses: ilammy/setup-nasm@v1
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
-        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
           # --libdir=lib is needed so Python can find OpenSSL libraries
           "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
 
       - name: Rename GNU link on Windows
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: bash
         run: mv /usr/bin/link /usr/bin/gnulink
 
       - name: Make OpenSSL
-        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
           $MAKE "${MAKEOPT}"
 
       - name: Install OpenSSL
-        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
           # install_sw saves us ages processing man pages :-)
@@ -200,7 +199,7 @@ jobs:
           "${OPENSSL_INSTALL_PATH}/bin/openssl" version
 
       - name: Get latest stable Python source
-        if: matrix.goal == 'build' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/python/cpython.git
           cd "${PYTHON_SOURCE_PATH}"
@@ -210,7 +209,7 @@ jobs:
           echo "COMPILED_PYTHON_VERSION=${COMPILED_PYTHON_VERSION}" >> $GITHUB_ENV
 
       - name: Mac/Linux Configure Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           ./configure --with-openssl="${OPENSSL_INSTALL_PATH}" \
@@ -221,14 +220,14 @@ jobs:
                       --with-lto
 
       - name: Windows Get External Python deps
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
           PCBuild\get_externals.bat
 
       - name: Windows overwrite external OpenSSL with local
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
@@ -247,7 +246,7 @@ jobs:
           cp "$env:OPENSSL_INSTALL_PATH\include\openssl\applink.c" "${env:OPENSSL_EXT_TARGET_PATH}\include\"
 
       - name: Windows Install sphinx-build
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           pip install --upgrade pip
@@ -255,7 +254,7 @@ jobs:
           sphinx-build --version
 
       - name: Windows Config/Build Python
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
@@ -265,7 +264,7 @@ jobs:
           PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}"
 
       - name: Windows Install Python
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
@@ -274,14 +273,14 @@ jobs:
           Copy-Item -Path "${env:PYTHON_SOURCE_PATH}\Lib\*" "${env:PYTHON_INSTALL_PATH}\lib\" -recurse
 
       - name: Mac/Linux Build Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           echo "Running: ${MAKE} ${MAKEOPT}"
           $MAKE $MAKEOPT
 
       - name: Mac/Linux Install Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           $MAKE altinstall
