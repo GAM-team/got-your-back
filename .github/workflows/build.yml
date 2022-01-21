@@ -46,7 +46,7 @@ jobs:
           - os: [self-hosted, linux, arm]
             jid: 6
             goal: build
-            arch: aarch64
+            arch: armv7l
           - os: ubuntu-20.04
             goal: test
             python: 3.7
