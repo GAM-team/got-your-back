@@ -452,6 +452,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
 
       - name: Upload to Google Drive, build only.
+        continue-on-error: true
         if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'GAM-team'
         env:
           GHCLIENT: ${{ secrets.GHCLIENT }}
