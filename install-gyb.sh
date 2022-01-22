@@ -132,9 +132,9 @@ case $myos in
 esac
 
 if [ "$gybversion" == "latest" -o "$gybversion" == "prerelease" -o "$gybversion" == "draft" ]; then
-  release_url="https://api.github.com/repos/jay0lee/got-your-back/releases"
+  release_url="https://api.github.com/repos/GAM-team/got-your-back/releases"
 else
-  release_url="https://api.github.com/repos/jay0lee/got-your-back/releases/tags/v$gybversion"
+  release_url="https://api.github.com/repos/GAM-team/got-your-back/releases/tags/v$gybversion"
 fi
 
 if [ -z ${GHCLIENT+x} ]; then
