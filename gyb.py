@@ -367,6 +367,7 @@ buckets = {
     "groupsmigration": QuotaBucket(10, 1, 10),
 }
 
+
 def getProgPath():
   if os.environ.get('STATICX_PROG_PATH', False):
     # StaticX static executable
