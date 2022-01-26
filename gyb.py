@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.54'
+__version__ = '1.55'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -238,6 +238,20 @@ where last restore left off.')
     dest='config_folder',
     help='Optional: Alternate folder to store config and credentials',
     default=getProgPath())
+  parser.add_argument('--cleanup',
+          action='store_true',
+          dest='cleanup',
+          help='Attempt to cleanup Message-Id, From and Date headers on restore to avoid issues. MAKES PERMANENT CHANGES TO RESTORED MESSAGES.')
+  now_date_header = email.utils.formatdate(localtime=True)
+  parser.add_argument('--cleanup-date',
+          dest='cleanup_date',
+          help=f'Date header to use if --cleanup is specified and IF message date header is missing or is not parsable. Format should look like "{now_date_header}". Defaults to now.',
+          default=now_date_header)
+  default_cleanup_from = 'GYB Restore <gyb-restore@gyb-restore.local>'
+  parser.add_argument('--cleanup-from',
+          dest='cleanup_from',
+          help=f'From header to use if --cleanup is specified and IF message from header is missing or not parasable. Default is "{default_cleanup_from}". Use a similar format.',
+          default=default_cleanup_from)
   parser.add_argument('--version',
     action='store_true',
     dest='version',
@@ -1693,6 +1707,79 @@ def restore_msg_to_group(gmig, full_message, message_num, sqlconn):
          (message_num,))
     sqlconn.commit()
 
+def cleanup_from(old_from):
+    if not old_from:
+        return options.cleanup_from
+    parsed_from = list(email.utils.parseaddr(old_from))
+    # empty values mean error in parseaddr
+    if not parsed_from[0] and not parsed_from[1]:
+        return options.cleanup_from
+    # no valid email address like:
+    # From: Joe Schmo
+    # Clean this up to:
+    # From: Joe Schmo <gyb-restore@gyb-restore.local
+    # so that we don't lose the real name.
+    if not parsed_from[1] or parsed_from[1].count('@') != 1:
+        parsed_from[1] = 'gyb-restore@gyb-restore.local'
+    # Note that parsed_from[0] == None is perfectly acceptable.
+    # It means the from header is just an email address.
+    # That's what we should land with here also so we don't
+    # change it needlessly.
+    return email.utils.formataddr(tuple(parsed_from))
+
+def message_hygiene(msg):
+    '''Ensure Message-Id, Date and From headers are valid. Replace if not.'''
+    omsg = email.message_from_bytes(msg)
+    orig_id = omsg['message-id']
+    orig_date = omsg['date']
+    orig_from = omsg['from']
+    gyb_changes = []
+    _, orig_id_email = email.utils.parseaddr(orig_id)
+    if not orig_id_email:
+        new_id = email.utils.make_msgid(domain='gyb-restore.local')
+        try:
+            omsg.replace_header('Message-ID', new_id)
+            omsg.add_header('X-GYB-Orig-Msg-Id', orig_id)
+            gyb_changes.append('replaced msgid')
+        except KeyError:
+            omsg.add_header('Message-ID', new_id)
+            gyb_changes.append('added msgid')
+    if not orig_date:
+        new_date = options.cleanup_date
+    else:
+        parsed_datetime = email.utils.parsedate_to_datetime(orig_date)
+        new_date = email.utils.format_datetime(parsed_datetime)
+        # preserve timezone values in parenthesis at end of date header
+        # Python doesn't generate these but they seem to be valid and common.
+        tz_suffix = re.search(r"(\s\(\w{1,6}\))$", orig_date.strip())
+        if tz_suffix:
+            new_date += tz_suffix.group(1)
+        try:
+            new_date_gmt = email.utils.format_datetime(parsed_datetime, usegmt=True)
+        except ValueError:
+            new_date_gmt = 'not valid gmt'
+    if not orig_date or (orig_date != new_date and orig_date != new_date_gmt):
+        try:
+            omsg.replace_header('Date', new_date)
+            omsg.add_header('X-GYB-Orig-Msg-Date', orig_date)
+            gyb_changes.append('replaced date')
+        except KeyError:
+            omsg.add_header('Date', new_date)
+            gyb_changes.append('added date')
+    new_from = cleanup_from(orig_from)
+    if orig_from != new_from:
+        try:
+            omsg.replace_header('From', new_from)
+            omsg.add_header('X-GYB-Orig-Msg-From', orig_from)
+            gyb_changes.append('replaced from')
+        except KeyError:
+            omsg.add_header('From', new_from)
+            gyb_changes.append('added from')
+    if gyb_changes:
+        omsg.add_header('X-GYB-Changes', ', '.join(gyb_changes))
+        omsg.add_header('X-GYB-Changes-Made', email.utils.formatdate(localtime=True))
+    return omsg.as_bytes()
+
 
 def main(argv):
   global options, gmail
@@ -1914,9 +2001,10 @@ def main(argv):
             message_num))
         print('  this message will be skipped.')
         continue
-      f = open(os.path.join(options.local_folder, message_filename), 'rb')
-      full_message = f.read()
-      f.close()
+      with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
+          full_message = f.read()
+      if options.cleanup:
+          full_message = message_hygiene(full_message)
       labels = []
       if not options.strip_labels:
         sqlcur.execute('SELECT DISTINCT label FROM labels WHERE message_num \
@@ -2070,8 +2158,6 @@ def main(argv):
             message = mbox.next()
           except StopIteration:
             break
-          if not message.get_header(b'from', case_insensitive=True):
-            message.set_headers({b'From': b'Not Set <not@set.net>'})
           mbox_pct = percentage(mbox._mbox_position, mbox._mbox_size)
           deleted = options.vault
           labels = options.label_restored.copy()
@@ -2117,6 +2203,8 @@ def main(argv):
           labelIds = labelsToLabelIds(cased_labels)
           rewrite_line(" message %s - %s%%" % (current, mbox_pct))
           full_message = message.as_bytes()
+          if options.cleanup:
+              full_message = message_hygiene(full_message)
           body = {}
           if labelIds:
             body['labelIds'] = labelIds
@@ -2222,9 +2310,10 @@ def main(argv):
             (os.path.join(options.local_folder, message_filename), message_num))
           print('  this message will be skipped.')
           continue
-        f = open(os.path.join(options.local_folder, message_filename), 'rb')
-        full_message = f.read()
-        f.close()
+        with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
+            full_message = f.read()
+        if options.cleanup:
+            full_message = message_hygiene(full_message)
         restore_msg_to_group(gmig, full_message, message_num, sqlconn)
     else: # mbox format
         sqlcur.execute('ATTACH ? as resume', (resumedb,))
@@ -2262,11 +2351,11 @@ def main(argv):
                 message = mbox.next()
               except StopIteration:
                 break
-              if not message.get_header(b'from', case_insensitive=True):
-                message.set_headers({b'From': b'Not Set <not@set.net>'})
               mbox_pct = percentage(mbox._mbox_position, mbox._mbox_size)
               rewrite_line(" message %s - %s%%" % (current, mbox_pct))
               full_message = message.as_bytes()
+              if options.cleanup:
+                  full_message = message_hygiene(full_message)
               restore_msg_to_group(gmig, full_message, request_id, sqlconn)
     sqlconn.commit()
     sqlconn.execute('DETACH resume')
