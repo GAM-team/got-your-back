@@ -113,15 +113,8 @@ google_auth_httplib2.AuthorizedHttp.request = _request_with_user_agent(
   google_auth_httplib2.AuthorizedHttp.request)
 
 def SetupOptionParser(argv):
-  tls_choices = []
-  if getattr(ssl, 'TLSVersion', False):
-    tls_min_default = 'TLSv1_3'
-    tls_vals = list(ssl.TLSVersion)[1:-1]
-    tls_choices = []
-    for val in tls_vals:
-      tls_choices.append(val.name)
-  else:
-    tls_min_default = None
+  tls_choices = ['TLSv1_2', 'TLSv1_3']
+  tls_min_default = tls_choices[-1]
   parser = argparse.ArgumentParser(add_help=False)
   parser.add_argument('--email',
     dest='email',
@@ -216,12 +209,12 @@ where last restore left off.')
       dest='tls_min_version',
       default=tls_min_default,
       choices=tls_choices,
-      help='Python 3.7+ only. Set minimum version of TLS HTTPS connections require. Default is TLSv1_2')
+      help='Set minimum version of TLS HTTPS connections require. Default is TLSv1_3')
     parser.add_argument('--tls-max-version',
       dest='tls_max_version',
       default=None,
       choices=tls_choices,
-      help='Python 3.7+ only. Set maximum version of TLS HTTPS connections use. Default is no max')
+      help='Set maximum version of TLS HTTPS connections use. Default is no max')
   parser.add_argument('--ca-file',
     dest='ca_file',
     default=None,
