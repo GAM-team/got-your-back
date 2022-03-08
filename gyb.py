@@ -46,6 +46,12 @@ from io import BytesIO
 import sys
 import os
 import os.path
+import ipaddress
+import multiprocessing
+from socket import gethostbyname
+from urllib.parse import urlencode, urlparse, parse_qs
+import wsgiref.simple_server
+import wsgiref.util
 import time
 import calendar
 import random
@@ -847,16 +853,132 @@ def shorten_url(long_url):
     print(content)
     return long_url
 
-class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
-  def authorization_url(self, **kwargs):
-    long_url, state = super(ShortURLFlow, self).authorization_url(**kwargs)
-    short_url = shorten_url(long_url)
-    return short_url, state
+def _localhost_to_ip():
+    '''returns IPv4 or IPv6 loopback address which localhost resolves to.
+       If localhost does not resolve to valid loopback IP address then returns
+       127.0.0.1'''
+    # TODO gethostbyname() will only ever return ipv4
+    # find a way to support IPv6 here and get preferred IP
+    # note that IPv6 may be broken on some systems also :-(
+    # for now IPv4 should do.
+    local_ip = gethostbyname('localhost')
+    local_ipaddress = ipaddress.ip_address(local_ip)
+    ip4_local_range = ipaddress.ip_network('127.0.0.0/8')
+    ip6_local_range = ipaddress.ip_network('::1/128')
+    if local_ipaddress not in ip4_local_range and \
+       local_ipaddress not in ip6_local_range:
+           local_ip = '127.0.0.1'
+    return local_ip
 
-MESSAGE_CONSOLE_AUTHORIZATION_PROMPT = '\nGo to the following link in your browser:\n\n\t{url}\n'
-MESSAGE_CONSOLE_AUTHORIZATION_CODE = 'Enter verification code: '
-MESSAGE_LOCAL_SERVER_AUTHORIZATION_PROMPT = '\nYour browser has been opened to visit:\n\n\t{url}\n\nIf your browser is on a different machine then press CTRL+C and delete the oauthbrowser.txt file in the same folder as GYB.\n'
-MESSAGE_LOCAL_SERVER_SUCCESS = 'The authentication flow has completed. You may close this browser window and return to GYB.'
+def _wait_for_http_client(d):
+    wsgi_app = google_auth_oauthlib.flow._RedirectWSGIApp(MESSAGE_LOCAL_SERVER_SUCCESS)
+    wsgiref.simple_server.WSGIServer.allow_reuse_address = False
+    # Convert hostn to IP since apparently binding to the IP
+    # reduces odds of firewall blocking us
+    local_ip = _localhost_to_ip()
+    for port in range(8080, 8099):
+        try:
+            local_server = wsgiref.simple_server.make_server(
+              local_ip,
+              port,
+              wsgi_app,
+              handler_class=wsgiref.simple_server.WSGIRequestHandler
+              )
+            break
+        except OSError:
+            pass
+    redirect_uri_format = (
+        "http://{}:{}/" if d['trailing_slash'] else "http://{}:{}"
+    )
+    # provide redirect_uri to main process so it can formulate auth_url
+    d['redirect_uri'] = redirect_uri_format.format(*local_server.server_address)
+    # wait until main process provides auth_url
+    # so we can open it in web browser.
+    while 'auth_url' not in d:
+        time.sleep(0.1)
+    if d['open_browser']:
+        webbrowser.open(d['auth_url'], new=1, autoraise=True)
+    local_server.handle_request()
+    authorization_response = wsgi_app.last_request_uri.replace("http", "https")
+    d['code'] = authorization_response
+    local_server.server_close()
+
+def _wait_for_user_input(d):
+    sys.stdin = open(0)
+    code = input(MESSAGE_CONSOLE_AUTHORIZATION_CODE)
+    d['code'] = code
+
+MESSAGE_CONSOLE_AUTHORIZATION_PROMPT = '''\nGo to the following link in your browser:
+\n\t{url}\n
+IMPORTANT: If you get a browser error that the site can't be reached AFTER you
+click the Allow button, copy the URL from the browser where the error occurred
+and paste that here instead.
+'''
+MESSAGE_CONSOLE_AUTHORIZATION_CODE = 'Enter verification code or browser URL: '
+MESSAGE_LOCAL_SERVER_SUCCESS = ('The authentication flow has completed. You may'
+                                ' close this browser window and return to GAM.')
+
+MESSAGE_AUTHENTICATION_COMPLETE = ('\nThe authentication flow has completed.\n')
+
+class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
+    def authorization_url(self, **kwargs):
+        long_url, state = super(ShortURLFlow, self).authorization_url(**kwargs)
+        short_url = shorten_url(long_url)
+        return short_url, state
+
+
+    def run_dual(self,
+                 use_console_flow,
+                 authorization_prompt_message='',
+                 console_prompt_message='',
+                 web_success_message='',
+                 open_browser=True,
+                 redirect_uri_trailing_slash=True,
+                 **kwargs):
+        mgr = multiprocessing.Manager()
+        d = mgr.dict()
+        d['trailing_slash'] = redirect_uri_trailing_slash
+        d['open_browser'] = use_console_flow
+        http_client = multiprocessing.Process(target=_wait_for_http_client,
+                                              args=(d,))
+        user_input = multiprocessing.Process(target=_wait_for_user_input,
+                                             args=(d,))
+        http_client.start()
+        # we need to wait until web server starts on avail port
+        # so we know redirect_uri to use
+        while 'redirect_uri' not in d:
+            time.sleep(0.1)
+        self.redirect_uri = d['redirect_uri']
+        d['auth_url'], _ = self.authorization_url(**kwargs)
+        print(MESSAGE_CONSOLE_AUTHORIZATION_PROMPT.format(url=d['auth_url']))
+        user_input.start()
+        userInput = False
+        while True:
+            time.sleep(0.1)
+            if not http_client.is_alive():
+                user_input.terminate()
+                break
+            elif not user_input.is_alive():
+                userInput = True
+                http_client.terminate()
+                break
+        while True:
+            code = d['code']
+            if code.startswith('http'):
+                parsed_url = urlparse(code)
+                parsed_params = parse_qs(parsed_url.query)
+                code = parsed_params.get('code', [None])[0]
+            try:
+                self.fetch_token(code=code)
+                break
+            except Exception as e:
+                if not userInput:
+                    controlflow.system_error_exit(8, str(e))
+                display.print_error(str(e))
+                _wait_for_user_input(d)
+        sys.stdout.write(MESSAGE_AUTHENTICATION_COMPLETE)
+        return self.credentials
+
 def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=None):
   client_config = {
     'installed': {
@@ -872,16 +994,7 @@ def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=No
     kwargs['login_hint'] = login_hint
   # Needs to be set so oauthlib doesn't puke when Google changes our scopes
   os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'true'
-  if not os.path.isfile(os.path.join(options.config_folder, 'oauthbrowser.txt')):
-    flow.run_console(
-            authorization_prompt_message=MESSAGE_CONSOLE_AUTHORIZATION_PROMPT,
-            authorization_code_message=MESSAGE_CONSOLE_AUTHORIZATION_CODE,
-            **kwargs)
-  else:
-    flow.run_local_server(
-            authorization_prompt_message=MESSAGE_LOCAL_SERVER_AUTHORIZATION_PROMPT,
-            success_message=MESSAGE_LOCAL_SERVER_SUCCESS,
-            **kwargs)
+  flow.run_dual(use_console_flow=True, **kwargs)
   return flow.credentials
 
 def getCRMService(login_hint):
