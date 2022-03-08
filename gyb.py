@@ -36,7 +36,7 @@ allLabelIds = dict()
 allLabels = dict()
 reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
   'sent', 'draft', 'chat', 'chats', 'migrated', 'todo', 'todos', 'buzz',
-  'bin', 'allmail', 'drafts', 'archive', 'archived']
+  'bin', 'allmail', 'drafts', 'archive', 'archived', 'muted']
 system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
                  'SENT', 'DRAFT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
                  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS']
