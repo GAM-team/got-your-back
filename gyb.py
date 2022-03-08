@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.55'
+__version__ = '1.60'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'https://git.io/gyb'
 __db_schema_version__ = '6'
@@ -1392,9 +1392,9 @@ def doCheckServiceAccount():
     print('\nAll scopes passed!\nService account %s is fully authorized.' % client_id)
     return
   user_domain = options.email[options.email.find('@')+1:]
-  long_url = (f'https://admin.google.com/{user_domain}/ManageOauthClients'
-              f'?clientScopeToAdd={",".join(all_scopes)}'
-              f'&clientNameToAdd={client_id}')
+  long_url = ('https://admin.google.com/ac/owl/domainwidedelegation'
+                    f'?clientScopeToAdd={",".join(all_scopes)}'
+                    f'&clientIdToAdd={client_id}&overwriteClientId=true')
   short_url = shorten_url(long_url)
   scopes_failed = f'''
 Some scopes failed! To authorize them, please go to:
