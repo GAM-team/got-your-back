@@ -935,6 +935,8 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
                  open_browser=True,
                  redirect_uri_trailing_slash=True,
                  **kwargs):
+        if sys.platform == 'darwin':
+            multiprocessing.set_start_method('fork')
         mgr = multiprocessing.Manager()
         d = mgr.dict()
         d['trailing_slash'] = redirect_uri_trailing_slash
