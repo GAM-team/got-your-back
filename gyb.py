@@ -2636,6 +2636,8 @@ if __name__ == '__main__':
   elif sys.version_info[1] >= 7:
     sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')
     sys.stdin.reconfigure(encoding='utf-8', errors='backslashreplace')
+  if sys.platform.startswith('win'):
+    multiprocessing.freeze_support()
   try:
     main(sys.argv[1:])
   except MemoryError:
