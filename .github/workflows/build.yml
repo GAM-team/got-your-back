@@ -74,7 +74,7 @@ jobs:
           path: |
             ./ssl
             ./python
-          key: ${{ matrix.jid }}-20220325
+          key: ${{ matrix.jid }}-20220329
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -313,8 +313,8 @@ jobs:
           fi
           echo "PyInstaller build arguments: ${PYINSTALLER_BUILD_ARGS}"
           "${PYTHON}" ./waf all $PYINSTALLER_BUILD_ARGS
-          cd ..
-          "${PYTHON}" -m pip install .
+          cd ../..
+          "${PYTHON}" -m pip install pyinstaller
 
       - name: Install pip requirements
         run: |
