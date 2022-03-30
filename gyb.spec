@@ -26,6 +26,10 @@ for d in a.datas:
         break
 
 pyz = PYZ(a.pure)
+
+# strip all non-Windows builds
+strip = not sys.platform == 'win32'
+
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
@@ -33,6 +37,6 @@ exe = EXE(pyz,
           a.datas,
           name='gyb',
           debug=False,
-          strip=None,
+          strip=strip,
           upx=False,
           console=True)
