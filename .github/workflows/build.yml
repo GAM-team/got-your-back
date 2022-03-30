@@ -325,7 +325,7 @@ jobs:
       - name: Build GYB with PyInstaller
         if: matrix.goal != 'test'
         run: |
-             "${PYTHON}" -OO -m PyInstaller --clean --noupx --strip --onefile --distpath=gyb gyb.spec
+             "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
              if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
              else
