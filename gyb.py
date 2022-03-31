@@ -48,7 +48,6 @@ import os
 import os.path
 import ipaddress
 import multiprocessing
-from socket import gethostbyname
 from urllib.parse import urlencode, urlparse, parse_qs
 import wsgiref.simple_server
 import wsgiref.util
@@ -716,6 +715,17 @@ def buildGAPIServiceObject(api, soft_errors=False):
       e = e.args[0]
     systemErrorExit(5, e)
 
+def _backoff(n, retries, reason):
+    wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
+    randomness = float(random.randint(1,1000)) / 1000
+    wait_on_fail += randomness
+    if n > 3:
+        sys.stderr.write('\nTemp error %s. Backing off %s seconds...'
+          % (reason, int(wait_on_fail)))
+    time.sleep(wait_on_fail)
+    if n > 3:
+      sys.stderr.write('attempt %s/%s\n' % (n+1, retries))
+
 def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reasons=[], **kwargs):
   retries = 10
   parameters = kwargs.copy()
@@ -737,6 +747,13 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reaso
         return
       else:
         sys.exit(int(http_status))
+    except (OSError,
+            socket.timeout,
+            socket.gaierror,
+            ssl.SSLEOFError,
+            httplib2.error.ServerNotFoundError) as e:
+        _backoff(n, retries, e)
+        continue
     except googleapiclient.errors.HttpError as e:
       try:
         error = json.loads(e.content.decode('utf-8'))
@@ -752,16 +769,8 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reaso
       if n != retries and (http_status >= 500 or
        reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError'] or
        reason in retry_reasons):
-        wait_on_fail = (2 ** n) if (2 ** n) < 60 else 60
-        randomness = float(random.randint(1,1000)) / 1000
-        wait_on_fail += randomness
-        if n > 3:
-          sys.stderr.write('\nTemp error %s. Backing off %s seconds...'
-            % (reason, int(wait_on_fail)))
-        time.sleep(wait_on_fail)
-        if n > 3:
-          sys.stderr.write('attempt %s/%s\n' % (n+1, retries))
-        continue
+          _backoff(n, retries, reason)
+          continue
       sys.stderr.write('\n%s: %s - %s\n' % (http_status, message, reason))
       if soft_errors:
         sys.stderr.write(' - Giving up.\n')
@@ -861,7 +870,7 @@ def _localhost_to_ip():
     # find a way to support IPv6 here and get preferred IP
     # note that IPv6 may be broken on some systems also :-(
     # for now IPv4 should do.
-    local_ip = gethostbyname('localhost')
+    local_ip = socket.gethostbyname('localhost')
     local_ipaddress = ipaddress.ip_address(local_ip)
     ip4_local_range = ipaddress.ip_network('127.0.0.0/8')
     ip6_local_range = ipaddress.ip_network('::1/128')
@@ -1735,7 +1744,7 @@ def backup_message(request_id, response, exception):
            INSERT INTO labels (message_num, label) VALUES (?, ?)""",
                               (message_num, label))
 
-def _createHttpObj(cache=None, timeout=None):
+def _createHttpObj(cache=None, timeout=600):
   http_args = {'cache': cache, 'timeout': timeout}
   if 'tls_maximum_version' in options:
     http_args['tls_maximum_version'] = options.tls_maximum_version
