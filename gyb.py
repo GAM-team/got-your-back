@@ -693,7 +693,8 @@ def buildGAPIServiceObject(api, soft_errors=False):
   if os.path.isfile(os.path.join(options.config_folder, 'extra-args.txt')):
     config = configparser.ConfigParser()
     config.optionxform = str
-    config.read(getGamPath()+'extra-args.txt')
+    ex_args_file = os.path.join(options.config_folder, 'extra-args.txt')
+    config.read(ex_args_file)
     extra_args.update(dict(config.items('extra-args')))
   httpc = _createHttpObj()
   request = google_auth_httplib2.Request(httpc)
@@ -925,7 +926,7 @@ and paste that here instead.
 '''
 MESSAGE_CONSOLE_AUTHORIZATION_CODE = 'Enter verification code or browser URL: '
 MESSAGE_LOCAL_SERVER_SUCCESS = ('The authentication flow has completed. You may'
-                                ' close this browser window and return to GAM.')
+                                ' close this browser window and return to GYB.')
 
 MESSAGE_AUTHENTICATION_COMPLETE = ('\nThe authentication flow has completed.\n')
 
@@ -1200,7 +1201,7 @@ def doDelProjects():
     callGAPI(crm.projects(), 'delete', projectId=projectId, soft_errors=True)
     print('  Project: {0} Deleted ({1}/{2})'.format(projectId, i, count))
 
-def setGAMProjectConsentScreen(httpObj, projectId, login_hint):
+def setProjectConsentScreen(httpObj, projectId, login_hint):
     print('Setting project consent screen...')
     iap = buildGAPIObject('iap', httpObj)
     body = {'applicationTitle': 'GYB', 'supportEmail': login_hint}
@@ -1326,7 +1327,7 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
                  name=service_account['name'], body=key_body, retry_reasons=[404])
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
-  setGAMProjectConsentScreen(httpc, project_id, login_hint)
+  setProjectConsentScreen(httpc, project_id, login_hint)
   _createClientSecretsOauth2service(project_id)
   print('That\'s it! Your GYB Project is created and ready to use.')
 
