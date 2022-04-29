@@ -7,7 +7,7 @@ Got Your Back (GYB) is a command line tool for backing up your Gmail messages to
 ## Linux / MacOS
 Open a terminal and run:
 ```
-bash <(curl -s -S -L https://git.io/gyb-install)
+bash <(curl -s -S -L https://gyb-shortn.jaylee.us/gyb-install)
 ```
 this will download GYB, install it and start setup.
 ## Windows
