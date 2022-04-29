@@ -458,7 +458,7 @@ jobs:
           GHCLIENT: ${{ secrets.GHCLIENT }}
         run: |
               # Use GAM to upload archive to Drive
-              bash <(curl -s -S -L https://git.io/install-gam) -l
+              bash <(curl -s -S -L https://gam-shortn.appspot.com/install-gam) -l
               for gybfile in gyb-$GYBVERSION-*; do
                 echo "Uploading file ${gybfile} to Google Drive..."
                 export OAUTHSERVICEFILE="${gybpath}/oauth2service.json"
