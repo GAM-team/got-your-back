@@ -26,7 +26,7 @@ __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
 __version__ = '1.63'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
-__website__ = 'https://git.io/gyb'
+__website__ = 'jaylee.us/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
