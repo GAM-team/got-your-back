@@ -350,7 +350,7 @@ jobs:
              rm -f "${gybpath}/lastcheck.txt"
 
       - name: Linux package GYB
-        if: matrix.os != 'windows-2022' && matrix.os != 'macos-11' && matrix.goal == 'build'
+        if: matrix.os != 'windows-2022' && matrix.os != 'macos-12' && matrix.goal == 'build'
         run: |
           this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
@@ -380,7 +380,7 @@ jobs:
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
-        if: matrix.os == 'macos-11' && matrix.goal != 'test'
+        if: matrix.os == 'macos-12' && matrix.goal != 'test'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
           GYB_ARCHIVE="gyb-${GYBVERSION}-macos-x86_64-MacOS${MACOSVERSION}.tar.xz"
