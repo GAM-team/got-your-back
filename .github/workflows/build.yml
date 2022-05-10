@@ -59,9 +59,12 @@ jobs:
             goal: test
             python: 3.9
             jid: 9
+          - os: ubuntu-20.04
+            goal: test
+            python: 3.11-dev
+            jid: 10
 
     steps:
-
       - uses: actions/checkout@master
         with:
           persist-credentials: false
