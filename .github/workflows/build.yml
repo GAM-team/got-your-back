@@ -27,7 +27,7 @@ jobs:
             jid: 1
             goal: build
             arch: x86_64
-          - os: macos-11
+          - os: macos-12
             jid: 2
             goal: build
             arch: x86_64
@@ -77,7 +77,7 @@ jobs:
           path: |
             ./ssl
             ./python
-          key: ${{ matrix.jid }}-20220503
+          key: ${{ matrix.jid }}-20220510
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
