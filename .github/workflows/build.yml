@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             jid: 1
             goal: build
             arch: x86_64
@@ -43,10 +43,6 @@ jobs:
             jid: 5
             goal: build
             arch: aarch64
-          - os: [self-hosted, linux, arm]
-            jid: 6
-            goal: build
-            arch: armv7l
           - os: ubuntu-20.04
             goal: test
             python: 3.8
@@ -73,7 +69,7 @@ jobs:
           path: |
             ./ssl
             ./python
-          key: ${{ matrix.jid }}-20220520
+          key: ${{ matrix.jid }}-20220525
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
