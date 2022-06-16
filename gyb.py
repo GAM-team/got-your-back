@@ -24,13 +24,13 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.63'
+__version__ = '1.70'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'jaylee.us/gyb'
 __db_schema_version__ = '6'
 __db_schema_min_version__ = '6'        #Minimum for restore
 
-global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels
+global extra_args, options, allLabelIds, allLabels, gmail, reserved_labels, thread_msgid_map
 extra_args = {'prettyPrint': False}
 allLabelIds = dict()
 allLabels = dict()
@@ -40,6 +40,8 @@ reserved_labels = ['inbox', 'spam', 'trash', 'unread', 'starred', 'important',
 system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
                  'SENT', 'DRAFT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
                  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS']
+thread_msgid_map = {}
+
 import argparse
 import importlib
 from io import BytesIO
@@ -61,6 +63,10 @@ import socket
 import sqlite3
 import ssl
 import email
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.utils import (format_datetime,
+                         make_msgid)
 import hashlib
 import pkg_resources
 import re
@@ -124,7 +130,7 @@ def SetupOptionParser(argv):
   parser.add_argument('--email',
     dest='email',
     help='Full email address of user or group to act against')
-  action_choices = ['backup','restore', 'restore-group', 'restore-mbox',
+  action_choices = ['backup','backup-chat', 'restore', 'restore-group', 'restore-mbox',
     'count', 'purge', 'purge-labels', 'print-labels', 'estimate', 'quota', 'reindex', 'revoke',
     'split-mbox', 'create-project', 'delete-projects', 'check-service-account', 'create-label']
   parser.add_argument('--action',
@@ -673,9 +679,8 @@ def buildGAPIObject(api, httpc=None):
   except googleapiclient.errors.UnknownApiNameOrVersion:
     disc_file = os.path.join(options.config_folder, '%s-%s.json' % (api, version))
     if os.path.isfile(disc_file):
-      f = file(disc_file, 'r')
-      discovery = f.read()
-      f.close()
+      with open(disc_file, 'r') as f:
+        discovery = f.read()
       return googleapiclient.discovery.build_from_document(discovery,
         base='https://www.googleapis.com', http=httpc)
     else:
@@ -1520,9 +1525,8 @@ def getMessageIDs (sqlconn, backup_folder):
                       WHERE rfc822_msgid IS NULL'''):
     message_full_filename = os.path.join(backup_folder, filename)
     if os.path.isfile(message_full_filename):
-      f = open(message_full_filename, 'r')
-      msgid = header_parser.parse(f, True).get('message-id') or '<DummyMsgID>'
-      f.close()
+      with open(message_full_filename, 'r') as f:
+        msgid = header_parser.parse(f, True).get('message-id') or '<DummyMsgID>'
       sqlcur.execute(
           'UPDATE messages SET rfc822_msgid = ? WHERE message_num = ?',
                      (msgid, message_num))
@@ -1696,15 +1700,71 @@ def purged_message(request_id, response, exception):
   if exception is not None:
     raise exception
 
+def backup_chat(request_id, response, exception):
+  if exception is not None:
+    print(exception)
+    return
+  labelIds = response.get('labelIds', [])
+  labels = labelIdsToLabels(labelIds)
+  message_file_name = "%s.eml" % (response['id'])
+  message_time = int(response['internalDate'])/1000
+  message_datetime = datetime.datetime.fromtimestamp(message_time)
+  message_date = time.gmtime(message_time)
+  message = MIMEMultipart("alternative")
+  html = base64.urlsafe_b64decode(response['payload']['body'].get('data', '')).decode()
+  part = MIMEText(html, "html")
+  message.attach(part)
+  for header in response['payload'].get('headers', []):
+    if header['name'] == 'From':
+      message['From'] = header['value']
+  message['Date'] = format_datetime(message_datetime)
+  thread_id = response.get('threadId')
+  message['Message-ID'] = make_msgid(domain='gyb-chat-backup')
+  if thread_id not in thread_msgid_map:
+    # for each thread_id we create a fake msgid and use it for
+    # In-Reply-To. The fake msgid isn't the Message-ID for any
+    # real message but using it as In-Reply-To on all messages
+    # in the thread lets Gmail properly thread the Chat conversation.
+    thread_msgid_map[thread_id] = make_msgid(domain='gyb-chat-backup')
+  message['In-Reply-To'] = thread_msgid_map[thread_id]
+  try:
+    time_for_sqlite = datetime.datetime.fromtimestamp(message_time)
+  except (OSError, IOError, OverflowError):
+    time_for_sqlite = datetime.datetime.fromtimestamp(86400) # minimal value Win accepts
+  message_rel_path = os.path.join(str(message_date.tm_year),
+                                  str(message_date.tm_mon),
+                                  str(message_date.tm_mday))
+  message_rel_filename = os.path.join(message_rel_path,
+                                      message_file_name)
+  message_full_path = os.path.join(options.local_folder,
+                                   message_rel_path)
+  message_full_filename = os.path.join(options.local_folder,
+                                       message_rel_filename)
+  if not os.path.isdir(message_full_path):
+    os.makedirs(message_full_path)
+  with open(message_full_filename, 'wb') as f:
+    f.write(message.as_string().encode())
+  sqlcur.execute("""
+            INSERT INTO messages (
+                     message_filename,
+                     message_internaldate) VALUES (?, ?)""",
+                    (message_rel_filename,
+                     time_for_sqlite))
+  message_num = sqlcur.lastrowid
+  sqlcur.execute("""
+           REPLACE INTO uids (message_num, uid) VALUES (?, ?)""",
+                           (message_num, response['id']))
+  for label in labels:
+    sqlcur.execute("""
+       INSERT INTO labels (message_num, label) VALUES (?, ?)""",
+                          (message_num, label))
+
 def backup_message(request_id, response, exception):
   if exception is not None:
     print(exception)
   else:
-    if 'labelIds' in response:
-      labelIds = response['labelIds']
-    else:
-      labelIds = list()
-    if 'CHATS' in labelIds: # skip CHATS
+    labelIds = response.get('labelIds', [])
+    if 'CHATS' in labelIds or 'CHAT' in labelIds: # skip CHATS
       return
     labels = labelIdsToLabels(labelIds)
     message_file_name = "%s.eml" % (response['id'])
@@ -1725,11 +1785,10 @@ def backup_message(request_id, response, exception):
                                      message_rel_filename)
     if not os.path.isdir(message_full_path):
       os.makedirs(message_full_path)
-    f = open(message_full_filename, 'wb')
     raw_message = str(response['raw'])
     full_message = base64.urlsafe_b64decode(raw_message)
-    f.write(full_message)
-    f.close()
+    with open(message_full_filename, 'wb') as f:
+      f.write(full_message)
     sqlcur.execute("""
              INSERT INTO messages (
                          message_filename, 
@@ -1954,7 +2013,7 @@ def main(argv):
   else:
     gmail = buildGAPIServiceObject('gmail')
   if not os.path.isdir(options.local_folder):
-    if options.action in ['backup',]:
+    if options.action in ['backup', 'backup-chat']:
       os.mkdir(options.local_folder)
     elif options.action in ['restore', 'restore-group', 'restore-mbox']:
       print('ERROR: Folder %s does not exist. Cannot restore.'
@@ -2076,6 +2135,60 @@ def main(argv):
         (refreshed_messages, refresh_count))
     print("\n")
 
+  # BACKUP-CHAT
+  elif options.action == 'backup-chat':
+    if options.batch_size == 0:
+      options.batch_size = 50
+    if options.gmail_search == '-is:chat':
+      options.gmail_search = 'is:chat'
+    page_message = 'Got %%total_items%% Chat IDs'
+    messages_to_process = callGAPIpages(gmail.users().messages(),
+      'list', items='messages', page_message=page_message, maxResults=500,
+      userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
+      fields='nextPageToken,messages/id')
+    backup_path = options.local_folder
+    if not os.path.isdir(backup_path):
+      os.mkdir(backup_path)
+    messages_to_backup = []
+    # Determine which messages from the search we haven't processed before.
+    print("GYB needs to examine %s Chats" % len(messages_to_process))
+    for message_num in messages_to_process:
+      if newDB or not message_is_backed_up(message_num['id'], sqlcur, sqlconn,
+              options.local_folder):
+        messages_to_backup.append(message_num['id'])
+    print("GYB already has a backup of %s Chats" %
+      (len(messages_to_process) - len(messages_to_backup)))
+    backup_count = len(messages_to_backup)
+    print("GYB needs to backup %s Chats" % backup_count)
+    if options.memory_limit:
+      memory_limit = options.memory_limit * 1024 * 1024
+      message_sizes = getSizeOfMessages(messages_to_backup, gmail)
+      request_size = 0
+    backed_up_messages = 0
+    gbatch = gmail.new_batch_http_request()
+    for a_message in messages_to_backup:
+      if options.memory_limit:
+        request_size += message_sizes[a_message]
+      if len(gbatch._order) == options.batch_size or (options.memory_limit and request_size >= memory_limit):
+        callGAPI(gbatch, None, soft_errors=True)
+        gbatch = gmail.new_batch_http_request()
+        sqlconn.commit()
+        if options.memory_limit:
+          request_size = message_sizes[a_message]
+        rewrite_line("backed up %s of %s Chats" %
+          (backed_up_messages, backup_count))
+      gbatch.add(gmail.users().messages().get(userId='me',
+        id=a_message, format='full',
+        fields='id,threadId,internalDate,labelIds,payload'),
+        callback=backup_chat)
+      backed_up_messages += 1
+    if len(gbatch._order) > 0:
+      callGAPI(gbatch, None, soft_errors=True)
+      sqlconn.commit()
+      rewrite_line("backed up %s of %s messages" %
+        (backed_up_messages, backup_count))
+    print("\n")
+
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
@@ -2130,11 +2243,13 @@ def main(argv):
         labels_results = sqlcur.fetchall()
         for l in labels_results:
           if options.label_prefix:
-            if l[0].lower()!="unread":
+            if l[0].lower() != 'unread':
               labels.append(options.label_prefix[0] + "/" + l[0])
             else:
               labels.append(l[0])
           else:
+            if l == ('CHAT',):
+              l = ('Chats_restored',)
             labels.append(l[0])
       if options.label_restored:
         for restore_label in options.label_restored:

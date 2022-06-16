@@ -445,6 +445,7 @@ jobs:
               $gyb --action print-labels --email $gyb_user --service-account
               $gyb --action backup --email $gyb_user
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
+              $gyb --action backup-chat --email $gyb_user
 
       - name: Upload to Google Drive, build only.
         continue-on-error: true
