@@ -43,15 +43,15 @@ jobs:
             jid: 5
             goal: build
             arch: aarch64
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             goal: test
             python: 3.8
             jid: 7
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             goal: test
             python: 3.9
             jid: 8
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             goal: test
             python: 3.11-dev
             jid: 9
@@ -351,24 +351,24 @@ jobs:
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Linux install patchelf/staticx
-        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal != 'test'
         run: |
           "${PYTHON}" -m pip install --upgrade patchelf-wrapper
           "${PYTHON}" -m pip install --upgrade staticx
 
       - name: Linux Make Static GYB
-        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal != 'test'
         run: |
           $PYTHON -m staticx gyb/gyb gyb/gyb-staticx
           
       - name: Linux Run StaticX-ed GYB
-        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal != 'test'
         run: |
           gyb/gyb-staticx --version
           mv gyb/gyb-staticx gyb/gyb
 
       - name: Linux package staticx GYB
-        if: matrix.os == 'ubuntu-20.04' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal != 'test'
         run: |
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-x86_64-legacy.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
