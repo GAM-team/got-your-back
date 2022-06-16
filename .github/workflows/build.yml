@@ -379,7 +379,7 @@ jobs:
       - name: Linux package staticx GYB
         if: runner.os == 'Linux' && matrix.goal != 'test'
         run: |
-          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-x86_64-legacy.tar.xz"
+          GYB_ARCHIVE="gyb-${GYBVERSION}-linux--$(uname -m)-legacy.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
