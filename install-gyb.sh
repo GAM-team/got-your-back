@@ -28,7 +28,7 @@ upgrade_only=false
 gybversion="latest"
 adminuser=""
 regularuser=""
-glibc_vers="2.31"
+glibc_vers="2.35"
 
 while getopts "hd:a:o:b:lp:u:r:v:" OPTION
 do
@@ -109,10 +109,9 @@ case $myos in
     done
     case $myarch in
       x86_64) gybfile="linux-x86_64-$useglibc.tar.xz";;
-      arm64|aarch64) gybfile="linux-aarch64-glibc2.28.tar.xz";;
-      armv7l) gybfile="linux-armv7l-glibc2.28.tar.xz";;
+      arm64|aarch64) gybfile="linux-aarch64-$useglibc.tar.xz";;
       *)
-        echo_red "ERROR: this installer currently only supports x86_64, aarch64 and armv7l. Looks like you're running on $myarch. You'll need to try the Python source. Exiting."
+        echo_red "ERROR: this installer currently only supports x86_64 and aarch64 architectures. Looks like you're running on $myarch. You'll need to try the Python source. Exiting."
         exit
     esac
     ;;
