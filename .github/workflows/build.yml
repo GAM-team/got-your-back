@@ -163,7 +163,7 @@ jobs:
       - name: Windows Choco Packages Install
         if: runner.os == 'Windows'
         run: |
-          choco install sqlite $CHOCO_OPS
+          choco install sqlite $CHOC_OPS
 
       - name: Windows NASM Install
         uses: ilammy/setup-nasm@v1
