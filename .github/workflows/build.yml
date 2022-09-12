@@ -69,7 +69,7 @@ jobs:
           path: |
             ./ssl
             ./python
-          key: ${{ matrix.jid }}-20220907
+          key: ${{ matrix.jid }}-20220912
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -125,10 +125,12 @@ jobs:
             PYEXTERNALS_PATH="amd64"
             PYBUILDRELEASE_ARCH="x64"
             OPENSSL_CONFIG_TARGET="VC-WIN64A"
+            CHOC_OPS=""
           elif [[ "${arch}" == "Win32" ]]; then
             PYEXTERNALS_PATH="win32"
             PYBUILDRELEASE_ARCH="Win32"
             OPENSSL_CONFIG_TARGET="VC-WIN32"
+            CHOC_OPS="--forcex86"
           fi
           echo "We'll run make with: ${MAKEOPT}"
           echo "JID=${jid}" >> $GITHUB_ENV
@@ -139,6 +141,7 @@ jobs:
           echo "PYEXTERNALS_PATH=${PYEXTERNALS_PATH}" >> $GITHUB_ENV
           echo "PYBUILDRELEASE_ARCH=${PYBUILDRELEASE_ARCH}" >> $GITHUB_ENV
           echo "OPENSSL_CONFIG_TARGET=${OPENSSL_CONFIG_TARGET}" >> $GITHUB_ENV
+          echo "CHOC_OPS=${CHOC_OPS}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_PATH}/lib:${PYTHON_INSTALL_PATH}/lib" >> $GITHUB_ENV
 
       - name: Get latest stable OpenSSL source
@@ -156,6 +159,11 @@ jobs:
         if: matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         with:
           arch: ${{ matrix.arch }}
+
+      - name: Windows Choco Packages Install
+        if: runner.os == 'Windows'
+        run: |
+          choco install sqlite $CHOCO_OPS
 
       - name: Windows NASM Install
         uses: ilammy/setup-nasm@v1
