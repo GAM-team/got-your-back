@@ -465,7 +465,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
               $gyb --action backup-chat --email $gyb_user
 
-        name: VirusTotal Scan
+      - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v3
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal != 'test'
         with:
