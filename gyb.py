@@ -41,6 +41,7 @@ system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
                  'SENT', 'DRAFT', 'CATEGORY_PERSONAL', 'CATEGORY_SOCIAL',
                  'CATEGORY_PROMOTIONS', 'CATEGORY_UPDATES', 'CATEGORY_FORUMS']
 thread_msgid_map = {}
+mbox_extensions = ['mbx', 'mbox', 'eml']
 
 import argparse
 import importlib
@@ -2365,7 +2366,6 @@ def main(argv):
                 vault_label_map[fileid] = labels
               elem.clear()  # keep memory usage down on very large files
     # Look for and restore mbox files
-    mbox_extensions = ['mbx', 'mbox', 'eml']
     for path, subdirs, files in os.walk(options.local_folder):
       for filename in files:
         file_extension = filename.split('.')[-1]
@@ -2561,8 +2561,8 @@ def main(argv):
             # Look for and restore mbox files
         for path, subdirs, files in os.walk(options.local_folder):
           for filename in files:
-            if filename[-4:].lower() != '.mbx' and \
-              filename[-5:].lower() != '.mbox':
+            file_extension = filename.split('.')[-1]
+            if file_extension not in mbox_extensions:
               continue
             file_path = os.path.join(path, filename)
             print("\nRestoring from %s file %s..." % (humansize(file_path), file_path))
