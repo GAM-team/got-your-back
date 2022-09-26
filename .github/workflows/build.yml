@@ -465,25 +465,19 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
               $gyb --action backup-chat --email $gyb_user
 
-      - name: Upload to Google Drive, build only.
-        continue-on-error: true
-        if: github.event_name == 'push' && matrix.goal == 'build' && github.repository_owner == 'GAM-team'
-        env:
-          GHCLIENT: ${{ secrets.GHCLIENT }}
-        run: |
-              # Use GAM to upload archive to Drive
-              bash <(curl -s -S -L https://gam-shortn.appspot.com/install-gam) -l
-              for gybfile in gyb-$GYBVERSION-*; do
-                echo "Uploading file ${gybfile} to Google Drive..."
-                export OAUTHSERVICEFILE="${gybpath}/oauth2service.json"
-                fileid=$(~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefile localfile $gybfile drivefilename $GYBVERSION-${GITHUB_SHA:0:7}-$gybfile parentid 1nM76gFy3aW1orENiyJGW1v4wmtoNAkQO returnidonly)
-                echo "file uploaded as ${fileid}, setting ACL..."
-                ~/bin/gam/gam user gyb-project-cp6-xqa-vk3@gyb-project-cp6-xqa-vk3.iam.gserviceaccount.com add drivefileacl $fileid anyone role reader withlink
-              done
+        name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@v3
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal != 'test'
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            *.tar.xz
+            *.zip
+            *.msi
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
-        if: github.event_name == 'push' && matrix.goal != 'test'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal != 'test'
         with:
           name: gyb-binaries
           path: |
