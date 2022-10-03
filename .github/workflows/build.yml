@@ -397,7 +397,7 @@ jobs:
         if: matrix.os == 'macos-12' && matrix.goal != 'test'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
-          GYB_ARCHIVE="gyb-${GYBVERSION}-macos-x86_64-MacOS${MACOSVERSION}.tar.xz"
+          GYB_ARCHIVE="gyb-${GYBVERSION}-macos-x86_64.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Windows package GYB
