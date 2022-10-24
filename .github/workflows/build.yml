@@ -312,7 +312,7 @@ jobs:
           cd pyinstaller
           export latest_release=$(git tag --list | grep -v dev | grep -v rc | sort -Vr | head -n1)
           echo $latest_release
-          export latest_release="v5.3"
+          # export latest_release="v5.3"
           git checkout "${latest_release}"
           # remove pre-compiled bootloaders so we fail if bootloader compile fails
           rm -rf PyInstaller/bootloader/*-*/*
