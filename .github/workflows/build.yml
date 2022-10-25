@@ -69,6 +69,7 @@ jobs:
           path: |
             ./ssl
             ./python
+            ./src/cpython/PCbuild
           key: ${{ matrix.jid }}-20221024
 
       - name: Use pre-compiled Python
@@ -102,6 +103,17 @@ jobs:
           jid: ${{ matrix.jid }}
         run: |
           echo "We are running on ${RUNNER_OS}"
+          if [[ "${arch}" == "Win64" ]]; then
+            PYEXTERNALS_PATH="amd64"
+            PYBUILDRELEASE_ARCH="x64"
+            OPENSSL_CONFIG_TARGET="VC-WIN64A"
+            CHOC_OPS=""
+          elif [[ "${arch}" == "Win32" ]]; then
+            PYEXTERNALS_PATH="win32"
+            PYBUILDRELEASE_ARCH="Win32"
+            OPENSSL_CONFIG_TARGET="VC-WIN32"
+            CHOC_OPS="--forcex86"
+          fi
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             MAKE=make
             MAKEOPT="-j$(sysctl -n hw.logicalcpu)"
@@ -119,18 +131,7 @@ jobs:
             MAKE=nmake
             MAKEOPT=""
             PERL="c:\strawberry\perl\bin\perl.exe"
-            echo "PYTHON=${PYTHON_INSTALL_PATH}\python.exe" >> $GITHUB_ENV
-          fi
-          if [[ "${arch}" == "Win64" ]]; then
-            PYEXTERNALS_PATH="amd64"
-            PYBUILDRELEASE_ARCH="x64"
-            OPENSSL_CONFIG_TARGET="VC-WIN64A"
-            CHOC_OPS=""
-          elif [[ "${arch}" == "Win32" ]]; then
-            PYEXTERNALS_PATH="win32"
-            PYBUILDRELEASE_ARCH="Win32"
-            OPENSSL_CONFIG_TARGET="VC-WIN32"
-            CHOC_OPS="--forcex86"
+            echo "PYTHON=${PYTHON_SOURCE_PATH}/PCbuild/${PYEXTERNALS_PATH}/python.exe" >> $GITHUB_ENV
           fi
           echo "We'll run make with: ${MAKEOPT}"
           echo "JID=${jid}" >> $GITHUB_ENV
@@ -263,15 +264,6 @@ jobs:
           Copy-Item -Path "${env:GITHUB_WORKSPACE}\openssl.props" -Destination PCBuild\ -verbose
           echo "Building for ${env:PYBUILDRELEASE_ARCH}..."
           PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}"
-
-      - name: Windows Install Python
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
-        shell: powershell
-        run: |
-          cd "${env:PYTHON_SOURCE_PATH}"
-          mkdir "${env:PYTHON_INSTALL_PATH}\lib"
-          Copy-Item -Path "PCBuild\${env:PYEXTERNALS_PATH}\*" "${env:PYTHON_INSTALL_PATH}\" -verbose
-          Copy-Item -Path "${env:PYTHON_SOURCE_PATH}\Lib\*" "${env:PYTHON_INSTALL_PATH}\lib\" -recurse -verbose
 
       - name: Mac/Linux Build Python
         if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
