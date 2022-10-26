@@ -69,8 +69,8 @@ jobs:
           path: |
             ./ssl
             ./python
-            ./src/cpython/PCbuild
-          key: ${{ matrix.jid }}-20221024
+            ./cpython/PCbuild
+          key: ${{ matrix.jid }}-20221026
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
