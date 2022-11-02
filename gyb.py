@@ -1121,7 +1121,7 @@ def _createClientSecretsOauth2service(projectId):
   console_credentials_url = f'https://console.cloud.google.com/apis/credentials/oauthclient?project={projectId}'
   while True:
     if '@gmail.com' in options.email:
-            print('''
+      print('''
 Please go to:
 %s
 As you are using a regular @gmail.com account, you will need to configure consent screen manually.
@@ -1150,7 +1150,7 @@ As you are using a regular @gmail.com account, you will need to configure consen
 23. Enter Client ID and Client Secret into GYB Setup.
 ''' % console_credentials_url)
     else:
-            print('''
+      print('''
 Please go to:
 %s
 1. Choose "Desktop App" for "Application Type"
