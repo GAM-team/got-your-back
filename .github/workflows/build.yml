@@ -35,10 +35,6 @@ jobs:
             jid: 3
             goal: build
             arch: Win64
-          - os: windows-2022
-            jid: 4
-            goal: build
-            arch: Win32
           - os: [self-hosted, linux, arm64]
             jid: 5
             goal: build
