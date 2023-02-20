@@ -300,13 +300,12 @@ jobs:
           cd pyinstaller
           export latest_release=$(git tag --list | grep -v dev | grep -v rc | sort -Vr | head -n1)
           echo $latest_release
-          # export latest_release="v5.3"
           git checkout "${latest_release}"
           # remove pre-compiled bootloaders so we fail if bootloader compile fails
           rm -rf PyInstaller/bootloader/*-*/*
           cd bootloader
-          if [[ "${arch}" == "Win32" ]]; then
-            export PYINSTALLER_BUILD_ARGS="--target-arch=32bit"
+          if [[ "${arch}" == "Win64" ]]; then
+            export PYINSTALLER_BUILD_ARGS="--target-arch=64bit"
           fi
           echo "PyInstaller build arguments: ${PYINSTALLER_BUILD_ARGS}"
           "${PYTHON}" ./waf all $PYINSTALLER_BUILD_ARGS
@@ -317,7 +316,7 @@ jobs:
       - name: Build GYB with PyInstaller
         if: matrix.goal != 'test'
         run: |
-             "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
+             "${PYTHON}" -m PyInstaller --clean --distpath=gyb --target-arch=gyb.spec
              if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
              else
