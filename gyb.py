@@ -892,7 +892,10 @@ def _wait_for_http_client(d):
     # Convert hostn to IP since apparently binding to the IP
     # reduces odds of firewall blocking us
     local_ip = _localhost_to_ip()
-    for port in range(8080, 8099):
+    local_server = None
+    tries = 0
+    for port in range(8080, 8999):
+        tries += 1
         try:
             local_server = wsgiref.simple_server.make_server(
               local_ip,
@@ -901,8 +904,10 @@ def _wait_for_http_client(d):
               handler_class=wsgiref.simple_server.WSGIRequestHandler
               )
             break
-        except OSError:
-            pass
+        except OSError as exc:
+            print("%d: %s:%d: %s" % (tries, local_ip, port, str(exc)))
+    if not local_server:
+        sys.exit("Unable to find available port")
     redirect_uri_format = (
         "http://{}:{}/" if d['trailing_slash'] else "http://{}:{}"
     )
