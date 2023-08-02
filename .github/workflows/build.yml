@@ -168,7 +168,7 @@ jobs:
 
       - name: Windows NASM Install
         uses: ilammy/setup-nasm@v1
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -178,7 +178,7 @@ jobs:
           "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
 
       - name: Rename GNU link on Windows
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: bash
         run: mv /usr/bin/link /usr/bin/gnulink
 
@@ -211,7 +211,7 @@ jobs:
           echo "COMPILED_PYTHON_VERSION=${COMPILED_PYTHON_VERSION}" >> $GITHUB_ENV
 
       - name: Mac/Linux Configure Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os != 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           ./configure --with-openssl="${OPENSSL_INSTALL_PATH}" \
@@ -222,14 +222,14 @@ jobs:
                       --with-lto
 
       - name: Windows Get External Python deps
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
           PCBuild\get_externals.bat
 
       - name: Windows overwrite external OpenSSL with local
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
@@ -248,7 +248,7 @@ jobs:
           cp "$env:OPENSSL_INSTALL_PATH\include\openssl\applink.c" "${env:OPENSSL_EXT_TARGET_PATH}\include\"
 
       - name: Windows Install sphinx-build
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           pip install --upgrade pip
@@ -256,7 +256,7 @@ jobs:
           sphinx-build --version
 
       - name: Windows Config/Build Python
-        if: matrix.goal == 'build' && matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           cd "${env:PYTHON_SOURCE_PATH}"
@@ -266,14 +266,14 @@ jobs:
           PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}"
 
       - name: Mac/Linux Build Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os != 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           echo "Running: ${MAKE} ${MAKEOPT}"
           $MAKE $MAKEOPT
 
       - name: Mac/Linux Install Python
-        if: matrix.goal == 'build' && matrix.os != 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os != 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${PYTHON_SOURCE_PATH}"
           $MAKE altinstall
@@ -318,7 +318,7 @@ jobs:
           "${PYTHON}" -m PyInstaller --version
 
       - name: Build GYB with PyInstaller
-        if: matrix.goal != 'test'
+        if: matrix.goal == 'build'
         run: |
              "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
              if [ -x "$(command -v realpath)" ]; then
@@ -346,20 +346,20 @@ jobs:
              rm -f "${gybpath}/lastcheck.txt"
 
       - name: Linux package GYB
-        if: matrix.os != 'windows-2022' && matrix.os != 'macos-12' && matrix.goal == 'build'
+        if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
           this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Linux install patchelf/staticx
-        if: runner.os == 'Linux' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
           "${PYTHON}" -m pip install --upgrade patchelf-wrapper
           "${PYTHON}" -m pip install --upgrade staticx
 
       - name: Linux Make Static GYB
-        if: runner.os == 'Linux' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
           case $RUNNER_ARCH in
             X64)
@@ -373,26 +373,26 @@ jobs:
           $PYTHON -m staticx -l "${ldlib}" gyb/gyb gyb/gyb-staticx
           
       - name: Linux Run StaticX-ed GYB
-        if: runner.os == 'Linux' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
           gyb/gyb-staticx --version
           mv gyb/gyb-staticx gyb/gyb
 
       - name: Linux package staticx GYB
-        if: runner.os == 'Linux' && matrix.goal != 'test'
+        if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(uname -m)-legacy.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
-        if: matrix.os == 'macos-12' && matrix.goal != 'test'
+        if: runner.os == 'macOS' && matrix.goal == 'build'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
           GYB_ARCHIVE="gyb-${GYBVERSION}-macos-${arch}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Windows package GYB
-        if: matrix.os == 'windows-2022' && matrix.goal != 'test'
+        if: runner.os == 'Windows' && matrix.goal == 'build'
         run: |
           cp gyb-setup.bat gyb
           GYB_ARCHIVE=gyb-$GYBVERSION-windows-x86_64.zip
@@ -458,7 +458,7 @@ jobs:
 
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v3
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal != 'test'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           files: |
@@ -468,7 +468,7 @@ jobs:
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal != 'test'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           name: gyb-binaries
           path: |
