@@ -24,7 +24,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-20.04
-            jid: 6
+            jid: 1
             goal: build
             arch: x86_64
           - os: macos-12
@@ -32,11 +32,11 @@ jobs:
             goal: build
             arch: x86_64
           - os: [self-hosted, macOS, ARM64]
-            jid: 4
+            jid: 3
             goal: build
             arch: aarch64
           - os: windows-2022
-            jid: 3
+            jid: 4
             goal: build
             arch: Win64
           - os: [self-hosted, linux, arm64]
@@ -46,15 +46,15 @@ jobs:
           - os: ubuntu-22.04
             goal: test
             python: "3.8"
-            jid: 7
+            jid: 6
           - os: ubuntu-22.04
             goal: test
             python: "3.9"
-            jid: 8
+            jid: 7
           - os: ubuntu-22.04
             goal: test
             python: "3.10"
-            jid: 9
+            jid: 8
 
     steps:
       - uses: actions/checkout@master
@@ -70,7 +70,7 @@ jobs:
             ./ssl
             ./python
             ./cpython
-          key: ${{ matrix.jid }}-20230802
+          key: ${{ matrix.jid }}-20230802-01
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
