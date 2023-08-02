@@ -23,8 +23,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
-            jid: 1
+          - os: ubuntu-20.04
+            jid: 6
             goal: build
             arch: x86_64
           - os: macos-12
