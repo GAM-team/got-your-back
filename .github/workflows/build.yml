@@ -31,6 +31,10 @@ jobs:
             jid: 2
             goal: build
             arch: x86_64
+          - os: [self-hosted, macOS, ARM64]
+            jid: 4
+            goal: build
+            arch: aarch64
           - os: windows-2022
             jid: 3
             goal: build
@@ -49,7 +53,7 @@ jobs:
             jid: 8
           - os: ubuntu-22.04
             goal: test
-            python: 3.11-dev
+            python: 3.10
             jid: 9
 
     steps:
@@ -66,7 +70,7 @@ jobs:
             ./ssl
             ./python
             ./cpython
-          key: ${{ matrix.jid }}-20230314
+          key: ${{ matrix.jid }}-20230802
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -384,7 +388,7 @@ jobs:
         if: matrix.os == 'macos-12' && matrix.goal != 'test'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
-          GYB_ARCHIVE="gyb-${GYBVERSION}-macos-x86_64.tar.xz"
+          GYB_ARCHIVE="gyb-${GYBVERSION}-macos-${arch}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: Windows package GYB
