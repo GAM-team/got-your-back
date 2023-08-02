@@ -121,8 +121,14 @@ case $myos in
     else
       this_macos_ver=$osversion
     fi
-    echo_green "You are running MacOS $this_macos_ver"
-    gybfile="macos-x86_64.tar.xz"
+    echo_green "You are running MacOS ${this_macos_ver} on ${myarch}"
+    case $myarch in
+      x86_64) gybfile="macos-x86_64.tar.xz";;
+      arm64|aarch64) gybfile="macos-x86_64.tar.xz";; # TODO update once arm64 builds exist
+      *)
+        echo_red "ERROR: this installer currently suppports x86_64 and aarch64 architectures. Looks like you're running on $myarch. Exiting"
+	exit
+    esac
     ;;
   *)
     echo_red "Sorry, this installer currently only supports Linux and MacOS. Looks like you're runnning on $myos. Exiting."
