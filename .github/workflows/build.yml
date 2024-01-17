@@ -45,20 +45,16 @@ jobs:
             arch: aarch64
           - os: ubuntu-22.04
             goal: test
-            python: "3.8"
+            python: "3.9"
             jid: 7
           - os: ubuntu-22.04
             goal: test
-            python: "3.9"
+            python: "3.10"
             jid: 8
           - os: ubuntu-22.04
             goal: test
-            python: "3.10"
-            jid: 9
-          - os: ubuntu-22.04
-            goal: test
             python: "3.11"
-            jid: 10
+            jid: 9
 
     steps:
       - uses: actions/checkout@master
