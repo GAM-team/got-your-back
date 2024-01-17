@@ -11,7 +11,7 @@ defaults:
     shell: bash
 
 env:
-  OPENSSL_CONFIG_OPTS: no-fips
+  OPENSSL_CONFIG_OPTS: no-fips --api=3.0.0
   OPENSSL_INSTALL_PATH: ${{ github.workspace }}/ssl
   OPENSSL_SOURCE_PATH: ${{ github.workspace }}/openssl
   PYTHON_INSTALL_PATH: ${{ github.workspace }}/python
