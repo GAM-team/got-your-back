@@ -1970,7 +1970,9 @@ def adapt_datetime_iso(val):
 
 def adapt_datetime_epoch(val):
     """Adapt datetime.datetime to Unix timestamp."""
-    return int(val.timestamp())
+    # yuck, we aren't actually storing timestamps in the GYB database.
+    #return int(val.timestamp())
+    return str(val)
 
 def convert_date(val):
     """Convert ISO 8601 date to datetime.date object."""
@@ -1982,7 +1984,10 @@ def convert_datetime(val):
 
 def convert_timestamp(val):
     """Convert Unix epoch timestamp to datetime.datetime object."""
-    return datetime.datetime.fromtimestamp(int(val))
+    # yuck, we aren't actually storing timestamps in the GYB
+    # database. I blame the original developer :-)
+    # return datetime.datetime.fromtimestamp(int(val))
+    return datetime.datetime.strptime(val.decode('UTF-8'), '%Y-%m-%d %H:%M:%S')
 
 def main(argv):
   global options, gmail
