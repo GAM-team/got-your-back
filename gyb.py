@@ -2356,7 +2356,7 @@ def main(argv):
           file_path = os.path.join(path, filename)
           print("\nReading Vault labels from %s file %s" % (humansize(file_path), file_path))
           print("large files may take some time to read...")
-          elif file_suffix == '.xml':
+          if file_suffix == '.xml':
               for _, elem in etree.iterparse(file_path, events=('end',)):
                   if elem.tag == 'Document':
                       labels = ''
