@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.74'
+__version__ = '1.80'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'jaylee.us/gyb'
 __db_schema_version__ = '6'
@@ -44,6 +44,7 @@ thread_msgid_map = {}
 mbox_extensions = ['mbx', 'mbox', 'eml']
 
 import argparse
+from csv import DictReader
 import importlib
 from io import BytesIO
 import sys
@@ -2343,28 +2344,38 @@ def main(argv):
     current_batch_bytes = 5000
     gbatch = gmail.new_batch_http_request()
     max_batch_bytes = 8 * 1024 * 1024
-    # Look for Google Vault XML metadata which contains message labels map
+    # Look for Google Vault XML and CSV metadata which contains message labels map
     vault_label_map = {}
+    vault_csv_label_map = {}
     if not options.strip_labels:
       for path, subdirs, files in os.walk(options.local_folder):
         for filename in files:
-          if filename[-4:].lower() != '.xml':
+          file_suffix = filename[-4:].lower()
+          if file_suffix not in ['.xml', '.csv']:
             continue
           file_path = os.path.join(path, filename)
           print("\nReading Vault labels from %s file %s" % (humansize(file_path), file_path))
           print("large files may take some time to read...")
-          for _, elem in etree.iterparse(file_path, events=('end',)):
-            if elem.tag == 'Document':
-              labels = ''
-              fileid = None
-              for tag in elem.iter('Tag'):
-                if tag.attrib['TagName'] == 'Labels':
-                  labels = tag.attrib.get('TagValue', '')
-              for file in elem.iter('ExternalFile'):
-                fileid = file.attrib.get('FileName', None)
-              if fileid and labels:
-                vault_label_map[fileid] = labels
-              elem.clear()  # keep memory usage down on very large files
+          elif file_suffix == '.xml':
+              for _, elem in etree.iterparse(file_path, events=('end',)):
+                  if elem.tag == 'Document':
+                      labels = ''
+                      fileid = None
+                      for tag in elem.iter('Tag'):
+                          if tag.attrib['TagName'] == 'Labels':
+                              labels = tag.attrib.get('TagValue', '')
+                      for file in elem.iter('ExternalFile'):
+                          fileid = file.attrib.get('FileName', None)
+                      if fileid and labels:
+                          vault_label_map[fileid] = labels
+                  elem.clear()  # keep memory usage down on very large files
+          elif file_suffix == '.csv':
+              with open(file_path, 'r') as f:
+                  csv_data = DictReader(f)
+                  for row in csv_data:
+                      msg_id = row.get('Rfc822MessageId')
+                      if msg_id:
+                          vault_csv_label_map[msg_id] = row.get('Labels', '')
     # Look for and restore mbox files
     for path, subdirs, files in os.walk(options.local_folder):
       for filename in files:
@@ -2399,6 +2410,10 @@ def main(argv):
               mbox_from = message.get_from()
               mbox_fileid = mbox_from.split('@')[0]
               labels_str = vault_label_map.get(mbox_fileid, '')
+            elif vault_csv_label_map:
+                # message id (minus < and >)
+                msg_id = message.get_header(b'message-id', case_insensitive=True)[1:-2]
+                labels_str = vault_csv_label_map.get(msg_id, '')
             else:
               labels_str = message.get_header(b'X-Gmail-Labels')
             mybytes, encoding = email.header.decode_header(labels_str)[0]

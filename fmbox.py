@@ -24,13 +24,15 @@ class fmsg():
     check_folded_header = False
     for line in self.msg_bytes.split(b'\n'):
       if case_insensitive:
-        line = line.lower()
+        search_line = line.lower()
+      else:
+        search_line = line
       if check_folded_header:
         if line.startswith(b' ') or line.startswith(b'\t'):
           header_value += line.lstrip()
         else:
           return header_value.decode()
-      elif line.startswith(b'%s: ' % header):
+      elif search_line.startswith(b'%s: ' % header):
         header_value = line[len(header)+2:]
         check_folded_header = True
       elif line == '':
