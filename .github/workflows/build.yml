@@ -39,7 +39,7 @@ jobs:
             jid: 4
             goal: build
             arch: Win64
-          - os: [self-hosted, linux, arm64, eph]
+          - os: [self-hosted, linux, arm64]
             jid: 5
             goal: build
             arch: aarch64
