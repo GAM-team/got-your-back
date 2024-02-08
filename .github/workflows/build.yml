@@ -27,11 +27,11 @@ jobs:
             jid: 1
             goal: build
             arch: x86_64
-          - os: macos-12
+          - os: macos-13
             jid: 2
             goal: build
             arch: x86_64
-          - os: [self-hosted, macOS, ARM64]
+          - os: macos-14
             jid: 3
             goal: build
             arch: aarch64
