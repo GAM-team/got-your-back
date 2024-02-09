@@ -64,14 +64,19 @@ jobs:
           fetch-depth: 0
 
       - name: Cache the build
+        if: matrix.goal == 'build'
         id: cache-python-ssl
         uses: actions/cache@v2
         with:
           path: |
-            ./ssl
-            ./python
-            ./cpython
-          key: ${{ matrix.jid }}-2024-02-08a
+            cache.tar.xz
+          key: ${{ matrix.jid }}-2024-02-09
+
+      - name: Untar Cache archive
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          tar xvvf cache.tar.xz
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
@@ -477,3 +482,14 @@ jobs:
             *.tar.xz
             *.zip
             *.msi
+
+      - name: Tar Cache archive
+        if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [[ "${RUNNER_OS}" == "Windows" ]]; then
+            tar_folder="cpython/"
+          else
+            tar_folder="ssl/ python/"
+          fi
+          tar cJvvf cache.tar.xz $tar_folder
