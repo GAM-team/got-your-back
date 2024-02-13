@@ -474,7 +474,7 @@ jobs:
             *.msi
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           name: gyb-binaries
