@@ -80,7 +80,7 @@ jobs:
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
 
