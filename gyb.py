@@ -1637,6 +1637,9 @@ def labelsToLabelIds(labels):
         allLabels[a_label['name']] = a_label['id']
   labelIds = list()
   for label in labels:
+    labelparts = label.split("/")
+    labelparts = [x.upper() if x.lower() in reserved_labels else x for x in labelparts]
+    label = "/".join(labelparts)
     # convert language system labels to standard
     label = labellang.mappings.get(label.upper(), label)
     if label.upper() in system_labels:
@@ -2483,6 +2486,9 @@ def main(argv):
               cased_labels.append(label)
             else:
               cased_labels.append(label)
+          if options.label_prefix:
+            prefix = "/".join(options.label_prefix)
+            cased_labels = ["%s/%s" % (prefix, label) for label in cased_labels]
           labelIds = labelsToLabelIds(cased_labels)
           rewrite_line(" message %s - %s%%" % (current, mbox_pct))
           full_message = message.as_bytes()
