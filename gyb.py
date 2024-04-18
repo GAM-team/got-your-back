@@ -2092,7 +2092,7 @@ def main(argv):
   # BACKUP #
   if options.action == 'backup':
     if options.batch_size == 0:
-      options.batch_size = 100
+      options.batch_size = 10
     page_message = 'Got %%total_items%% Message IDs'
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', page_message=page_message, maxResults=500,
