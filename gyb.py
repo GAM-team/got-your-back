@@ -2175,7 +2175,7 @@ def main(argv):
   # BACKUP-CHAT
   elif options.action == 'backup-chat':
     if options.batch_size == 0:
-      options.batch_size = 50
+      options.batch_size = 10
     if options.gmail_search == '-is:chat':
       options.gmail_search = 'is:chat'
     page_message = 'Got %%total_items%% Chat IDs'
@@ -2229,7 +2229,7 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 15 
+      options.batch_size = 3
     resumedb = os.path.join(options.local_folder, 
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -2357,7 +2357,7 @@ def main(argv):
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
     if options.batch_size == 0:
-      options.batch_size = 15
+      options.batch_size = 3
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -2647,7 +2647,7 @@ def main(argv):
   # COUNT 
   elif options.action == 'count':
     if options.batch_size == 0:
-      options.batch_size = 100
+      options.batch_size = 10
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', maxResults=500,
       userId='me', includeSpamTrash=options.spamtrash, q=options.gmail_search,
