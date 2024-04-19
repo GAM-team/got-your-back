@@ -469,9 +469,9 @@ jobs:
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           files: |
-            *.tar.xz
-            *.zip
-            *.msi
+            gyb*.tar.xz
+            gyb*.zip
+            gyb*.msi
 
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
@@ -479,9 +479,9 @@ jobs:
         with:
           name: ${{ matrix.jid }}
           path: |
-            *.tar.xz
-            *.zip
-            *.msi
+            gyb*.tar.xz
+            gyb*.zip
+            gyb*.msi
 
       - name: Tar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
