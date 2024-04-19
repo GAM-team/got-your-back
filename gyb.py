@@ -2776,7 +2776,7 @@ otaBytesByService,quotaType')
   # ESTIMATE #
   elif options.action == 'estimate':
     if options.batch_size == 0:
-      options.batch_size = 100
+      options.batch_size = 10
     page_message = 'Got %%total_items%% Message IDs'
     messages_to_process = callGAPIpages(gmail.users().messages(),
       'list', items='messages', page_message=page_message,
