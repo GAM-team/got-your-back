@@ -2229,7 +2229,7 @@ def main(argv):
   # RESTORE #
   elif options.action == 'restore':
     if options.batch_size == 0:
-      options.batch_size = 3
+      options.batch_size = 1
     resumedb = os.path.join(options.local_folder, 
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
@@ -2357,7 +2357,7 @@ def main(argv):
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
     if options.batch_size == 0:
-      options.batch_size = 3
+      options.batch_size = 1
     resumedb = os.path.join(options.local_folder,
                             "%s-restored.sqlite" % options.email)
     if options.noresume:
