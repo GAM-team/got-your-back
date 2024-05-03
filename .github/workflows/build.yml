@@ -343,6 +343,12 @@ jobs:
              echo "gyb=$(${realpath} ./gyb/gyb)" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
+      - name: Attest Binary Provenance
+        uses: actions/attest-build-provenance@v1
+        if: matrix.goal == 'build'
+        with:
+          subject-path: ${{ env.gyb }}
+
       - name: Basic Tests all jobs
         run: |
              echo -e "PYTHON: $PYTHON\ngyb: $gyb\ngybpath: $gybpath\n"
@@ -468,7 +474,7 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
               $gyb --action backup-chat --email $gyb_user
 
-      - name: Attest Build Provenance
+      - name: Attest Build Archive Provenance
         uses: actions/attest-build-provenance@v1
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
