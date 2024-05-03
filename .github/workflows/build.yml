@@ -359,7 +359,7 @@ jobs:
              echo "gybpath=$(${realpath} ./gyb/)" >> $GITHUB_ENV
              gyb=$(${realpath} ./gyb/gyb)
              if [[ "${RUNNER_OS}" == "Windows" ]]; then
-               gyb+=".exe"
+               gyb=$(cygpath -w "$gyb")
              fi
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
