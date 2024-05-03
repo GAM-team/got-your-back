@@ -493,7 +493,7 @@ jobs:
             gyb*.msi
 
       - name: VirusTotal Scan
-        uses: crazy-max/ghaction-virustotal@v3
+        uses: crazy-max/ghaction-virustotal@v4
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
