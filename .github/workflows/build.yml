@@ -472,7 +472,10 @@ jobs:
         uses: actions/attest-build-provenance@v1
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
-          subject-path: gyb*.{tar.xz,zip,msi}
+          subject-path: |
+            gyb*.tar.xz
+            gyb*.zip
+            gyb*.msi
 
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v3
