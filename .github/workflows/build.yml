@@ -406,9 +406,9 @@ jobs:
           if [[ "${staticx}" == "yes" ]]; then
             this_glibc_ver="legacy"
           else
-            this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
+            this_glibc_ver=glibc$(ldd --version | awk '/ldd/{print $NF}')
           fi
-          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
+          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-${this_glibc_ver}.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
