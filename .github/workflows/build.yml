@@ -471,7 +471,7 @@ jobs:
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v1
         with:
-        subject-path: gyb*.{tar.xz,zip,msi}
+          subject-path: gyb*.{tar.xz,zip,msi}
 
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v3
