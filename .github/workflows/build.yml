@@ -470,6 +470,7 @@ jobs:
 
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v1
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           subject-path: gyb*.{tar.xz,zip,msi}
 
