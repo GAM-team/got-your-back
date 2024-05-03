@@ -33,34 +33,44 @@ jobs:
             jid: 1
             goal: build
             arch: x86_64
-          - os: macos-12
+          - os: ubuntu-20.04
             jid: 2
             goal: build
             arch: x86_64
-          - os: macos-14
+            staticx: yes
+          - os: macos-12
             jid: 3
+            goal: build
+            arch: x86_64
+          - os: macos-14
+            jid: 4
             goal: build
             arch: aarch64
           - os: windows-2022
-            jid: 4
+            jid: 5
             goal: build
             arch: Win64
           - os: [self-hosted, linux, arm64]
-            jid: 5
+            jid: 6
             goal: build
             arch: aarch64
+          - os: [self-hosted, linux, arm64]
+            jid: 7
+            goal: build
+            arch: aarch64
+            staticx: yes
           - os: ubuntu-22.04
             goal: test
             python: "3.9"
-            jid: 7
-          - os: ubuntu-22.04
-            goal: test
-            python: "3.10"
             jid: 8
           - os: ubuntu-22.04
             goal: test
-            python: "3.11"
+            python: "3.10"
             jid: 9
+          - os: ubuntu-22.04
+            goal: test
+            python: "3.11"
+            jid: 10
 
     steps:
       - uses: actions/checkout@master
@@ -75,7 +85,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2024-04-18
+          key: ${{ matrix.jid }}-2024-05-03
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
@@ -112,6 +122,7 @@ jobs:
         env:
           arch: ${{ matrix.arch }}
           jid: ${{ matrix.jid }}
+          staticx: ${{ matrix.staticx }}
         run: |
           echo "We are running on ${RUNNER_OS}"
           if [[ "${arch}" == "Win64" ]]; then
@@ -147,6 +158,7 @@ jobs:
           echo "We'll run make with: ${MAKEOPT}"
           echo "JID=${jid}" >> $GITHUB_ENV
           echo "arch=${arch}" >> $GITHUB_ENV
+          echo "staticx=${staticx}" >> $GITHUB_ENV
           echo "MAKE=${MAKE}" >> $GITHUB_ENV
           echo "MAKEOPT=${MAKEOPT}" >> $GITHUB_ENV
           echo "PERL=${PERL}" >> $GITHUB_ENV
@@ -166,6 +178,7 @@ jobs:
           git checkout "${LATEST_STABLE_TAG}"
           export COMPILED_OPENSSL_VERSION=${LATEST_STABLE_TAG:8} # Trim the openssl- prefix
           echo "COMPILED_OPENSSL_VERSION=${COMPILED_OPENSSL_VERSION}" >> $GITHUB_ENV
+
       - name: Windows Configure VCode
         uses: ilammy/msvc-dev-cmd@v1
         if: matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -343,6 +356,26 @@ jobs:
              echo "gyb=$(${realpath} ./gyb/gyb)" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
+      - name: Linux install patchelf/staticx
+        if: matrix.staticx == 'yes'
+        run: |
+          "${PYTHON}" -m pip install --upgrade patchelf-wrapper
+          "${PYTHON}" -m pip install --upgrade staticx
+
+      - name: Linux Make Static GYB
+        if: matrix.staticx == 'yes'
+        run: |
+          case $RUNNER_ARCH in
+            X64)
+              ldlib=/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+              ;;
+            ARM64)
+              ldlib=/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+              ;;
+          esac
+          echo "ldlib=${ldlib}"
+          $PYTHON -m staticx -l "${ldlib}" gyb/gyb gyb/gyb-staticx
+
       - name: Attest Binary Provenance
         uses: actions/attest-build-provenance@v1
         if: matrix.goal == 'build'
@@ -366,40 +399,12 @@ jobs:
       - name: Linux package GYB
         if: runner.os == 'Linux' && matrix.goal == 'build'
         run: |
-          this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
+          if [[ "${staticx}" == "yes" ]]; then
+            this_glibc_ver="legacy"
+          else
+            this_glibc_ver=$(ldd --version | awk '/ldd/{print $NF}')
+          fi
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-glibc${this_glibc_ver}.tar.xz"
-          tar cfJ $GYB_ARCHIVE gyb/
-
-      - name: Linux install patchelf/staticx
-        if: runner.os == 'Linux' && matrix.goal == 'build'
-        run: |
-          "${PYTHON}" -m pip install --upgrade patchelf-wrapper
-          "${PYTHON}" -m pip install --upgrade staticx
-
-      - name: Linux Make Static GYB
-        if: runner.os == 'Linux' && matrix.goal == 'build'
-        run: |
-          case $RUNNER_ARCH in
-            X64)
-              ldlib=/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
-              ;;
-            ARM64)
-              ldlib=/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
-              ;;
-          esac
-          echo "ldlib=${ldlib}"
-          $PYTHON -m staticx -l "${ldlib}" gyb/gyb gyb/gyb-staticx
-          
-      - name: Linux Run StaticX-ed GYB
-        if: runner.os == 'Linux' && matrix.goal == 'build'
-        run: |
-          gyb/gyb-staticx --version
-          mv gyb/gyb-staticx gyb/gyb
-
-      - name: Linux package staticx GYB
-        if: runner.os == 'Linux' && matrix.goal == 'build'
-        run: |
-          GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(uname -m)-legacy.tar.xz"
           tar cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
