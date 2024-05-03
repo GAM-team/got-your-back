@@ -353,7 +353,11 @@ jobs:
                realpath=grealpath
              fi
              echo "gybpath=$(${realpath} ./gyb/)" >> $GITHUB_ENV
-             echo "gyb=$(${realpath} ./gyb/gyb)" >> $GITHUB_ENV
+             gyb=$({realpath} ./gyb/gyb)
+             if [[ "${RUNNER_OS}" == "Windows" ]]; then
+               gyb+=".exe"
+             fi
+             echo "gyb=${gyb}" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
       - name: Linux install patchelf/staticx
