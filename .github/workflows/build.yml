@@ -468,6 +468,11 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
               $gyb --action backup-chat --email $gyb_user
 
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+        subject-path: gyb*.{tar.xz,zip,msi}
+
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v3
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
@@ -484,14 +489,6 @@ jobs:
         with:
           name: gyb-binaries-${{ env.OS }}-${{ env.arch }}-${{ matrix.jid }}
           path: |
-            gyb*.tar.xz
-            gyb*.zip
-            gyb*.msi
-
-      - name: Attest Build Provenance
-        uses: actions/attest-build-provenance@v1
-        with:
-        subject-path: |
             gyb*.tar.xz
             gyb*.zip
             gyb*.msi
