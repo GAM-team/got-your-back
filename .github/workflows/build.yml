@@ -138,6 +138,7 @@ jobs:
           fi
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             MAKE=make
+            OS=macos
             MAKEOPT="-j$(sysctl -n hw.logicalcpu)"
             PERL=perl
             # We only care about non-deprecated OSes
@@ -146,17 +147,20 @@ jobs:
             echo "PYTHON=${PYTHON_INSTALL_PATH}/bin/python3" >> $GITHUB_ENV
           elif [[ "${RUNNER_OS}" == "Linux" ]]; then
             MAKE=make
+            OS=linux
             MAKEOPT="-j$(nproc)"
             PERL=perl
             echo "PYTHON=${PYTHON_INSTALL_PATH}/bin/python3" >> $GITHUB_ENV
           elif [[ "${RUNNER_OS}" == "Windows" ]]; then
             MAKE=nmake
+            OS=windows
             MAKEOPT=""
             PERL="c:\strawberry\perl\bin\perl.exe"
             echo "PYTHON=${PYTHON_SOURCE_PATH}/PCbuild/${PYEXTERNALS_PATH}/python.exe" >> $GITHUB_ENV
           fi
           echo "We'll run make with: ${MAKEOPT}"
           echo "JID=${jid}" >> $GITHUB_ENV
+          echo "OS=${OS}" >> $GITHUB_ENV
           echo "arch=${arch}" >> $GITHUB_ENV
           echo "staticx=${staticx}" >> $GITHUB_ENV
           echo "MAKE=${MAKE}" >> $GITHUB_ENV
