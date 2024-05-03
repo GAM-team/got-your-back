@@ -1,5 +1,10 @@
 name: Build and test GYB
 
+permissions:
+  id-token: write
+  attestations: write
+  contents: read
+
 on:
   push:
   pull_request:
@@ -479,6 +484,14 @@ jobs:
         with:
           name: gyb-binaries-${{ env.OS }}-${{ env.arch }}-${{ matrix.jid }}
           path: |
+            gyb*.tar.xz
+            gyb*.zip
+            gyb*.msi
+
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+        subject-path: |
             gyb*.tar.xz
             gyb*.zip
             gyb*.msi
