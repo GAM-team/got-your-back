@@ -71,6 +71,10 @@ jobs:
             goal: test
             python: "3.11"
             jid: 10
+          - os: ubuntu-22.04
+            goal: test
+            python: "3.12"
+            jid: 11
 
     steps:
       - uses: actions/checkout@master
