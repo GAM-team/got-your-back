@@ -183,7 +183,7 @@ visible in user\'s Gmail but are subject to Vault discovery/retention.')
   parser.add_argument('--service-account',
     action='store_true',
     dest='service_account',
-    help='G Suite only. Use OAuth 2.0 Service \
+    help='Google Workspace only. Use OAuth 2.0 Service \
 Account to authenticate.')
   parser.add_argument('--use-admin',
     dest='use_admin',
@@ -492,7 +492,7 @@ def requestOAuthAccess():
 [%s]  3)  Gmail Full Access - read/write mailbox access and message purge
 [%s]  4)  No Gmail Access
 
-[%s]  5)  Groups Restore - write to G Suite Groups Archive
+[%s]  5)  Groups Restore - write to Google Workspace Groups Archive
 [%s]  6)  Storage Quota - Drive app config scope used for --action quota
 
       7)  Continue
@@ -895,7 +895,7 @@ def getValidateLoginHint(login_hint):
     if VALIDEMAIL_PATTERN.match(login_hint):
       return login_hint
   while True:
-    login_hint = input('\nWhat is your G Suite admin email address? ').strip()
+    login_hint = input('\nWhat is your Google Workspace admin email address? ').strip()
     if VALIDEMAIL_PATTERN.match(login_hint):
       return login_hint
     print('Error: that is not a valid email address')
@@ -1480,7 +1480,7 @@ Some scopes failed! To authorize them, please go to:
 
   {short_url}
 
-You will be redirected to the G Suite admin console. The Client Name and API
+You will be redirected to the Google Workspace admin console. The Client Name and API
 Scopes fields will be pre-populated. Please click Authorize to allow these
 scopes access. After authorizing it may take some time for this test to pass so
 go grab a cup of coffee and then try this command again.
