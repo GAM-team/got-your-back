@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.81'
+__version__ = '1.82'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'jaylee.us/gyb'
 __db_schema_version__ = '6'
@@ -88,7 +88,8 @@ import google_auth_oauthlib.flow
 import google_auth_httplib2
 import google.oauth2.id_token
 import googleapiclient
-import googleapiclient.discovery
+from googleapiclient.discovery import build, build_from_document, V2_DISCOVERY_URI
+from googleapiclient.http import MediaIoBaseUpload, BatchHttpRequest
 import googleapiclient.errors
 
 import fmbox
@@ -295,7 +296,7 @@ def getQuota(method):
     method (googleapiclient.http.HttpRequest | googleapiclient.http.BatchHttpRequest):
       a method API request that needs quota prior to sending.
   """
-  if isinstance(method, googleapiclient.http.BatchHttpRequest):
+  if isinstance(method, BatchHttpRequest):
     method_ids = [m.methodId for m in method._requests.values()]
   else:
     method_ids = [method.methodId]
@@ -406,7 +407,8 @@ def getValidOauth2TxtCredentials(force_refresh=False):
     retries = 3
     for n in range(1, retries+1):
       try:
-        credentials.refresh(google_auth_httplib2.Request(_createHttpObj()))
+        req = google_auth_httplib2.Request(_createHttpObj())
+        credentials.refresh(req)
         writeCredentials(credentials)
         break
       except google.auth.exceptions.RefreshError as e:
@@ -428,7 +430,14 @@ def getOauth2TxtStorageCredentials():
   if not oauth_string:
     return
   oauth_data = json.loads(oauth_string)
-  creds = google.oauth2.credentials.Credentials.from_authorized_user_file(cfgFile)
+  oauth_data['type'] = 'authorized_user'
+  if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+     os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+      oauth_data['token_uri'] = 'https://oauth2.mtls.googleapis.com/token'
+  else:
+      oauth_data['token_uri'] = 'https://oauth2.googleapis.com/token'
+  google.oauth2.credentials._GOOGLE_OAUTH2_TOKEN_ENDPOINT = oauth_data['token_uri']
+  creds = google.oauth2.credentials.Credentials.from_authorized_user_info(oauth_data)
   creds.token = oauth_data.get('token', oauth_data.get('auth_token', ''))
   creds._id_token = oauth_data.get('id_token_jwt', oauth_data.get('id_token', None))
   token_expiry = oauth_data.get('token_expiry', '1970-01-01T00:00:01Z')
@@ -659,6 +668,18 @@ def getAPIScope(api):
   elif api == 'drive':
     return ['https://www.googleapis.com/auth/drive.appdata']
 
+def get_cert_files():
+    return (os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE'),
+            os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'),
+            None)
+
+def getClientOptions():
+    client_options = {}
+    if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+       os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+        client_options['client_encrypted_cert_source'] = get_cert_files
+    return client_options
+
 def buildGAPIObject(api, httpc=None):
   if not httpc:
     credentials = getValidOauth2TxtCredentials()
@@ -671,24 +692,52 @@ def buildGAPIObject(api, httpc=None):
     config.read(os.path.join(options.config_folder, 'extra-args.txt'))
     extra_args.update(dict(config.items('extra-args')))
   version = getAPIVer(api)
+  client_options = getClientOptions()
   try:
-    return googleapiclient.discovery.build(
+    service = build(
             api,
             version,
             http=httpc,
             cache_discovery=False,
+            client_options=client_options,
             static_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
-    disc_file = os.path.join(options.config_folder, '%s-%s.json' % (api, version))
+    disc_file = os.path.join(options.config_folder, f'{api}-{version}.json')
     if os.path.isfile(disc_file):
       with open(disc_file, 'r') as f:
         discovery = f.read()
-      return googleapiclient.discovery.build_from_document(discovery,
-        base='https://www.googleapis.com', http=httpc)
+      service = build_from_document(discovery,
+        http=httpc)
     else:
       print('No online discovery doc and %s does not exist locally'
         % disc_file)
       raise
+  if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+       os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+           root_url = service._rootDesc.get('rootUrl')
+           mtls_root_url = service._rootDesc.get('mtlsRootUrl')
+           if not mtls_root_url:
+               if api == 'oauth2':
+                   # OA2 API is broken on mTLS, just use regular host
+                   mtls_root_url = root_url
+               else:
+                   mtls_root_url = re.sub(r'googleapis\.com',
+                                          'mtls.googleapis.com',
+                                          root_url)
+           base_url = service._rootDesc.get('baseUrl')
+           base_url_suffix = base_url.replace(root_url, '')
+           mtls_base_url = f'{mtls_root_url}{base_url_suffix}'
+
+           # force TLS URLs
+           service._rootDesc['baseUrl'] = mtls_base_url
+           service._rootDesc['rootUrl'] = mtls_root_url
+           service._baseUrl = mtls_base_url
+           # rebuild functions like batch with TLS URL
+           service._add_basic_methods(
+                   service._resourceDesc,
+                   service._rootDesc,
+                   service._schema)
+  return service
 
 def buildGAPIServiceObject(api, soft_errors=False):
   global extra_args
@@ -707,12 +756,14 @@ def buildGAPIServiceObject(api, soft_errors=False):
   request = google_auth_httplib2.Request(httpc)
   credentials.refresh(request)
   version = getAPIVer(api)
+  client_options = getClientOptions()
   try:
-    service = googleapiclient.discovery.build(
+    service = build(
             api,
             version,
             http=httpc,
             cache_discovery=False,
+            client_options=client_options,
             static_discovery=False)
     service._http = google_auth_httplib2.AuthorizedHttp(credentials, http=httpc)
     return service
@@ -988,7 +1039,12 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
                 parsed_params = parse_qs(parsed_url.query)
                 code = parsed_params.get('code', [None])[0]
             try:
-                self.fetch_token(code=code)
+                kwargs = {'code': code}
+                if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+                   os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+                       cert, key, _ = get_cert_files()
+                       kwargs['cert'] = (cert, key)
+                self.fetch_token(**kwargs)
                 break
             except Exception as e:
                 if not userInput:
@@ -999,22 +1055,26 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
         return self.credentials
 
 def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=None):
-  client_config = {
-    'installed': {
-      'client_id': client_id, 'client_secret': client_secret,
-      'redirect_uris': ['http://localhost', 'urn:ietf:wg:oauth:2.0:oob'],
-      'auth_uri': 'https://accounts.google.com/o/oauth2/v2/auth',
-      'token_uri': 'https://oauth2.googleapis.com/token',
+    token_uri = 'https://oauth2.googleapis.com/token'
+    if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+       os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+           token_uri = 'https://oauth2.mtls.googleapis.com/token'
+    client_config = {
+      'installed': {
+        'client_id': client_id, 'client_secret': client_secret,
+        'redirect_uris': ['http://localhost', 'urn:ietf:wg:oauth:2.0:oob'],
+        'auth_uri': 'https://accounts.google.com/o/oauth2/v2/auth',
+        'token_uri': token_uri
+        }
       }
-    }
-  flow = ShortURLFlow.from_client_config(client_config, scopes, autogenerate_code_verifier=True)
-  kwargs = {'access_type': access_type}
-  if login_hint:
-    kwargs['login_hint'] = login_hint
-  # Needs to be set so oauthlib doesn't puke when Google changes our scopes
-  os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'true'
-  flow.run_dual(use_console_flow=True, **kwargs)
-  return flow.credentials
+    flow = ShortURLFlow.from_client_config(client_config, scopes, autogenerate_code_verifier=True)
+    kwargs = {'access_type': access_type}
+    if login_hint:
+        kwargs['login_hint'] = login_hint
+    # Needs to be set so oauthlib doesn't puke when Google changes our scopes
+    os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = 'true'
+    flow.run_dual(use_console_flow=True, **kwargs)
+    return flow.credentials
 
 def getCRMService(login_hint):
   scope = 'https://www.googleapis.com/auth/cloud-platform'
@@ -1022,13 +1082,13 @@ def getCRMService(login_hint):
   client_secret = 'qM3dP8f_4qedwzWQE1VR4zzU'
   credentials = _run_oauth_flow(client_id, client_secret, scope, 'online', login_hint)
   httpc = google_auth_httplib2.AuthorizedHttp(credentials)
-  crm = googleapiclient.discovery.build(
+  crm = build(
           'cloudresourcemanager',
           'v1',
           http=httpc,
           cache_discovery=False,
           static_discovery=False,
-          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
+          discoveryServiceUrl=V2_DISCOVERY_URI)
   return (crm, httpc)
 
 GYB_PROJECT_APIS = 'https://raw.githubusercontent.com/jay0lee/got-your-back/master/project-apis.txt?'
@@ -1041,13 +1101,13 @@ def enableProjectAPIs(project_name, checkEnabled, httpc):
     print('ERROR: tried to retrieve %s but got %s' % (GYB_PROJECT_APIS, s.status))
     sys.exit(0)
   apis = c.decode("utf-8").splitlines()
-  serveu = googleapiclient.discovery.build(
+  serveu = build(
           'serviceusage',
           'v1',
           http=httpc,
           cache_discovery=False,
           static_discovery=False,
-          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
+          discoveryServiceUrl=V2_DISCOVERY_URI)
   if checkEnabled:
     enabledServices = callGAPIpages(serveu.services(), 'list', 'services',
                                     parent=parent, filter='state:ENABLED',
@@ -1309,13 +1369,13 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
       sys.exit(2)
     break
   enableProjectAPIs(project_id, False, httpc)
-  iam = googleapiclient.discovery.build(
+  iam = build(
           'iam',
           'v1',
           http=httpc,
           cache_discovery=False,
           static_discovery=False,
-          discoveryServiceUrl=googleapiclient.discovery.V2_DISCOVERY_URI)
+          discoveryServiceUrl=V2_DISCOVERY_URI)
   print('Creating Service Account')
   sa_body = {
              'accountId': project_id,
@@ -1812,7 +1872,12 @@ def _createHttpObj(cache=None, timeout=600):
     http_args['tls_maximum_version'] = options.tls_maximum_version
   if 'tls_minimum_version' in options:
     http_args['tls_minimum_version'] = options.tls_minimum_version
-  return httplib2.Http(**http_args)
+  httpc = httplib2.Http(**http_args)
+  if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+     os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+    cert, key, _ = get_cert_files()
+    httpc.add_certificate(key, cert, "")
+  return httpc
 
 def bytes_to_larger(myval):
   myval = int(myval)
@@ -1869,7 +1934,7 @@ def getSizeOfMessages(messages, gmail):
 
 def restore_msg_to_group(gmig, full_message, message_num, sqlconn):
     fstr = BytesIO(full_message)
-    media = googleapiclient.http.MediaIoBaseUpload(fstr,
+    media = MediaIoBaseUpload(fstr,
                                                    mimetype='message/rfc822',
                                                    chunksize=-1,
                                                    resumable=True)
@@ -2012,9 +2077,14 @@ def main(argv):
     print(ssl.OPENSSL_VERSION)
     anonhttpc = _createHttpObj()
     headers = {'User-Agent': getGYBVersion(' | ')}
-    anonhttpc.request('https://gmail.googleapis.com', headers=headers)
-    cipher_name, tls_ver, _ = anonhttpc.connections['https:gmail.googleapis.com'].sock.cipher()
-    print('gmail.googleapis.com connects using %s %s' % (tls_ver, cipher_name))
+    if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
+     os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+      host = 'gmail.mtls.googleapis.com'
+    else:
+      host = 'gmail.googleapis.com'
+    anonhttpc.request(f'https://{host}', headers=headers)
+    cipher_name, tls_ver, _ = anonhttpc.connections[f'https:{host}'].sock.cipher()
+    print(f'{host} connects using {tls_ver} {cipher_name}')
     sys.exit(0)
   if options.shortversion:
     sys.stdout.write(__version__)
