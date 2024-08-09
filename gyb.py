@@ -1987,13 +1987,23 @@ def convert_timestamp(val):
     # yuck, we aren't actually storing timestamps in the GYB
     # database. I blame the original developer :-)
     # return datetime.datetime.fromtimestamp(int(val))
-    return datetime.datetime.strptime(val.decode('UTF-8'), '%Y-%m-%d %H:%M:%S')
+    my_date = val.decode('UTF-8')
+    date_format = '%Y-%m-%d %H:%M:%S'
+    try:
+        return datetime.datetime.strptime(my_date, date_format)
+    except ValueError as v:
+        ulr = len(v.args[0].partition('unconverted data remains: ')[2])
+        if ulr:
+            my_date = datetime.datetime.strptime(my_date[:-ulr], date_format)
+        else:
+            raise v
 
 def main(argv):
   global options, gmail
   options = SetupOptionParser(argv)
   if options.debug:
     httplib2.debuglevel = 4
+
   doGYBCheckForUpdates(debug=options.debug)
   if options.version:
     print(getGYBVersion())
