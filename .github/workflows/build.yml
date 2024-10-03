@@ -29,16 +29,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             jid: 1
             goal: build
             arch: x86_64
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             jid: 2
             goal: build
             arch: x86_64
             staticx: yes
-          - os: macos-12
+          - os: macos-13
             jid: 3
             goal: build
             arch: x86_64
@@ -73,7 +73,7 @@ jobs:
             jid: 10
           - os: ubuntu-22.04
             goal: test
-            python: "3.13-dev"
+            python: "3.13"
             jid: 12
 
     steps:
@@ -89,7 +89,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2024-08-09
+          key: ${{ matrix.jid }}-2024-10-03
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
