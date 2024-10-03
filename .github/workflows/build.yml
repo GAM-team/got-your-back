@@ -59,22 +59,22 @@ jobs:
             goal: build
             arch: aarch64
             staticx: yes
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             goal: test
             python: "3.9"
             jid: 8
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             goal: test
             python: "3.10"
             jid: 9
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             goal: test
             python: "3.11"
             jid: 10
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             goal: test
             python: "3.13"
-            jid: 12
+            jid: 11
 
     steps:
       - uses: actions/checkout@master
