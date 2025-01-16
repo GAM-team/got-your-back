@@ -372,6 +372,9 @@ jobs:
       - name: Linux install patchelf/staticx
         if: matrix.staticx == 'yes'
         run: |
+          sudo apt-get -qq --yes update
+          # arm64 needs to build a wheel and needs scons to build
+          sudo apt-get -qq --yes install scons
           "${PYTHON}" -m pip install --upgrade patchelf-wrapper
           "${PYTHON}" -m pip install --upgrade staticx
 
