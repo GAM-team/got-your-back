@@ -50,11 +50,11 @@ jobs:
             jid: 5
             goal: build
             arch: Win64
-          - os: [self-hosted, linux, arm64]
+          - os: ubuntu-22.04-arm
             jid: 6
             goal: build
             arch: aarch64
-          - os: [self-hosted, linux, arm64]
+          - os: ubuntu-22.04-arm
             jid: 7
             goal: build
             arch: aarch64
@@ -89,7 +89,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2024-10-31
+          key: ${{ matrix.jid }}-2025-01-16
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
