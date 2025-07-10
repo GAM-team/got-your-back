@@ -11,7 +11,7 @@
 
 :saauth
 @echo(
-@set /p yn= "Are you a G Suite admin backing up user mail? [y or n] "
+@set /p yn= "Are you a Google Workspace admin backing up user mail? [y or n] "
 @if /I "%yn%"=="n" (
 @  echo(
 @  echo You can authorize a service account later by running:
@@ -25,7 +25,7 @@
 @  goto saauth
    )
 @echo(
-@set /p regularuser= "Please enter the email address of a regular G Suite user: "
+@set /p regularuser= "Please enter the email address of a regular Google Workspace user: "
 @echo Great! Checking service account scopes. This will fail the first time. Follow the steps to authorize and retry. It can take a few minutes for scopes to PASS after they've been authorized in the admin console.
 @gyb --email %regularuser% --action check-service-account
 @if not ERRORLEVEL 1 goto sadone
