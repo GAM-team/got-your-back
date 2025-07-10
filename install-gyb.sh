@@ -308,11 +308,11 @@ done
 
 service_account_authorized=false
 while $project_created; do
-  read -p "Are you ready to authorize GYB to backup and restore G Suite user email? (yes or no) " yn
+  read -p "Are you ready to authorize GYB to backup and restore Google Workspace user email? (yes or no) " yn
   case $yn in
     [Yy]*)
       if [ "$regularuser" == "" ]; then
-        read -p "Please enter the email address of a regular G Suite user: " regularuser
+        read -p "Please enter the email address of a regular Google Workspace user: " regularuser
       fi
       echo_yellow "Great! Checking service account scopes.This will fail the first time. Follow the steps to authorize and retry. It can take a few minutes for scopes to PASS after they've been authorized in the admin console."
       "$target_dir/gyb/gyb" --email $regularuser --action check-service-account
