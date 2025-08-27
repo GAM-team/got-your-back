@@ -178,6 +178,13 @@ jobs:
           echo "CHOC_OPS=${CHOC_OPS}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=${OPENSSL_INSTALL_PATH}/lib:${PYTHON_INSTALL_PATH}/lib:/usr/local/lib" >> $GITHUB_ENV
 
+      - name: MacOS import developer certificates for signing
+        if: runner.os == 'macOS'
+        uses: apple-actions/import-codesign-certs@95e84a1a18f2bdbc5c6ab9b7f4429372e4b13a8b # 5.0.3
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
+
       - name: Get latest stable OpenSSL source
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
@@ -355,6 +362,10 @@ jobs:
       - name: Build GYB with PyInstaller
         if: matrix.goal == 'build'
         run: |
+             if [[ "${RUNNER_OS}" == "macOS" ]]; then
+               # Tell our spec to use our code sign certificate
+               export codesign_identity="Jay Lee"
+             fi
              "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
              if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
