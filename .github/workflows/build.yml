@@ -470,6 +470,18 @@ jobs:
           # verify signature. If we failed to sign we should fail to verify and die.
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' verify /pa /v "$env:gyb"
 
+      - name: MacOS send binary for Apple notarization
+        if: runner.os == 'macOS'
+        env:
+          ASP_NOTARIZE: ${{ secrets.ASP_NOTARIZE }}
+        run: |
+          # Apple wants some kind of "package" submitted so just add gyb to a .zip
+          # name it something we can track and link in Apple's notarize process
+          zipfilename="./gyb-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.zip"
+          zip -r "$zipfilename" "$gybpath"
+          xcrun notarytool submit --apple-id "jay0lee@gmail.com" --password "$ASP_NOTARIZE" --team-id GZ85H2DRLM "$zipfilename"
+          rm -v "$zipfilename"
+
       - name: Attest Binary Provenance
         uses: actions/attest-build-provenance@v1
         if: matrix.goal == 'build'
