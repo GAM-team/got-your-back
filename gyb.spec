@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 import os
 import sys
+from sys import platform
 
 import importlib
 from PyInstaller.utils.hooks import copy_metadata
@@ -27,16 +28,48 @@ for d in a.datas:
 
 pyz = PYZ(a.pure)
 
-# strip all non-Windows builds
-strip = not sys.platform == 'win32'
-
+# requires Python 3.10+ but no one should be compiling
+# GAM with older versions anyway
+target_arch = None
+codesign_identity = None
+entitlements_file = None
+manifest = None
+version = 'version_info.txt'
+match platform:
+    case "darwin":
+        codesign_identity = getenv('codesign_identity')
+        if codesign_identity:
+            entitlements_file = '../.github/actions/entitlements.plist'
+        strip = True
+    case "win32":
+        target_arch = None
+        strip = False
+        manifest = 'gam.exe.manifest'
+    case _:
+        target_arch = None
+        strip = True
+name = 'gam'
+debug = False
+bootloader_ignore_signals = False
+upx = False
+console = True
+disable_windowed_traceback = False
+argv_emulation = False
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='gyb',
-          debug=False,
+          name=name,
+          debug=debug
+          bootloader_ignore_signals=bootloader_ignore_signals,,
           strip=strip,
-          upx=False,
-          console=True)
+          manifest=manifest,
+          upx=upx,
+          console=console,
+          argv_emulation=argv_emulation,
+          target_arch=target_arch,
+          codesign_identity=codesign_identity,
+          entitlements_file=entitlements_file,
+          version=version,
+          )
