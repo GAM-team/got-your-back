@@ -47,7 +47,7 @@ for d in a.datas:
 pyz = PYZ(a.pure)
 
 # requires Python 3.10+ but no one should be compiling
-# GAM with older versions anyway
+# GYB with older versions anyway
 target_arch = None
 codesign_identity = None
 entitlements_file = None
@@ -66,7 +66,7 @@ match platform:
     case _:
         target_arch = None
         strip = True
-name = 'gam'
+name = 'gyb'
 debug = False
 bootloader_ignore_signals = False
 upx = False
