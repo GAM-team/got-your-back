@@ -57,7 +57,7 @@ match platform:
     case "darwin":
         codesign_identity = os.getenv('codesign_identity')
         if codesign_identity:
-            entitlements_file = '../.github/actions/entitlements.plist'
+            entitlements_file = '.github/actions/entitlements.plist'
         strip = True
     case "win32":
         target_arch = None
