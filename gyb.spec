@@ -62,7 +62,7 @@ match platform:
     case "win32":
         target_arch = None
         strip = False
-        manifest = 'gam.exe.manifest'
+        manifest = 'gyb.exe.manifest'
     case _:
         target_arch = None
         strip = True
