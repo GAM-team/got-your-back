@@ -585,16 +585,6 @@ jobs:
             gyb*.zip
             gyb*.msi
 
-      - name: VirusTotal Scan
-        uses: crazy-max/ghaction-virustotal@v4
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
-        with:
-          vt_api_key: ${{ secrets.VT_API_KEY }}
-          files: |
-            gyb*.tar.xz
-            gyb*.zip
-            gyb*.msi
-
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
@@ -615,3 +605,61 @@ jobs:
             tar_folder="ssl/ python/"
           fi
           tar cJvvf cache.tar.xz $tar_folder
+
+
+  merge:
+    if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    needs: build
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: gyb-binaries
+          pattern: gyb-binaries-*
+
+  publish:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    needs: merge
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: read
+
+    steps:
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # 5.0.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # 5.0.0
+
+      - name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f # 4.2.0
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            gyb-binaries/*
+
+      - name: Set datetime version string
+        id: dateversion
+        run: |
+          export dateversion="$(date  +'%Y%m%d.%H%M%S')"
+          echo "Date version: ${dateversion}"
+          echo "dateversion=${dateversion}" >> $GITHUB_OUTPUT
+
+      - name: Publish draft release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # 2.3.2
+        with:
+          draft: true
+          prerelease: false
+          tag_name: "${{ steps.dateversion.outputs.dateversion }}"
+          fail_on_unmatched_files: true
+          files: |
+            gyb-binaries/*
