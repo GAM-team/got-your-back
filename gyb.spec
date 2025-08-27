@@ -78,7 +78,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           name=name,
-          debug=debug
+          debug=debug,
           bootloader_ignore_signals=bootloader_ignore_signals,,
           strip=strip,
           manifest=manifest,
