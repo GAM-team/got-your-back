@@ -1,5 +1,6 @@
 # -*- mode: python -*-
 import os
+import re
 import sys
 from sys import platform
 
@@ -54,7 +55,7 @@ manifest = None
 version = 'version_info.txt'
 match platform:
     case "darwin":
-        codesign_identity = getenv('codesign_identity')
+        codesign_identity = os.getenv('codesign_identity')
         if codesign_identity:
             entitlements_file = '../.github/actions/entitlements.plist'
         strip = True
