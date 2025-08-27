@@ -523,6 +523,15 @@ jobs:
           # verify signature. If we failed to sign we should fail to verify and die.
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' verify /pa /v "$env:MSI_FILENAME"
 
+      - name: Attest Build Archive Provenance
+        uses: actions/attest-build-provenance@v1
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
+        with:
+          subject-path: |
+            gyb*.tar.xz
+            gyb*.zip
+            gyb*.msi
+
       - name: Basic Tests build jobs only
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
@@ -544,7 +553,7 @@ jobs:
           echo "We successfully compiled Python ${this_python} and OpenSSL ${this_openssl}"
 
       - name: Live API tests push only
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.repository_owner == 'GAM-team'
+        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team'
         env:
           PASSCODE: ${{ secrets.PASSCODE }}
         run: |
@@ -576,18 +585,9 @@ jobs:
               $gyb --action backup --email $gyb_user --service-account --local-folder sa-backup
               $gyb --action backup-chat --email $gyb_user
 
-      - name: Attest Build Archive Provenance
-        uses: actions/attest-build-provenance@v1
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
-        with:
-          subject-path: |
-            gyb*.tar.xz
-            gyb*.zip
-            gyb*.msi
-
       - name: Archive artifacts
         uses: actions/upload-artifact@v4
-        if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
+        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && matrix.goal == 'build'
         with:
           name: gyb-binaries-${{ env.OS }}-${{ env.arch }}-${{ matrix.jid }}
           path: |
