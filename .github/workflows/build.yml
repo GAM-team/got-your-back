@@ -87,7 +87,7 @@ jobs:
       - name: Cache the build
         if: matrix.goal == 'build'
         id: cache-python-ssl
-        uses: actions/cache@v4
+        uses: actions/cache@638ed79f9dc94c1de1baef91bcab5edaa19451f4 # v4.2.4
         with:
           path: |
             cache.tar.xz
@@ -101,7 +101,7 @@ jobs:
 
       - name: Use pre-compiled Python
         if: matrix.python != ''
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@3d1e2d2ca0a067f27da6fec484fce7f5256def85 # v5.6.0
         with:
           python-version: ${{ matrix.python }}
           allow-prereleases: true
@@ -181,7 +181,7 @@ jobs:
 
       - name: MacOS import developer certificates for signing
         if: runner.os == 'macOS'
-        uses: apple-actions/import-codesign-certs@95e84a1a18f2bdbc5c6ab9b7f4429372e4b13a8b # 5.0.3
+        uses: apple-actions/import-codesign-certs@11e1bb2d3771ad8ffa8459dfe527bc26b2dd4b62 # v5.0.3
         with:
           p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
           p12-password: ${{ secrets.CERTIFICATES_P12_PASSWORD }}
@@ -198,7 +198,7 @@ jobs:
           echo "COMPILED_OPENSSL_VERSION=${COMPILED_OPENSSL_VERSION}" >> $GITHUB_ENV
 
       - name: Windows Configure VCode
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@460a772e4cf7358f9f2f23773240813e40e7a894 # v1.13.0
         if: matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         with:
           arch: ${{ matrix.arch }}
@@ -209,7 +209,7 @@ jobs:
           choco install sqlite $CHOC_OPS
 
       - name: Windows NASM Install
-        uses: ilammy/setup-nasm@v1
+        uses: ilammy/setup-nasm@3a5c2907aab40613bec4a2c63f5d0ef0b11fbd9f # v1.5.2
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
@@ -484,7 +484,7 @@ jobs:
           rm -v "$zipfilename"
 
       - name: Attest Binary Provenance
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
         if: matrix.goal == 'build'
         with:
           subject-path: ${{ env.gyb }}
@@ -548,7 +548,7 @@ jobs:
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' verify /pa /v "$env:MSI_FILENAME"
 
       - name: Attest Build Archive Provenance
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
         if: (github.event_name == 'push' || github.event_name == 'schedule') && matrix.goal == 'build'
         with:
           subject-path: |
@@ -610,7 +610,7 @@ jobs:
               $gyb --action backup-chat --email $gyb_user
 
       - name: Archive artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && matrix.goal == 'build'
         with:
           name: gyb-binaries-${{ env.OS }}-${{ env.arch }}-${{ matrix.jid }}
@@ -640,7 +640,7 @@ jobs:
       packages: write
     steps:
       - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: gyb-binaries
           pattern: gyb-binaries-*
@@ -679,7 +679,7 @@ jobs:
           echo "dateversion=${dateversion}" >> $GITHUB_OUTPUT
 
       - name: Publish draft release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # 2.3.2
+        uses: softprops/action-gh-release@fbadcc90e88ecface60a0a0d123795b784ceb239 # v2.3.2
         with:
           draft: true
           prerelease: false
