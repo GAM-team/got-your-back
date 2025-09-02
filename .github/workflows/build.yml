@@ -404,6 +404,8 @@ jobs:
           esac
           echo "ldlib=${ldlib}"
           $PYTHON -m staticx -l "${ldlib}" gyb/gyb gyb/gyb-staticx
+          rm -rvf gyb/gyb
+          mv -v gyb/gyb-staticx gyb/gyb
 
       - name: Install WinAppDriver
         if: runner.os == 'Windows'
