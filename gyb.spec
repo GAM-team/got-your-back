@@ -61,6 +61,8 @@ for d in a.datas:
     elif 'googleapiclient/discovery_cache/documents/' in d[0]:
         print(f' manually removing discovery JSON {d[0]}')
         a.datas.remove(d)
+    else:
+        print(f' LEAVING {d}')
 
 pyz = PYZ(a.pure)
 
