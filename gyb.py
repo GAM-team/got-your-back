@@ -700,7 +700,7 @@ def buildGAPIObject(api, httpc=None):
             http=httpc,
             cache_discovery=False,
             client_options=client_options,
-            discoveryServiceURL=V2_DISCOVERY_URI,
+            discoveryServiceUrl=V2_DISCOVERY_URI,
             static_discovery=False)
   except googleapiclient.errors.UnknownApiNameOrVersion:
     disc_file = os.path.join(options.config_folder, f'{api}-{version}.json')
@@ -765,7 +765,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
             http=httpc,
             cache_discovery=False,
             client_options=client_options,
-            discoveryServiceURL=V2_DISCOVERY_URI,
+            discoveryServiceUrL=V2_DISCOVERY_URI,
             static_discovery=False)
     service._http = google_auth_httplib2.AuthorizedHttp(credentials, http=httpc)
     return service
