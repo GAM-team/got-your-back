@@ -46,7 +46,7 @@ a = Analysis(['gyb.py'],
              datas=extra_files,
              hiddenimports=[],
              hooksconfig={},
-             hookspath=None,
+             hookspath=['tools/hooks'],
              runtime_hooks=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
@@ -61,6 +61,8 @@ for d in a.datas:
     elif 'googleapiclient/discovery_cache/documents/' in d[0]:
         print(f' manually removing discovery JSON {d[0]}')
         a.datas.remove(d)
+    else:
+        print(f' LEAVING {d}')
 
 pyz = PYZ(a.pure)
 
