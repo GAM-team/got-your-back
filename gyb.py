@@ -1878,10 +1878,10 @@ def backup_message(request_id, response, exception):
 
 def _createHttpObj(cache=None, timeout=600):
   http_args = {'cache': cache, 'timeout': timeout}
-  if 'tls_maximum_version' in options:
-    http_args['tls_maximum_version'] = options.tls_maximum_version
-  if 'tls_minimum_version' in options:
-    http_args['tls_minimum_version'] = options.tls_minimum_version
+  if 'tls_max_version' in options:
+    http_args['tls_maximum_version'] = options.tls_max_version
+  if 'tls_min_version' in options:
+    http_args['tls_minimum_version'] = options.tls_min_version
   httpc = httplib2.Http(**http_args)
   if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
      os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
