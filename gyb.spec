@@ -56,8 +56,11 @@ a = Analysis(['gyb.py'],
 
 for d in a.datas:
     if 'pyconfig' in d[0]:
+        print(f' manually removing {d[0]}')
         a.datas.remove(d)
-        break
+    elif 'googleapiclient/discovery_cache/documents/' in d[0]:
+        print(f' manually removing discovery JSON {d[0]}')
+        a.datas.remove(d)
 
 pyz = PYZ(a.pure)
 
