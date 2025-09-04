@@ -493,6 +493,11 @@ jobs:
           xcrun notarytool submit --apple-id "jay0lee@gmail.com" --password "$ASP_NOTARIZE" --team-id GZ85H2DRLM "$zipfilename"
           rm -v "$zipfilename"
 
+      - name: Staple notarization to MacOS GYB binary
+        if: runner.os == 'macOS'
+        run: |
+          xcrun stapler staple "$gyb"
+
       - name: Attest Binary Provenance
         uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
         if: matrix.goal == 'build'
