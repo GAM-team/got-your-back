@@ -773,7 +773,7 @@ def buildGAPIServiceObject(api, soft_errors=False):
             http=httpc,
             cache_discovery=False,
             client_options=client_options,
-            discoveryServiceUrL=discoveryServiceUrl,
+            discoveryServiceUrl=discoveryServiceUrl,
             static_discovery=False)
     service._http = google_auth_httplib2.AuthorizedHttp(credentials, http=httpc)
     return service
