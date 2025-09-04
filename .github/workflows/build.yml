@@ -381,6 +381,12 @@ jobs:
              fi
              echo "gyb=${gyb}" >> $GITHUB_ENV
              echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
+             echo "---- WARNINGS FROM build/gyb/warn-gyb.txt"
+             cat build/gyb/warn-gyb.txt
+             echo "---- Analysis FROM build/gyb/Analysis-00.toc"
+             cat build/gyb/Analysis-00.toc
+             echo "---- EXE data FROM build/gyb/EXE-00.toc"
+             cat build/gyb/EXE-00.toc
 
       - name: Linux install patchelf/staticx
         if: matrix.staticx == 'yes'
