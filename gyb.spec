@@ -30,7 +30,7 @@ print(version_info)
 proot = os.path.dirname(importlib.import_module('httplib2').__file__)
 extra_files = [(os.path.join(proot, 'cacerts.txt'), 'httplib2')]
 
-extra_files += copy_metadata('google-api-python-client')
+#extra_files += copy_metadata('google-api-python-client')
 
 a = Analysis(['gyb.py'],
              excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter'],
