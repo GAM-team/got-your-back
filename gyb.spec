@@ -28,7 +28,7 @@ print(version_info)
 
 # dynamically determine where httplib2/cacerts.txt lives
 proot = os.path.dirname(importlib.import_module('httplib2').__file__)
-extra_files = [(os.path.join(proot, 'cacerts.txt'), 'httplib2')]
+extra_files = [('cacerts.pem', '.')]
 
 excludes = [
     'pkg_resources',
