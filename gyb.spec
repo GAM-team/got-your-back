@@ -26,8 +26,7 @@ with open("version_info.txt", "w") as f:
     f.write(version_info)
 print(version_info)
 
-# dynamically determine where httplib2/cacerts.txt lives
-proot = os.path.dirname(importlib.import_module('httplib2').__file__)
+# use our own cacerts.pem which we collected from Google
 extra_files = [('cacerts.pem', '.')]
 
 excludes = [
