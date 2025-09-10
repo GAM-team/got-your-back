@@ -111,7 +111,8 @@ async function runSSD() {
         await screenshot(driver, 'login12.png');
 
     } catch (error) {
-        console.error("Error during Appium run:", error.name);
+        console.error("Error during Appium run:");
+        console.error(error);
     }
 
     // INTENTIONAL Keep driver open so tray icon for Certum doesn't close
