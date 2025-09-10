@@ -43,13 +43,6 @@ system_labels = ['INBOX', 'SPAM', 'TRASH', 'UNREAD', 'STARRED', 'IMPORTANT',
 thread_msgid_map = {}
 mbox_extensions = ['mbx', 'mbox', 'eml']
 
-# Force use of our limited CA file
-CA_CERTS_PEM = 'cacerts.pem'
-os.environ['REQUESTS_CA_BUNDLE'] = CA_CERTS_PEM
-os.environ['DEFAULT_CA_BUNDLE_PATH'] = CA_CERTS_PEM
-os.environ['HTTPLIB2_CA_CERTS'] = CA_CERTS_PEM
-os.environ['SSL_CERT_FILE'] = CA_CERTS_PEM
-
 import argparse
 from csv import DictReader
 import importlib
@@ -88,6 +81,13 @@ from urllib.parse import urlencode
 import configparser
 import webbrowser
 import threading
+
+# Force use of our limited CA file
+CA_CERTS_PEM = 'cacerts.pem'
+os.environ['REQUESTS_CA_BUNDLE'] = CA_CERTS_PEM
+os.environ['DEFAULT_CA_BUNDLE_PATH'] = CA_CERTS_PEM
+os.environ['HTTPLIB2_CA_CERTS'] = CA_CERTS_PEM
+os.environ['SSL_CERT_FILE'] = CA_CERTS_PEM
 
 import httplib2
 import google.oauth2.service_account
