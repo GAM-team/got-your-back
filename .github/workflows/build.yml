@@ -40,7 +40,7 @@ jobs:
             goal: build
             arch: x86_64
             staticx: yes
-          - os: macos-13
+          - os: macos-15
             jid: 3
             goal: build
             arch: x86_64
@@ -91,7 +91,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2025-08.27
+          key: ${{ matrix.jid }}-2025-10-03
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
