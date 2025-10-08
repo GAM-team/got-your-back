@@ -209,7 +209,7 @@ jobs:
           choco install sqlite $CHOC_OPS
 
       - name: Windows NASM Install
-        uses: ilammy/setup-nasm@3a5c2907aab40613bec4a2c63f5d0ef0b11fbd9f # v1.5.2
+        uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b # v1.5.2
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
