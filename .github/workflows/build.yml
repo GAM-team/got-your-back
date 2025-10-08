@@ -40,7 +40,7 @@ jobs:
             goal: build
             arch: x86_64
             staticx: yes
-          - os: macos-15
+          - os: macos-15-intel
             jid: 3
             goal: build
             arch: x86_64
@@ -91,7 +91,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2025-10-03
+          key: ${{ matrix.jid }}-2025-10-08
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
@@ -198,8 +198,8 @@ jobs:
           echo "COMPILED_OPENSSL_VERSION=${COMPILED_OPENSSL_VERSION}" >> $GITHUB_ENV
 
       - name: Windows Configure VCode
-        uses: ilammy/msvc-dev-cmd@460a772e4cf7358f9f2f23773240813e40e7a894 # v1.13.0
-        if: matrix.os == 'windows-2022' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        if: runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         with:
           arch: ${{ matrix.arch }}
 
@@ -261,7 +261,8 @@ jobs:
                       --enable-shared \
                       --with-ensurepip=upgrade \
                       --enable-optimizations \
-                      --with-lto
+                      --with-lto \
+                      --with-tail-call-interp
 
       - name: Windows Get External Python deps
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -305,7 +306,7 @@ jobs:
           # We need out custom openssl.props which uses OpenSSL 3 DLL names
           Copy-Item -Path "${env:GITHUB_WORKSPACE}\openssl.props" -Destination PCBuild\ -verbose
           echo "Building for ${env:PYBUILDRELEASE_ARCH}..."
-          PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}"
+          PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}" --with-tail-call-interp
 
       - name: Mac/Linux Build Python
         if: matrix.goal == 'build' && runner.os != 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
