@@ -958,37 +958,82 @@ def _localhost_to_ip():
     return local_ip
 
 def _wait_for_http_client(d):
-    wsgi_app = google_auth_oauthlib.flow._RedirectWSGIApp(MESSAGE_LOCAL_SERVER_SUCCESS)
-    wsgiref.simple_server.WSGIServer.allow_reuse_address = False
-    # Convert hostn to IP since apparently binding to the IP
-    # reduces odds of firewall blocking us
-    local_ip = _localhost_to_ip()
-    for port in range(8080, 8099):
+    """
+    Child-process helper used during OAuth. It attempts to start a local WSGI
+    server to receive the OAuth redirect. If the local server cannot be started
+    (common on some Windows setups), it signals the parent process to fall back
+    to a console-based flow by setting d['error'] = 'local_server_failed'.
+    """
+    import sys, traceback
+
+    try:
+        # print("[DEBUG] Entering _wait_for_http_client", flush=True)
+        wsgi_app = google_auth_oauthlib.flow._RedirectWSGIApp(MESSAGE_LOCAL_SERVER_SUCCESS)
+        wsgiref.simple_server.WSGIServer.allow_reuse_address = False
+
+        local_ip = _localhost_to_ip()
+        # print(f"[DEBUG] Resolved localhost to {local_ip}", flush=True)
+
+        local_server = None
+        for port in range(8080, 8099):
+            try:
+                local_server = wsgiref.simple_server.make_server(
+                    local_ip,
+                    port,
+                    wsgi_app,
+                    handler_class=wsgiref.simple_server.WSGIRequestHandler
+                )
+                # print(f"[DEBUG] Bound local server on {local_ip}:{port}", flush=True)
+                break
+            except OSError as e:
+                # print(f"[DEBUG] Port {port} unavailable: {e}", flush=True)
+                continue
+
+        if local_server is None:
+            # print("[ERROR] Could not bind any local server port", flush=True)
+            d['error'] = 'local_server_failed'
+            d['error_detail'] = 'Could not bind local server on ports 8080-8099'
+            return
+
+        redirect_uri_format = "http://{}:{}/" if d.get('trailing_slash') else "http://{}:{}"
+        d['redirect_uri'] = redirect_uri_format.format(*local_server.server_address)
+        # print(f"[DEBUG] Set redirect_uri = {d['redirect_uri']}", flush=True)
+
+        # Wait until parent provides auth_url
+        while 'auth_url' not in d:
+            time.sleep(0.1)
+        # print(f"[DEBUG] Received auth_url from parent: {d['auth_url']}", flush=True)
+
+        if d.get('open_browser'):
+            try:
+                # print("[DEBUG] Attempting to open browser...", flush=True)
+                webbrowser.open(d['auth_url'], new=1, autoraise=True)
+                # print("[DEBUG] Browser open call issued", flush=True)
+            except Exception as e:
+                d['browser_error'] = str(e)
+                # print(f"[WARN] Failed to open browser: {e}", flush=True)
+
+        # print("[DEBUG] Waiting for OAuth redirect request...", flush=True)
+        local_server.handle_request()
+        # print("[DEBUG] handle_request() returned", flush=True)
+
+        authorization_response = wsgi_app.last_request_uri.replace("http", "https")
+        d['code'] = authorization_response
+        # print(f"[DEBUG] Captured authorization_response: {authorization_response}", flush=True)
+
+    except Exception as e:
+        # print("[EXCEPTION] Exception in _wait_for_http_client", flush=True)
+        # traceback.print_exc(file=sys.stdout)
+        d['error'] = 'local_server_failed'
+        d['error_detail'] = str(e)
+    finally:
         try:
-            local_server = wsgiref.simple_server.make_server(
-              local_ip,
-              port,
-              wsgi_app,
-              handler_class=wsgiref.simple_server.WSGIRequestHandler
-              )
-            break
-        except OSError:
+            if 'local_server' in locals() and local_server:
+                local_server.server_close()
+                # print("[DEBUG] Closed local server", flush=True)
+        except Exception as e:
+            # print(f"[WARN] Error closing local server: {e}", flush=True)
             pass
-    redirect_uri_format = (
-        "http://{}:{}/" if d['trailing_slash'] else "http://{}:{}"
-    )
-    # provide redirect_uri to main process so it can formulate auth_url
-    d['redirect_uri'] = redirect_uri_format.format(*local_server.server_address)
-    # wait until main process provides auth_url
-    # so we can open it in web browser.
-    while 'auth_url' not in d:
-        time.sleep(0.1)
-    if d['open_browser']:
-        webbrowser.open(d['auth_url'], new=1, autoraise=True)
-    local_server.handle_request()
-    authorization_response = wsgi_app.last_request_uri.replace("http", "https")
-    d['code'] = authorization_response
-    local_server.server_close()
 
 def _wait_for_user_input(d):
     sys.stdin = open(0)
@@ -1007,41 +1052,102 @@ MESSAGE_LOCAL_SERVER_SUCCESS = ('The authentication flow has completed. You may'
 
 MESSAGE_AUTHENTICATION_COMPLETE = ('\nThe authentication flow has completed.\n')
 
+
 class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
+    def __init__(self, oauth2session, client_type, client_config, 
+                 redirect_uri=None, code_verifier=None, 
+                 autogenerate_code_verifier=False):
+        # Capture scopes from oauth2session before parent init
+        self._gyb_scopes = getattr(oauth2session, 'scope', None)
+        super().__init__(oauth2session, client_type, client_config,
+                        redirect_uri, code_verifier,
+                        autogenerate_code_verifier)
+
     def authorization_url(self, **kwargs):
         long_url, state = super(ShortURLFlow, self).authorization_url(**kwargs)
         short_url = shorten_url(long_url)
         return short_url, state
 
-
     def run_dual(self,
-                 use_console_flow,
-                 authorization_prompt_message='',
-                 console_prompt_message='',
-                 web_success_message='',
-                 open_browser=True,
-                 redirect_uri_trailing_slash=True,
-                 **kwargs):
+              use_console_flow,
+              authorization_prompt_message='',
+              console_prompt_message='',
+              web_success_message='',
+              open_browser=True,
+              redirect_uri_trailing_slash=True,
+              **kwargs):
+        # use_console_flow indicates whether to try to open a browser or rely on manual input only
         if sys.platform == 'darwin':
             multiprocessing.set_start_method('fork')
         mgr = multiprocessing.Manager()
         d = mgr.dict()
         d['trailing_slash'] = redirect_uri_trailing_slash
         d['open_browser'] = use_console_flow
-        http_client = multiprocessing.Process(target=_wait_for_http_client,
-                                              args=(d,))
-        user_input = multiprocessing.Process(target=_wait_for_user_input,
-                                             args=(d,))
+
+        http_client = multiprocessing.Process(target=_wait_for_http_client, args=(d,))
+        user_input = multiprocessing.Process(target=_wait_for_user_input, args=(d,))
+
+        # print("[DEBUG] Starting _wait_for_http_client process", flush=True)
         http_client.start()
-        # we need to wait until web server starts on avail port
-        # so we know redirect_uri to use
-        while 'redirect_uri' not in d:
+
+        # Wait until either redirect_uri is provided or an error is signaled
+        while 'redirect_uri' not in d and 'error' not in d:
             time.sleep(0.1)
+
+        # === Fallback: local server failed, proceed with manual (console) OAuth flow ===
+        if "error" in d and d["error"] == "local_server_failed":
+            # print(f"[DEBUG] Local server failed: {d.get('error_detail')}", flush=True)
+
+            scopes = getattr(self, "_gyb_scopes", None)
+            # print(f"[DEBUG] scopes from self._gyb_scopes = {scopes}", flush=True)
+            if not scopes:
+                raise RuntimeError("No OAuth scopes available in flow object")
+
+            redirect_uri = "http://localhost"
+            # print(f"[DEBUG] Using redirect_uri={redirect_uri}", flush=True)
+
+            self.redirect_uri = redirect_uri
+            auth_url, state = self.authorization_url(
+                access_type=kwargs.get("access_type", "offline"),
+                include_granted_scopes="true",
+                login_hint=kwargs.get("login_hint"),
+            )
+            print(MESSAGE_CONSOLE_AUTHORIZATION_PROMPT.format(url=auth_url))
+            try:
+                webbrowser.open(auth_url, new=1, autoraise=True)
+                # print("[DEBUG] Browser open issued", flush=True)
+            except Exception as e:
+                # print(f"[WARN] Failed to open browser automatically: {e}", flush=True)
+                pass
+
+            user_input = input(
+                "Enter the authorization code or full redirected URL here: "
+            ).strip()
+            if user_input.startswith("http"):
+                from urllib.parse import urlparse, parse_qs
+
+                qs = parse_qs(urlparse(user_input).query)
+                code = qs.get("code", [None])[0]
+            else:
+                code = user_input
+
+            if not code:
+                systemErrorExit(8, "No authorization code found/provided")
+
+            # print("[DEBUG] Exchanging code for tokens with fetch_token()", flush=True)
+            self.fetch_token(code=code)
+            # print("[DEBUG] OAuth completed via manual console flow", flush=True)
+            sys.stdout.write(MESSAGE_AUTHENTICATION_COMPLETE)
+            return self.credentials
+
+        # === Normal local-server path (unchanged) ===
+        # print(f"[DEBUG] Using redirect_uri from child: {d['redirect_uri']}", flush=True)
         self.redirect_uri = d['redirect_uri']
         d['auth_url'], _ = self.authorization_url(**kwargs)
         print(MESSAGE_CONSOLE_AUTHORIZATION_PROMPT.format(url=d['auth_url']))
         user_input.start()
         userInput = False
+
         while True:
             time.sleep(0.1)
             if not http_client.is_alive():
@@ -1051,6 +1157,7 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
                 userInput = True
                 http_client.terminate()
                 break
+
         while True:
             code = d['code']
             if code.startswith('http'):
@@ -1060,9 +1167,9 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
             try:
                 kwargs = {'code': code}
                 if os.environ.get('GOOGLE_API_CLIENT_CERTIFICATE') and \
-                   os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
-                       cert, key, _ = get_cert_files()
-                       kwargs['cert'] = (cert, key)
+                os.environ.get('GOOGLE_API_CLIENT_PRIVATE_KEY'):
+                    cert, key, _ = get_cert_files()
+                    kwargs['cert'] = (cert, key)
                 self.fetch_token(**kwargs)
                 break
             except Exception as e:
@@ -1072,6 +1179,7 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
                 _wait_for_user_input(d)
         sys.stdout.write(MESSAGE_AUTHENTICATION_COMPLETE)
         return self.credentials
+
 
 def _run_oauth_flow(client_id, client_secret, scopes, access_type, login_hint=None):
     token_uri = 'https://oauth2.googleapis.com/token'
@@ -1615,7 +1723,7 @@ def getMessageIDs (sqlconn, backup_folder):
           'UPDATE messages SET rfc822_msgid = ? WHERE message_num = ?',
                      (msgid, message_num))
   sqlconn.commit()
- 
+
 def rebuildUIDTable(sqlconn):
   pass
 
