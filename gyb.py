@@ -2908,7 +2908,7 @@ otaBytesByService,quotaType')
     for label in labels:
       createLabel(label)
 
-if __name__ == '__main__':
+def command_line():
   if sys.version_info[0] < 3 or sys.version_info[1] < 7:
     print('ERROR: GYB requires Python 3.7 or greater.')
     sys.exit(3)
@@ -2938,3 +2938,16 @@ if __name__ == '__main__':
     except NameError:
       pass
     sys.exit(4)
+
+def _installed_main():
+  """
+  If gyb was installed with pip or setup.py, set the default --config-folder
+  paramter to be the directory this script was called from instead of where
+  the script actually is.
+  """
+  if "--config-folder" not in sys.argv:
+    sys.argv.extend(["--config-folder", "."])
+  command_line()
+
+if __name__ == '__main__':
+  command_line()
