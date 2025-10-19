@@ -2364,6 +2364,8 @@ def main(argv):
       current += 1
       message_filename = x[2]
       message_num = x[0]
+      print(message_num)
+      print(message_filename)
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
         print('WARNING! file %s does not exist for message %s'
@@ -2372,7 +2374,13 @@ def main(argv):
         print('  this message will be skipped.')
         continue
       with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
-          full_message = f.read()
+          try:
+              full_message = f.read()
+          except Exception as e:
+              print('ERROR! failed to read file %s for message %s: %s'
+                % (os.path.join(options.local_folder, message_filename),
+                   message_num, e))
+              continue
       if options.cleanup:
           full_message = message_hygiene(full_message)
       labels = []
