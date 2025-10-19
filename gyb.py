@@ -2364,8 +2364,6 @@ def main(argv):
       current += 1
       message_filename = x[2]
       message_num = x[0]
-      print(message_num)
-      print(message_filename)
       if not os.path.isfile(os.path.join(options.local_folder,
         message_filename)):
         print('WARNING! file %s does not exist for message %s'
