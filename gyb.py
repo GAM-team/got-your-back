@@ -1124,10 +1124,8 @@ class ShortURLFlow(google_auth_oauthlib.flow.InstalledAppFlow):
                 "Enter the authorization code or full redirected URL here: "
             ).strip()
             if user_input.startswith("http"):
-                from urllib.parse import urlparse, parse_qs
-
-                qs = parse_qs(urlparse(user_input).query)
-                code = qs.get("code", [None])[0]
+                qs = parse_qs(urlparse(code).query)
+                code = qs.get('code', [None])[0]
             else:
                 code = user_input
 
