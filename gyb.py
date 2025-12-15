@@ -86,7 +86,7 @@ import threading
 CA_CERTS_PEM = 'cacerts.pem'
 os.environ['REQUESTS_CA_BUNDLE'] = CA_CERTS_PEM
 os.environ['DEFAULT_CA_BUNDLE_PATH'] = CA_CERTS_PEM
-os.environ['HTTPLIB2_CA_CERTS'] = CA_CERTS_PEM
+# os.environ['HTTPLIB2_CA_CERTS'] = CA_CERTS_PEM
 os.environ['SSL_CERT_FILE'] = CA_CERTS_PEM
 
 import httplib2
