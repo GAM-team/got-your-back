@@ -484,13 +484,21 @@ jobs:
       - name: MacOS send binary for Apple notarization
         if: runner.os == 'macOS'
         env:
-          ASP_NOTARIZE: ${{ secrets.ASP_NOTARIZE }}
+          APPLE_KEY: ${{ secrets.APPLE_KEY }}
+          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
         run: |
           # Apple wants some kind of "package" submitted so just add gyb to a .zip
           # name it something we can track and link in Apple's notarize process
           zipfilename="./gyb-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.zip"
           zip -r "$zipfilename" "$gybpath"
-          xcrun notarytool submit --apple-id "jay0lee@gmail.com" --password "$ASP_NOTARIZE" --team-id GZ85H2DRLM "$zipfilename"
+          echo -e "$APPLE_KEY" > ./apple.p8
+          xcrun notarytool submit \
+            --key ./apple.p8 \
+            --key-id "$APPLE_KEY_ID" \
+            --issuer-id "$APPLE_ISSUER_ID" \
+            "$zipfilename"
+          rm -v apple.p8
           rm -v "$zipfilename"
 
       - name: Attest Binary Provenance
