@@ -48,7 +48,7 @@ jobs:
             jid: 4
             goal: build
             arch: aarch64
-          - os: windows-2022
+          - os: windows-2025-vs2026
             jid: 5
             goal: build
             arch: Win64
@@ -91,7 +91,7 @@ jobs:
         with:
           path: |
             cache.tar.xz
-          key: ${{ matrix.jid }}-2025-10-08
+          key: ${{ matrix.jid }}-2026-02-13
 
       - name: Untar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit == 'true'
