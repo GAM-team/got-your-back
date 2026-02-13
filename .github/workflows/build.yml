@@ -492,9 +492,12 @@ jobs:
           # name it something we can track and link in Apple's notarize process
           zipfilename="./gyb-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.zip"
           zip -r "$zipfilename" "$gybpath"
-          KEY_FILE=$(mktemp "${RUNNER_TEMP}/notary_key.XXXXXX.p8")
+          export KEY_FILE=$(mktemp "${RUNNER_TEMP}/notary_key.XXXXXX.p8")
           trap 'rm -f "$KEY_FILE"' EXIT
           echo "$APPLE_KEY" > "$KEY_FILE"
+          echo "$KEY_FILE"
+          file "$KEY_FILE"
+          ls -l "$KEY_FILE"
           xcrun notarytool submit \
             --key "$KEY_FILE" \
             --key-id "$APPLE_KEY_ID" \
