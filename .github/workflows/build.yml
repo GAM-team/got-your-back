@@ -498,7 +498,7 @@ jobs:
           echo "$KEY_FILE"
           file "$KEY_FILE"
           ls -l "$KEY_FILE"
-          xcrun notarytool submit "$zipfilename" --key "$KEY_FILE" --key-id "$APPLE_KEY_ID" --issuer-id "$APPLE_ISSUER_ID"
+          xcrun notarytool submit "$zipfilename" --key "$KEY_FILE" --key-id "$APPLE_KEY_ID" --issuer "$APPLE_ISSUER_ID"
           rm -v "$KEY_FILE"
           rm -v "$zipfilename"
 
