@@ -495,9 +495,6 @@ jobs:
           export KEY_FILE="$(mktemp).p8"
           trap 'rm -f "$KEY_FILE"' EXIT
           echo "$APPLE_KEY" > "$KEY_FILE"
-          echo "$KEY_FILE"
-          file "$KEY_FILE"
-          ls -l "$KEY_FILE"
           xcrun notarytool submit "$zipfilename" --key "$KEY_FILE" --key-id "$APPLE_KEY_ID" --issuer "$APPLE_ISSUER_ID"
           rm -v "$KEY_FILE"
           rm -v "$zipfilename"
