@@ -492,13 +492,11 @@ jobs:
           # name it something we can track and link in Apple's notarize process
           zipfilename="./gyb-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.zip"
           zip -r "$zipfilename" "$gybpath"
-          echo -e "$APPLE_KEY" > ./apple.p8
           xcrun notarytool submit \
-            --key ./apple.p8 \
+            --key <(echo "$APPLE_KEY") \
             --key-id "$APPLE_KEY_ID" \
             --issuer-id "$APPLE_ISSUER_ID" \
             "$zipfilename"
-          rm -v apple.p8
           rm -v "$zipfilename"
 
       - name: Attest Binary Provenance
