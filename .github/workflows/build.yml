@@ -492,7 +492,7 @@ jobs:
           # name it something we can track and link in Apple's notarize process
           zipfilename="./gyb-${RUNNER_ARCH}-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}.zip"
           zip -r "$zipfilename" "$gybpath"
-          export KEY_FILE=$(mktemp).p8"
+          export KEY_FILE="$(mktemp).p8"
           trap 'rm -f "$KEY_FILE"' EXIT
           echo "$APPLE_KEY" > "$KEY_FILE"
           echo "$KEY_FILE"
