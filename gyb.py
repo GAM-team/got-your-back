@@ -1202,14 +1202,44 @@ def _createClientSecretsOauth2service(projectId):
 
   console_credentials_url = f'https://console.cloud.google.com/apis/credentials/oauthclient?project={projectId}'
   while True:
-    print('''Please go to:
-
+    if '@gmail.com' in options.email:
+      print('''
+Please go to:
 %s
-
-1. Enter "GYB" for "Application name".
-2. Leave other fields blank. Click "Save" button.
-3. Choose "Desktop app". Enter a desired value for "Name". Click the blue "Create" button.
-4. Copy your "client ID" value.
+As you are using a regular @gmail.com account, you will need to configure consent screen manually.
+1. Open link above in your browser.
+2. You should already be on the "Credentials" Tab.
+3. Click "Configure Consent Screen" on the right. (Blue Button)
+4. User Type : External (Internal Only Applicable to GSuite)
+5. Click "Create" (Blue Button)
+6. Enter "GYB" for App Name.
+7. Enter your email for "User support email"
+8. Scroll to bottom.
+9. Enter your email for "Developer contact information"
+10. Click "Save and Continue"
+11. Ignore the Scopes Section
+12. Click "Save and Continue"
+13. Ignore the Test Users
+14. Click "Save and Continue"
+15. You should now be on the "Summary" screen.
+16. Scroll to the bottom and click "Back to Dashboard"
+17. Next, Go Back to "Credentials" Tab you"ll now notice it"s different.
+18. Click "+ Create Credentials" at the top.
+19. Click "OAuth client ID"
+20. For "Application Type" Choose "Desktop App"
+21. For its "Name" set to "GYB"
+22. You will now have a window titled "OAuth client created"
+23. Enter Client ID and Client Secret into GYB Setup.
+''' % console_credentials_url)
+    else:
+      print('''
+Please go to:
+%s
+1. Choose "Desktop App" for "Application Type"
+2. Enter "GYB" for "Application name".
+3. Leave other fields blank. Click "Save" button.
+4. Choose "Desktop app". Enter a desired value for "Name". Click the blue "Create" button.
+5. Copy your "client ID" value.
 ''' % console_credentials_url)
 # If you use Firefox to copy the Client ID and Secret, the data has leading and trailing newlines
 # The first input will get the leading newline, thus we have to issue another input to get the data
