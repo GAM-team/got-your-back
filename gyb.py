@@ -1412,8 +1412,47 @@ and accept the Terms of Service (ToS). As soon as you've accepted the ToS popup,
               'privateKeyType': 'TYPE_GOOGLE_CREDENTIALS_FILE',
               'keyAlgorithm': 'KEY_ALG_RSA_2048'
              }
-  key = callGAPI(iam.projects().serviceAccounts().keys(), 'create',
-                 name=service_account['name'], body=key_body, retry_reasons=[404])
+  try:
+    key = callGAPI(iam.projects().serviceAccounts().keys(), 'create',
+                   name=service_account['name'], body=key_body,
+                   retry_reasons=[404], throw_reasons=[400])
+  except googleapiclient.errors.HttpError as e:
+    content = e.content.decode('utf-8') if isinstance(e.content, bytes) else e.content
+    if 'disableServiceAccountKeyCreation' in content:
+      print('''
+ERROR: Your Google Cloud organization has the "Disable service account key
+creation" policy (constraints/iam.disableServiceAccountKeyCreation) enforced,
+so GYB cannot create the service account key it needs to back up mail.
+
+This policy is enforced by default on Google Cloud organizations created since
+mid-2024. A Cloud Organization Policy Administrator (typically a Google Workspace
+super admin) must relax it, then re-run this command.
+
+To temporarily disable it org-wide:
+
+  gcloud organizations list   # note your ORG_ID
+  gcloud resource-manager org-policies disable-enforce \\
+      constraints/iam.disableServiceAccountKeyCreation --organization=ORG_ID
+
+Then re-run:
+
+  gyb --action create-project --email %s
+
+and re-enable the policy afterward:
+
+  gcloud resource-manager org-policies enable-enforce \\
+      constraints/iam.disableServiceAccountKeyCreation --organization=ORG_ID
+
+The project "%s" was created but is unusable without a key. Delete it (and any
+other orphaned GYB projects from earlier retries) with:
+
+  gyb --action delete-projects --email %s --search gyb
+
+(or in the Cloud Console) before retrying.
+''' % (login_hint, project_id, login_hint))
+      sys.exit(4)
+    sys.stderr.write('\n%s\n' % content)
+    sys.exit(400)
   oauth2service_data = base64.b64decode(key['privateKeyData'])
   writeFile(service_account_file, oauth2service_data, continueOnError=False)
   setProjectConsentScreen(httpc, project_id, login_hint)

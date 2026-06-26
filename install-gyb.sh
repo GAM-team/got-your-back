@@ -276,6 +276,9 @@ while true; do
     echo_green "Project creation complete."
     project_created=true
     break
+  elif (( $rc == 4 )); then
+    echo_red "Project creation cannot proceed (see the instructions above). Stopping."
+    exit 4
   else
     echo_red "Project creation failed. Trying again."
   fi

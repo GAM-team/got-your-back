@@ -3,6 +3,11 @@
 
 :createproject
 @gyb --action create-project --email %adminemail%
+@if %ERRORLEVEL%==4 (
+@  echo(
+@  echo Project creation cannot proceed ^(see the instructions above^). Stopping.
+@  goto alldone
+   )
 @if not ERRORLEVEL 1 goto projectdone
 @echo(
 @echo Projection creation failed. Trying again. Say n to skip projection creation.
