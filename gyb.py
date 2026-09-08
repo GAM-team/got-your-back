@@ -1683,9 +1683,16 @@ def labelIdsToLabels(labelIds):
         else:
           allLabelIds[a_label['id']] = a_label['name']
     try:
-      labels.append(allLabelIds[labelId])
+      label = allLabelIds[labelId]
     except KeyError:
-      pass
+      continue
+    # Two label IDs can map to the same string: a system label is stored under
+    # its ID, so a user label named after one (IMPORTANT, UNREAD, CATEGORY_*)
+    # collides with it. The labels table has a UNIQUE index on
+    # (message_num, label), so keeping the duplicate aborted the whole backup
+    # with an uncaught sqlite3.IntegrityError. Order is preserved.
+    if label not in labels:
+      labels.append(label)
   return labels
 
 def createLabel(label_name):
@@ -1840,7 +1847,7 @@ def backup_chat(request_id, response, exception):
                            (message_num, response['id']))
   for label in labels:
     sqlcur.execute("""
-       INSERT INTO labels (message_num, label) VALUES (?, ?)""",
+       INSERT OR IGNORE INTO labels (message_num, label) VALUES (?, ?)""",
                           (message_num, label))
 
 def backup_message(request_id, response, exception):
@@ -1885,7 +1892,7 @@ def backup_message(request_id, response, exception):
                                (message_num, response['id']))
     for label in labels:
       sqlcur.execute("""
-           INSERT INTO labels (message_num, label) VALUES (?, ?)""",
+           INSERT OR IGNORE INTO labels (message_num, label) VALUES (?, ?)""",
                               (message_num, label))
 
 def _createHttpObj(cache=None, timeout=600):
