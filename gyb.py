@@ -2372,7 +2372,13 @@ def main(argv):
         print('  this message will be skipped.')
         continue
       with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
-          full_message = f.read()
+          try:
+              full_message = f.read()
+          except Exception as e:
+              print('ERROR! failed to read file %s for message %s: %s'
+                % (os.path.join(options.local_folder, message_filename),
+                   message_num, e))
+              continue
       if options.cleanup:
           full_message = message_hygiene(full_message)
       labels = []
