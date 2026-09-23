@@ -903,7 +903,7 @@ def callGAPIpages(service, function, items='items',
         return all_pages
     except (IndexError, KeyError):
       if page_message:
-        sys.stderr.write('\n')
+        sys.stdout.write('\n')
       return all_pages
 
 VALIDEMAIL_PATTERN = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
