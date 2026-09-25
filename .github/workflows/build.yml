@@ -391,26 +391,27 @@ jobs:
           if [[ "$staticx" != "yes" ]]; then
             export PYINSTALLER_BUILD_ONEDIR=yes
           fi
-          "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
-             if [ -x "$(command -v realpath)" ]; then
-               realpath=realpath
-             else
-               brew install coreutils
-               realpath=grealpath
-             fi
-             echo "gybpath=$(${realpath} ./gyb/)" >> $GITHUB_ENV
-             gyb=$(${realpath} ./gyb/gyb)
-             if [[ "${RUNNER_OS}" == "Windows" ]]; then
-               gyb=$(cygpath -w "$gyb")
-             fi
-             echo "gyb=${gyb}" >> $GITHUB_ENV
-             echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
-             echo "---- WARNINGS FROM build/gyb/warn-gyb.txt"
-             cat build/gyb/warn-gyb.txt
-             echo "---- Analysis FROM build/gyb/Analysis-00.toc"
-             cat build/gyb/Analysis-00.toc
-             echo "---- EXE data FROM build/gyb/EXE-00.toc"
-             cat build/gyb/EXE-00.toc
+          "${PYTHON}" -m PyInstaller --clean --noconfirm --distpath=dist gyb.spec
+          if [ -x "$(command -v realpath)" ]; then
+            realpath=realpath
+          else
+            brew install coreutils
+            realpath=grealpath
+          fi
+          
+          # gybpath is the folder containing all files
+          export gybpath=$(${realpath} dist/gyb)
+          
+          # gyb is the executable binary inside
+          if [[ "${RUNNER_OS}" == "Windows" ]]; then
+            export gyb=$(cygpath -w "${gybpath}/gyb.exe")
+          else
+            export gyb="${gybpath}/gyb"
+          fi
+          
+          echo "gybpath=${gybpath}" >> $GITHUB_ENV
+          echo "gyb=${gyb}" >> $GITHUB_ENV
+          echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
 
       - name: Linux install patchelf/staticx
         if: matrix.staticx == 'yes'
@@ -535,19 +536,23 @@ jobs:
             this_glibc_ver=glibc$(ldd --version | awk '/ldd/{print $NF}')
           fi
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-${this_glibc_ver}.tar.xz"
-          tar cfJ $GYB_ARCHIVE gyb/
+          tar -C dist -cfJ $GYB_ARCHIVE gyb/
 
       - name: MacOS package GYB
         if: runner.os == 'macOS' && matrix.goal == 'build'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
           GYB_ARCHIVE="gyb-${GYBVERSION}-macos-${arch}.tar.xz"
-          tar cfJ $GYB_ARCHIVE gyb/
+          tar -C dist -cfJ $GYB_ARCHIVE gyb/
 
       - name: Windows package GYB
         if: runner.os == 'Windows' && matrix.goal == 'build'
         run: |
-          cp gyb-setup.bat gyb
+          # Copy setup helper and license into application directory
+          cp gyb-setup.bat dist/gyb/
+          cp LICENSE dist/gyb/ || true
+
+          # Detect runner architecture using standard GHA env vars
           if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
             win_arch="arm64"
             wix_arch="arm64"
@@ -555,26 +560,43 @@ jobs:
             win_arch="x86_64"
             wix_arch="x64"
           fi
-          GYB_ARCHIVE="gyb-${GYBVERSION}-windows-${win_arch}.zip"
+
+          # 1. Create ZIP Archive containing the top-level gyb/ folder
+          GYB_ARCHIVE="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-${win_arch}.zip"
+          cd dist
           /c/Program\ Files/7-Zip/7z.exe a -tzip "$GYB_ARCHIVE" gyb -xr!.svn
+          cd ..
+
+          # 2. Build MSI Installer with WiX Toolset
           export MSI_FILENAME="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-${win_arch}.msi"
-          mkdir -p gyb-pkg
-          cp -rf gyb/* gyb-pkg/;
+
+          # Populate staging folders for WiX
+          mkdir -p gyb-64 gyb
+          cp -rf dist/gyb/* gyb-64/
+          cp -rf dist/gyb/* gyb/
+
           /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/candle.exe -arch ${wix_arch} windows-gyb.wxs
-          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/WixUIExtension.dll windows-gyb.wixobj -o "$MSI_FILENAME" || true;
+          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/WixUIExtension.dll windows-gyb.wixobj -o "$MSI_FILENAME" || true
           rm -f *.wixpdb
           echo "MSI_FILENAME=${MSI_FILENAME}" >> $GITHUB_ENV
 
       - name: Sign GYB MSI
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && matrix.goal == 'build'
         shell: pwsh
         run: |
-          write-Host "Signing ${env:MSI_FILENAME}...."
+          Write-Host "Signing ${env:MSI_FILENAME}...."
           $signtool = "${{ steps.certum.outputs.signtool-path }}"
+          if (-not $signtool) {
+            $signtool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'
+          }
           $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
-          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:MSI_FILENAME"
-          write-Host "Verifying signature of ${env:MSI_FILENAME}...."
-          & $signtool verify /pa /v "$env:MSI_FILENAME"
+          if (-not $thumbprint) {
+            $thumbprint = "$env:WINDOWS_CODESIGN_CERT_HASH"
+          }
+
+          Start-Process -Wait -NoNewWindow -ErrorAction Stop -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:MSI_FILENAME"
+          Write-Host "Verifying signature of ${env:MSI_FILENAME}...."
+          & "$signtool" verify /pa /v "$env:MSI_FILENAME"
 
       - name: Attest Build Archive Provenance
         uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
