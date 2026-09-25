@@ -131,24 +131,6 @@ jobs:
           staticx: ${{ matrix.staticx }}
         run: |
           echo "We are running on ${RUNNER_OS}"
-          if [[ "${RUNNER_OS}" == "Windows" ]]; then
-            MAKE=nmake
-            MAKEOPT=""
-            PERL="c:\strawberry\perl\bin\perl.exe"
-            if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
-              PYEXTERNALS_PATH="arm64"
-              PYBUILDRELEASE_ARCH="ARM64"
-              OPENSSL_CONFIG_TARGET="VC-WIN64-ARM"
-            elif [[ "${RUNNER_ARCH}" == "X64" ]]; then
-              PYEXTERNALS_PATH="amd64"
-              PYBUILDRELEASE_ARCH="x64"
-              OPENSSL_CONFIG_TARGET="VC-WIN64A"
-            fi
-            echo "PYTHON=${PYTHON_SOURCE_PATH}/PCbuild/${PYEXTERNALS_PATH}/python.exe" >> $GITHUB_ENV
-            echo "PYEXTERNALS_PATH=${PYEXTERNALS_PATH}" >> $GITHUB_ENV
-            echo "PYBUILDRELEASE_ARCH=${PYBUILDRELEASE_ARCH}" >> $GITHUB_ENV
-            echo "OPENSSL_CONFIG_TARGET=${OPENSSL_CONFIG_TARGET}" >> $GITHUB_ENV
-          fi
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             MAKE=make
             OS=macos
@@ -169,7 +151,19 @@ jobs:
             OS=windows
             MAKEOPT=""
             PERL="c:\strawberry\perl\bin\perl.exe"
-            echo "PYTHON=${PYTHON_SOURCE_PATH}/PCbuild/${PYEXTERNALS_PATH}/python.exe" >> $GITHUB_ENV
+            if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
+              PYEXTERNALS_PATH="arm64"
+              PYBUILDRELEASE_ARCH="ARM64"
+              WIX_ARCH="arm64"
+            elif [[ "${RUNNER_ARCH}" == "X64" ]]; then
+              PYEXTERNALS_PATH="amd64"
+              PYBUILDRELEASE_ARCH="x64"
+              WIX_ARCH="x64"
+            fi
+            echo "PYTHON=${PYTHON_INSTALL_PATH}\python.exe" >> $GITHUB_ENV
+            echo "PS_PYTHON_INSTALL_PATH=$(cygpath -w $PYTHON_INSTALL_PATH)" >> $GITHUB_ENV
+            echo "PYBUILDRELEASE_ARCH=${PYBUILDRELEASE_ARCH}" >> $GITHUB_ENV
+            echo "WIX_ARCH=${WIX_ARCH}" >> $GITHUB_ENV
           fi
           echo "We'll run make with: ${MAKEOPT}"
           echo "JID=${jid}" >> $GITHUB_ENV
@@ -224,9 +218,9 @@ jobs:
           cd "${OPENSSL_SOURCE_PATH}"
           # Python doesn't like OpenSSL 4.0 with ASM on Linux arm64
           if ([ "$RUNNER_OS" == "Linux" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
-            "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" no-asm $OPENSSL_CONFIG_OPTS
+            "${PERL}" ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" no-asm $OPENSSL_CONFIG_OPTS
           else
-            "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
+            "${PERL}" ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
           fi
 
       - name: Rename GNU link on Windows
@@ -315,7 +309,7 @@ jobs:
           pip install --upgrade sphinx
           sphinx-build --version
 
-      - name: Windows Config/Build Python
+      - name: Windows Config/Build/Install Python
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         shell: powershell
         run: |
@@ -325,7 +319,9 @@ jobs:
           # Custom _hashlib.vcxproj with static crypto dependencies
           Copy-Item -Path "${env:GITHUB_WORKSPACE}\_hashlib.vcxproj" -Destination PCBuild\ -Verbose
           echo "Building for ${env:PYBUILDRELEASE_ARCH}..."
-          PCBuild\build.bat -m --pgo -c Release -p "${env:PYBUILDRELEASE_ARCH}"
+          PCBuild\build.bat -c Release -p "${env:PYBUILDRELEASE_ARCH}" --pgo
+          .\python.bat PC\layout --precompile --preset-default --copy $env:PS_PYTHON_INSTALL_PATH
+          Get-ChildItem -Path $env:PS_PYTHON_INSTALL_PATH -File
 
       - name: Mac/Linux Build Python
         if: matrix.goal == 'build' && runner.os != 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -361,16 +357,9 @@ jobs:
           export gyb="${PYTHON} -m gyb"
           echo "gyb=${gyb}" >> $GITHUB_ENV
 
-      - name: Upgrade pip, wheel, etc
-        run: |
-          "${PYTHON}" -m pip install --upgrade pip wheel setuptools
-
       - name: Install pip requirements
         run: |
-             set +e
-             outdated=$("$PYTHON" -m pip list --outdated | grep -v 'Package' | grep -v '\-\-\-' | cut -d ' ' -f 1)
-             "$PYTHON" -m pip install --upgrade --force-reinstall "$outdated"
-             "$PYTHON" -m pip install --upgrade -r requirements.txt
+          "$PYTHON" -m pip install --upgrade -r requirements.txt
 
       - name: Install PyInstaller
         if: matrix.goal == 'build'
@@ -683,11 +672,7 @@ jobs:
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         working-directory: ${{ github.workspace }}
         run: |
-          if [[ "${RUNNER_OS}" == "Windows" ]]; then
-            tar_folder="cpython/ ssl/"
-          else
-            tar_folder="ssl/ python/"
-          fi
+          tar_folder="ssl/ python/"
           tar cJvvf cache.tar.xz $tar_folder
 
   merge:
