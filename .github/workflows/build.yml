@@ -60,21 +60,21 @@ jobs:
             goal: build
             arch: aarch64
             staticx: yes
-          - os: ubuntu-24.04
-            goal: test
-            python: "3.10"
-            jid: 8
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             goal: test
             python: "3.11"
-            jid: 9
-          - os: ubuntu-24.04
+            jid: 8
+          - os: ubuntu-26.04
             goal: test
             python: "3.12"
-            jid: 10
-          - os: ubuntu-24.04
+            jid: 9
+          - os: ubuntu-26.04
             goal: test
-            python: "3.14t"
+            python: "3.13"
+            jid: 10
+          - os: ubuntu-26.04
+            goal: test
+            python: "3.15"
             jid: 11
 
     steps:
