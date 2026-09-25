@@ -363,23 +363,7 @@ jobs:
       - name: Install PyInstaller
         if: matrix.goal == 'build'
         run: |
-          git clone https://github.com/pyinstaller/pyinstaller.git
-          cd pyinstaller
-          export latest_release=$(git tag --list | grep -v dev | grep -v rc | sort -Vr | head -n1)
-          echo $latest_release
-          git checkout "${latest_release}"
-          # remove pre-compiled bootloaders so we fail if bootloader compile fails
-          rm -rf PyInstaller/bootloader/*-*/*
-          cd bootloader
-          if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
-            export PYINSTALLER_BUILD_ARGS="--target-arch=arm64"
-          elif [[ "${RUNNER_ARCH}" == "X64" ]]; then
-            export PYINSTALLER_BUILD_ARGS="--target-arch=64bit"
-          fi
-          echo "PyInstaller build arguments: ${PYINSTALLER_BUILD_ARGS}"
-          "${PYTHON}" ./waf all $PYINSTALLER_BUILD_ARGS
-          cd ..
-          "${PYTHON}" -m pip install .
+          "${PYTHON}" -m pip install --upgrade pyinstaller
           "${PYTHON}" -m PyInstaller --version
 
       - name: Build GYB with PyInstaller
