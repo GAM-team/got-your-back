@@ -44,7 +44,7 @@ jobs:
             jid: 3
             goal: build
             arch: x86_64
-          - os: macos-14
+          - os: macos-15
             jid: 4
             goal: build
             arch: aarch64
