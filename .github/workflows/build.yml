@@ -392,23 +392,32 @@ jobs:
             export PYINSTALLER_BUILD_ONEDIR=yes
           fi
           "${PYTHON}" -m PyInstaller --clean --noconfirm --distpath=dist gyb.spec
+
+          # In onefile mode (staticx), PyInstaller produces a single binary at dist/gyb.
+          # Move it into dist/gyb/gyb so dist/gyb is always a directory across all builds.
+          if [ -f "dist/gyb" ]; then
+            mv dist/gyb dist/gyb_bin
+            mkdir -p dist/gyb
+            mv dist/gyb_bin dist/gyb/gyb
+          fi
+
           if [ -x "$(command -v realpath)" ]; then
             realpath=realpath
           else
             brew install coreutils
             realpath=grealpath
           fi
-          
-          # gybpath is the folder containing all files
+
+          # gybpath is always the folder
           export gybpath=$(${realpath} dist/gyb)
-          
-          # gyb is the executable binary inside
+
+          # gyb is always the executable binary inside
           if [[ "${RUNNER_OS}" == "Windows" ]]; then
             export gyb=$(cygpath -w "${gybpath}/gyb.exe")
           else
             export gyb="${gybpath}/gyb"
           fi
-          
+
           echo "gybpath=${gybpath}" >> $GITHUB_ENV
           echo "gyb=${gyb}" >> $GITHUB_ENV
           echo -e "GYB: ${gyb}\nGYBPATH: ${gybpath}"
@@ -436,9 +445,9 @@ jobs:
               ;;
           esac
           echo "ldlib=${ldlib}"
-          $PYTHON -m staticx -l "${ldlib}" gyb/gyb gyb/gyb-staticx
-          rm -rvf gyb/gyb
-          mv -v gyb/gyb-staticx gyb/gyb
+          $PYTHON -m staticx -l "${ldlib}" "$gyb" "${gyb}-staticx"
+          rm -f "$gyb"
+          mv "${gyb}-staticx" "$gyb"
 
       - name: Setup Certum Code Signing
         id: certum
@@ -456,7 +465,7 @@ jobs:
         run: |
           $signtool = "${{ steps.certum.outputs.signtool-path }}"
           $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
-          $targetDir = (Resolve-Path "gyb").Path
+          $targetDir = (Resolve-Path "dist/gyb").Path
           Write-Host "Searching for binaries to sign in $targetDir..."
 
           # Collect all executable files (*.exe, *.dll, *.pyd)
