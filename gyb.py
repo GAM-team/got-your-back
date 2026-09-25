@@ -856,8 +856,20 @@ def callGAPI(service, function, soft_errors=False, throw_reasons=[], retry_reaso
       else:
         sys.exit(int(http_status))
     except google.auth.exceptions.RefreshError as e:
+      # Retry transient refresh failures instead of exiting, so one bad refresh
+      # cannot kill a long run. A genuinely bad credential still fails at the end.
+      if n != retries:
+        _backoff(n, retries, 'token refresh: %s' % e)
+        continue
       sys.stderr.write('Error: Authentication Token Error - %s' % e)
       sys.exit(403)
+  # Retries exhausted. Report it: falling through returns None, which is what a
+  # successful call also returns, so the caller cannot detect the dropped batch.
+  sys.stderr.write('\nERROR: giving up after %s attempts - the network appears '
+                   'to be down.\n' % retries)
+  if soft_errors:
+    return
+  sys.exit(4)
 
 def callGAPIpages(service, function, items='items',
  nextPageToken='nextPageToken', page_message=None, message_attribute=None,
@@ -1764,17 +1776,29 @@ def refresh_message(request_id, response, exception):
                   WHERE message_num = uids.message_num)""",
                   ((response['id']),))
 
+# message_num -> reason for every message a restore could not import.
+unrestored_messages = {}
+
 def restored_message(request_id, response, exception):
   if exception is not None:
+    reason = 'unknown'
+    code = None
     try:
       error = json.loads(exception.content.decode('utf-8'))
-      if error['error']['code'] == 400:
-        print("\nERROR: %s: %s. Skipping message restore."
-          % (error['error']['code'], error['error']['errors'][0]['message']))
-        return
-    except:
-      pass
-    raise exception
+      code = error['error']['code']
+      reason = error['error']['errors'][0].get('reason', 'unknown')
+      message = error['error']['errors'][0]['message']
+    except Exception:
+      message = str(exception)
+    if code == 400:
+      print("\nERROR: %s: %s. Skipping message restore." % (code, message))
+      unrestored_messages[request_id] = '%s %s' % (code, reason)
+      return
+    # Record rather than raise: raising here aborts the rest of the batch's
+    # callbacks, losing the success record of messages that did import.
+    print("\nERROR: %s: %s (%s). Message %s not restored; it will be retried on "
+          "the next run." % (code, message, reason, request_id))
+    unrestored_messages[request_id] = '%s %s' % (code, reason)
   else:
     sqlconn.execute(
       '''INSERT OR IGNORE INTO restored_messages (message_num) VALUES (?)''',
@@ -2355,6 +2379,9 @@ def main(argv):
 
     messages_to_restore_results = sqlcur.fetchall()
     restore_count = len(messages_to_restore_results)
+    # Baseline so the end-of-run tally counts only this run's messages.
+    sqlcur.execute('SELECT count(*) FROM restored_messages')
+    already_restored = sqlcur.fetchone()[0]
     current = 0
     gbatch = gmail.new_batch_http_request()
     max_batch_bytes = 8 * 1024 * 1024
@@ -2371,8 +2398,17 @@ def main(argv):
             message_num))
         print('  this message will be skipped.')
         continue
-      with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
-          full_message = f.read()
+      try:
+        with open(os.path.join(options.local_folder, message_filename), 'rb') as f:
+            full_message = f.read()
+      except OSError as e:
+        # Skip a message file that exists but cannot be read (typically an
+        # antivirus lock), so one bad file cannot kill the whole restore.
+        print('\nWARNING! could not read %s for message %s: %s'
+          % (os.path.join(options.local_folder, message_filename), message_num, e))
+        print('  this message will be skipped.')
+        unrestored_messages[str(message_num)] = 'unreadable: %s' % e
+        continue
       if options.cleanup:
           full_message = message_hygiene(full_message)
       labels = []
@@ -2451,10 +2487,69 @@ def main(argv):
         current, restore_count))
       callGAPI(gbatch, None, soft_errors=True)
       sqlconn.commit()
+    # Retry messages that failed on a temporary error, so recording the failure
+    # instead of raising keeps the in-run recovery that raising used to provide.
+    for retry_pass in range(1, 4):
+      retryable = [n for n, r in unrestored_messages.items()
+                   if r.split()[0] in ('403', '429', '500', '502', '503', '504')]
+      if not retryable:
+        break
+      print('\nretrying %s message(s) that hit a temporary error (pass %s of 3)'
+        % (len(retryable), retry_pass))
+      time.sleep(5 * retry_pass)
+      gbatch = gmail.new_batch_http_request()
+      for message_num in retryable:
+        del unrestored_messages[message_num]
+        sqlcur.execute(
+          'SELECT message_filename FROM messages WHERE message_num = ?',
+          (message_num,))
+        row = sqlcur.fetchone()
+        if not row:
+          continue
+        try:
+          with open(os.path.join(options.local_folder, row[0]), 'rb') as f:
+            full_message = f.read()
+        except OSError as e:
+          unrestored_messages[str(message_num)] = 'unreadable: %s' % e
+          continue
+        if options.cleanup:
+          full_message = message_hygiene(full_message)
+        retry_labels = list(options.label_restored) if options.label_restored else []
+        body = {'labelIds': labelsToLabelIds(retry_labels)}
+        body['raw'] = base64.urlsafe_b64encode(full_message).decode('utf-8')
+        gbatch.add(gmail.users().messages().import_(userId='me', body=body,
+          fields='id', deleted=options.vault, neverMarkSpam=True),
+          callback=restored_message, request_id=str(message_num))
+        if len(gbatch._order) >= max(options.batch_size, 1):
+          callGAPI(gbatch, None, soft_errors=True)
+          gbatch = gmail.new_batch_http_request()
+          sqlconn.commit()
+      if len(gbatch._order) > 0:
+        callGAPI(gbatch, None, soft_errors=True)
+        sqlconn.commit()
     print("\n")
     sqlconn.commit()
+    # Compare against the resume table, not the reported errors: a dropped batch
+    # fires no per-message callback, so errors alone under-count what is missing.
+    sqlcur.execute('SELECT count(*) FROM restored_messages')
+    now_restored = sqlcur.fetchone()[0]
+    missing = restore_count - (now_restored - already_restored)
     sqlconn.execute('DETACH resume')
     sqlconn.commit()
+    if missing > 0 or unrestored_messages:
+      reasons = {}
+      for r in unrestored_messages.values():
+        reasons[r] = reasons.get(r, 0) + 1
+      unexplained = missing - len(unrestored_messages)
+      if unexplained > 0:
+        reasons['no error reported (dropped batch)'] = unexplained
+      sys.stderr.write(
+        '\nWARNING: %s of %s message(s) were NOT restored:\n%s\n'
+        'Re-run the same restore command to retry them (resume skips messages '
+        'already restored, and Gmail de-duplicates re-imported mail).\n'
+        % (max(missing, len(unrestored_messages)), restore_count,
+           '\n'.join('  %s x %s' % (n, r) for r, n in sorted(reasons.items()))))
+      sys.exit(3)
 
  # RESTORE-MBOX #
   elif options.action == 'restore-mbox':
