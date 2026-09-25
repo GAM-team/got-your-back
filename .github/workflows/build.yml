@@ -418,71 +418,26 @@ jobs:
           rm -rvf gyb/gyb
           mv -v gyb/gyb-staticx gyb/gyb
 
-      - name: Install WinAppDriver
+      - name: Setup Certum Code Signing
+        id: certum
         if: runner.os == 'Windows'
-        run: |
-          choco install -y winappdriver
-
-      - name: Enabled dev mode for WinAppDriver
-        if: runner.os == 'Windows'
-        shell: cmd
-        run : |
-         reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
-
-      - name: Install appium and totp tools
-        if: runner.os == 'Windows'
-        run: |
-          echo "Installing appium..."
-          npm install -g appium
-          echo "Installing totp-generator..."
-          npm install "totp-generator"
-          echo "Installing wdio..."
-          npm install @wdio/cli
-          echo "Installing appium win driver..."
-          appium driver install windows
-
-      - name: Install Certum MSI
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $url = "https://files.certum.eu/software/SimplySignDesktop/Windows/9.3.4.72/SimplySignDesktop-9.3.4.72-64-bit-en.msi"
-          $file = "SimplySignDesktop.msi"
-          Invoke-WebRequest $url -OutFile $file
-          $log = "install.log" 
-          $procMain = Start-Process "msiexec" "/i `"$file`" /qn /l*! `"$log`"" -NoNewWindow -PassThru
-          $procLog = Start-Process "powershell" "Get-Content -Path `"$log`" -Wait" -NoNewWindow -PassThru 
-          $procMain.WaitForExit() 
-          $procLog.Kill()
-
-      - name: Login to Certum
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          TOTP_SECRET: ${{ secrets.TOTP_SECRET }}
-        run: |
-          # disable win private firewall that interferes with appium server
-          Set-NetFirewallProfile -Profile Private -Enabled False
-          $appiumCmd = Get-Command appium
-          $appiumPath = $appiumCmd.Path
-          Start-Process -Filepath "powershell.exe" -ArgumentList "-File", $appiumPath, "--address", "127.0.0.1", "--log-level", "error"
-          Start-Sleep -Seconds 10
-          write-host "appium started"
-          write-host "running SimplySignDesktop login..."
-          node tools/ssd.mjs --log-level warn
-          write-host "sleeping during login..."
-          Start-Sleep 10
+        uses: jay0lee/certum-cloud-code-sign@a3324503499c49090869856eeeecfe95fb613d87 # v1
+        with:
+          username: ${{ secrets.CERTUM_USERNAME || 'jay0lee@gmail.com' }}
+          totp_secret: ${{ secrets.TOTP_SECRET }}
+          cert_sha1: ${{ env.WINDOWS_CODESIGN_CERT_HASH }}
+          debug: 'false'
 
       - name: Sign gyb.exe
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           write-Host "Signing ${env:gyb}...."
-          # Always explicitely use x64 version os signtool.exe, arm64 version apparently can't
-          # see Certum certs since SimplySignDesktop is x64-only today.
-          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'  -ArgumentList "sign", "/sha1", "$env:WINDOWS_CODESIGN_CERT_HASH", "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:gyb"
+          $signtool = "${{ steps.certum.outputs.signtool-path }}"
+          $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
+          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:gyb"
           write-Host "Verifying signature of ${env:gyb}...."
-          # verify signature. If we failed to sign we should fail to verify and die.
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' verify /pa /v "$env:gyb"
+          & $signtool verify /pa /v "$env:gyb"
 
       - name: MacOS send binary for Apple notarization
         if: runner.os == 'macOS'
@@ -559,12 +514,11 @@ jobs:
         shell: pwsh
         run: |
           write-Host "Signing ${env:MSI_FILENAME}...."
-          # Always explicitely use x64 version os signtool.exe, arm64 version apparently can't
-          # see Certum certs since SimplySignDesktop is x64-only today.
-          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'  -ArgumentList "sign", "/sha1", "$env:WINDOWS_CODESIGN_CERT_HASH", "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:MSI_FILENAME"
+          $signtool = "${{ steps.certum.outputs.signtool-path }}"
+          $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
+          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:MSI_FILENAME"
           write-Host "Verifying signature of ${env:MSI_FILENAME}...."
-          # verify signature. If we failed to sign we should fail to verify and die.
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe' verify /pa /v "$env:MSI_FILENAME"
+          & $signtool verify /pa /v "$env:MSI_FILENAME"
 
       - name: Attest Build Archive Provenance
         uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
@@ -638,6 +592,10 @@ jobs:
             gyb*.zip
             gyb*.msi
 
+      - name: Teardown SimplySign Desktop Session
+        if: always() && runner.os == 'Windows'
+        uses: jay0lee/certum-cloud-code-sign/teardown@a3324503499c49090869856eeeecfe95fb613d87 # v1
+
       - name: Tar Cache archive
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         working-directory: ${{ github.workspace }}
@@ -648,7 +606,6 @@ jobs:
             tar_folder="ssl/ python/"
           fi
           tar cJvvf cache.tar.xz $tar_folder
-
 
   merge:
     if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
