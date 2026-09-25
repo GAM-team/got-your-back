@@ -40,10 +40,9 @@ jobs:
             goal: build
             arch: x86_64
             staticx: yes
-          - os: macos-15-intel
+          - os: windows-11-arm
             jid: 3
             goal: build
-            arch: x86_64
           - os: macos-15
             jid: 4
             goal: build
@@ -132,16 +131,23 @@ jobs:
           staticx: ${{ matrix.staticx }}
         run: |
           echo "We are running on ${RUNNER_OS}"
-          if [[ "${arch}" == "Win64" ]]; then
-            PYEXTERNALS_PATH="amd64"
-            PYBUILDRELEASE_ARCH="x64"
-            OPENSSL_CONFIG_TARGET="VC-WIN64A"
-            CHOC_OPS=""
-          elif [[ "${arch}" == "Win32" ]]; then
-            PYEXTERNALS_PATH="win32"
-            PYBUILDRELEASE_ARCH="Win32"
-            OPENSSL_CONFIG_TARGET="VC-WIN32"
-            CHOC_OPS="--forcex86"
+          if [[ "${RUNNER_OS}" == "Windows" ]]; then
+            MAKE=nmake
+            MAKEOPT=""
+            PERL="c:\strawberry\perl\bin\perl.exe"
+            if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
+              PYEXTERNALS_PATH="arm64"
+              PYBUILDRELEASE_ARCH="ARM64"
+              OPENSSL_CONFIG_TARGET="VC-WIN64-ARM"
+            elif [[ "${RUNNER_ARCH}" == "X64" ]]; then
+              PYEXTERNALS_PATH="amd64"
+              PYBUILDRELEASE_ARCH="x64"
+              OPENSSL_CONFIG_TARGET="VC-WIN64A"
+            fi
+            echo "PYTHON=${PYTHON_SOURCE_PATH}/PCbuild/${PYEXTERNALS_PATH}/python.exe" >> $GITHUB_ENV
+            echo "PYEXTERNALS_PATH=${PYEXTERNALS_PATH}" >> $GITHUB_ENV
+            echo "PYBUILDRELEASE_ARCH=${PYBUILDRELEASE_ARCH}" >> $GITHUB_ENV
+            echo "OPENSSL_CONFIG_TARGET=${OPENSSL_CONFIG_TARGET}" >> $GITHUB_ENV
           fi
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
             MAKE=make
@@ -201,7 +207,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
         if: runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         with:
-          arch: ${{ matrix.arch }}
+          arch: ${{ runner.arch }}
 
       - name: Windows Choco Packages Install
         if: runner.os == 'Windows'
@@ -365,7 +371,9 @@ jobs:
           # remove pre-compiled bootloaders so we fail if bootloader compile fails
           rm -rf PyInstaller/bootloader/*-*/*
           cd bootloader
-          if [[ "${arch}" == "Win64" ]]; then
+          if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
+            export PYINSTALLER_BUILD_ARGS="--target-arch=arm64"
+          elif [[ "${RUNNER_ARCH}" == "X64" ]]; then
             export PYINSTALLER_BUILD_ARGS="--target-arch=64bit"
           fi
           echo "PyInstaller build arguments: ${PYINSTALLER_BUILD_ARGS}"
@@ -510,12 +518,19 @@ jobs:
         if: runner.os == 'Windows' && matrix.goal == 'build'
         run: |
           cp gyb-setup.bat gyb
-          GYB_ARCHIVE=gyb-$GYBVERSION-windows-x86_64.zip
-          /c/Program\ Files/7-Zip/7z.exe a -tzip $GYB_ARCHIVE gyb -xr!.svn
-          export MSI_FILENAME="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-x86_64.msi"
-          mkdir gyb-64
-          cp -rf gyb/* gyb-64/;
-          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/candle.exe -arch x64 windows-gyb.wxs
+          if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
+            win_arch="arm64"
+            wix_arch="arm64"
+          else
+            win_arch="x86_64"
+            wix_arch="x64"
+          fi
+          GYB_ARCHIVE="gyb-${GYBVERSION}-windows-${win_arch}.zip"
+          /c/Program\ Files/7-Zip/7z.exe a -tzip "$GYB_ARCHIVE" gyb -xr!.svn
+          export MSI_FILENAME="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-${win_arch}.msi"
+          mkdir -p gyb-pkg
+          cp -rf gyb/* gyb-pkg/;
+          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/candle.exe -arch ${wix_arch} windows-gyb.wxs
           /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/WixUIExtension.dll windows-gyb.wixobj -o "$MSI_FILENAME" || true;
           rm -f *.wixpdb
           echo "MSI_FILENAME=${MSI_FILENAME}" >> $GITHUB_ENV
