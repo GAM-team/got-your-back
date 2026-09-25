@@ -339,14 +339,10 @@ jobs:
 
       - name: Run Python
         run: |
-          "${PYTHON}" -VV
-          "${PYTHON}" -c "import ssl; print(f'Using {ssl.OPENSSL_VERSION}')"
+          "${PYTHON}" -V
 
       - name: Create and use Python .venv
         run: |
-          cd "$GITHUB_WORKSPACE"
-          curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py
-          "$PYTHON" get-pip.py
           "$PYTHON" -m venv "${GITHUB_WORKSPACE}/.venv"
           if [[ "${RUNNER_OS}" == "Windows" ]]; then
             PYTHON="${GITHUB_WORKSPACE}/.venv/Scripts/python.exe"
@@ -362,13 +358,7 @@ jobs:
           echo "gyb=${gyb}" >> $GITHUB_ENV
 
       - name: Install pip requirements
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          if ([ "$RUNNER_OS" == "Windows" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
-            gh release download --repo "jay0lee/cryptography-wheels" --pattern "*[^t]-win_arm64.whl" --clobber
-            "$PYTHON" -m pip install cryptography-*.whl
-          fi
           "$PYTHON" -m pip install --upgrade -r requirements.txt
 
       - name: Install PyInstaller
