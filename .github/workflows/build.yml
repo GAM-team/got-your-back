@@ -356,6 +356,11 @@ jobs:
           echo "PYTHON=${PYTHON}" >> $GITHUB_ENV
           echo "Using VENV Python ${PYTHON}"
 
+          # Update gyb command so test jobs use the venv Python
+          # build jobs will later overwrite $gyb with the compiled binary path
+          export gyb="${PYTHON} -m gyb"
+          echo "gyb=${gyb}" >> $GITHUB_ENV
+
       - name: Upgrade pip, wheel, etc
         run: |
           curl -O https://bootstrap.pypa.io/get-pip.py
