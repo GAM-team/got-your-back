@@ -345,6 +345,17 @@ jobs:
         run: |
           "${PYTHON}" -V
 
+      - name: Create and use Python .venv
+        run: |
+          "$PYTHON" -m venv "${GITHUB_WORKSPACE}/.venv"
+          if [[ "${RUNNER_OS}" == "Windows" ]]; then
+            PYTHON="${GITHUB_WORKSPACE}/.venv/Scripts/python.exe"
+          else
+            PYTHON="${GITHUB_WORKSPACE}/.venv/bin/python"
+          fi
+          echo "PYTHON=${PYTHON}" >> $GITHUB_ENV
+          echo "Using VENV Python ${PYTHON}"
+
       - name: Upgrade pip, wheel, etc
         run: |
           curl -O https://bootstrap.pypa.io/get-pip.py
