@@ -90,21 +90,56 @@ upx = False
 console = True
 disable_windowed_traceback = False
 argv_emulation = False
-exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-          name=name,
-          debug=debug,
-          bootloader_ignore_signals=bootloader_ignore_signals,
-          strip=strip,
-          manifest=manifest,
-          upx=upx,
-          console=console,
-          argv_emulation=argv_emulation,
-          target_arch=target_arch,
-          codesign_identity=codesign_identity,
-          entitlements_file=entitlements_file,
-          version=version,
-          )
+if os.getenv('PYINSTALLER_BUILD_ONEDIR'):
+    # Build onedir folder
+    exe = EXE(
+        pyz,
+        a.scripts,
+        [],
+        exclude_binaries=True,
+        name=name,
+        debug=debug,
+        bootloader_ignore_signals=bootloader_ignore_signals,
+        manifest=manifest,
+        strip=strip,
+        upx=upx,
+        console=console,
+        contents_directory='lib',  # Puts DLLs/PYDs neatly under a lib/ subfolder
+        disable_windowed_traceback=disable_windowed_traceback,
+        argv_emulation=argv_emulation,
+        target_arch=target_arch,
+        codesign_identity=codesign_identity,
+        entitlements_file=entitlements_file,
+        version=version,
+    )
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=strip,
+        upx=upx,
+        upx_exclude=[],
+        name=name,
+    )
+else:
+    # Build onefile (legacy Linux staticx)
+    exe = EXE(
+        pyz,
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        name=name,
+        debug=debug,
+        bootloader_ignore_signals=bootloader_ignore_signals,
+        strip=strip,
+        manifest=manifest,
+        upx=upx,
+        console=console,
+        argv_emulation=argv_emulation,
+        target_arch=target_arch,
+        codesign_identity=codesign_identity,
+        entitlements_file=entitlements_file,
+        version=version,
+    )
