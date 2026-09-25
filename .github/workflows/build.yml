@@ -380,11 +380,13 @@ jobs:
       - name: Build GYB with PyInstaller
         if: matrix.goal == 'build'
         run: |
-             if [[ "${RUNNER_OS}" == "macOS" ]]; then
-               # Tell our spec to use our code sign certificate
-               export codesign_identity="Jay Lee"
-             fi
-             "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            export codesign_identity="Jay Lee"
+          fi
+          if [[ "$staticx" != "yes" ]]; then
+            export PYINSTALLER_BUILD_ONEDIR=yes
+          fi
+          "${PYTHON}" -m PyInstaller --clean --distpath=gyb gyb.spec
              if [ -x "$(command -v realpath)" ]; then
                realpath=realpath
              else
@@ -442,16 +444,44 @@ jobs:
           cert_sha1: ${{ env.WINDOWS_CODESIGN_CERT_HASH }}
           debug: 'false'
 
-      - name: Sign gyb.exe
+      - name: Sign Windows Binaries
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          write-Host "Signing ${env:gyb}...."
           $signtool = "${{ steps.certum.outputs.signtool-path }}"
           $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
-          Start-Process -Wait -NoNewWindow -ErrorAction Continue -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:gyb"
-          write-Host "Verifying signature of ${env:gyb}...."
-          & $signtool verify /pa /v "$env:gyb"
+          $targetDir = (Resolve-Path "gyb").Path
+          Write-Host "Searching for binaries to sign in $targetDir..."
+
+          # Collect all executable files (*.exe, *.dll, *.pyd)
+          $files = Get-ChildItem -Path $targetDir -Recurse -Include *.exe, *.dll, *.pyd
+          $filesToSign = @()
+          foreach ($file in $files) {
+            $sig = Get-AuthenticodeSignature $file.FullName
+            if ($sig.Status -eq 'NotSigned' -or $sig.Status -eq 'HashMismatch') {
+              $filesToSign += $file.FullName
+            } else {
+              Write-Host "Skipping $($file.Name) - Already signed by $($sig.SignerCertificate.Subject)"
+            }
+          }
+
+          # Batch sign in chunks of 50 to respect Windows command line limits
+          if ($filesToSign.Count -gt 0) {
+            Write-Host "Batch signing $($filesToSign.Count) files..."
+            $chunkSize = 50
+            for ($i = 0; $i -lt $filesToSign.Count; $i += $chunkSize) {
+              $upperBound = [Math]::Min($i + $chunkSize - 1, $filesToSign.Count - 1)
+              $chunk = $filesToSign[$i..$upperBound]
+              Write-Host "Signing chunk ($($chunk.Count) files)..."
+              $baseArgs = @("sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v")
+              Start-Process -Wait -NoNewWindow -ErrorAction Stop -FilePath $signtool -ArgumentList ($baseArgs + $chunk)
+            }
+          } else {
+            Write-Host "No files require signing."
+          }
+
+          Write-Host "Verifying primary binary signature..."
+          & "$signtool" verify /pa /v "$env:gyb"
 
       - name: MacOS send binary for Apple notarization
         if: runner.os == 'macOS'
