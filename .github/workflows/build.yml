@@ -216,8 +216,12 @@ jobs:
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
-          # --libdir=lib is needed so Python can find OpenSSL libraries
-          "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
+          # Python doesn't like OpenSSL 4.0 with ASM on Linux arm64
+          if ([ "$RUNNER_OS" == "Linux" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
+            "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" no-asm $OPENSSL_CONFIG_OPTS
+          else
+            "${PERL}" ./Configure "${OPENSSL_CONFIG_TARGET}" --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
+          fi
 
       - name: Rename GNU link on Windows
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -290,7 +294,12 @@ jobs:
           cp "$env:OPENSSL_INSTALL_PATH\lib\*" "${env:OPENSSL_EXT_TARGET_PATH}"
           cp "$env:OPENSSL_INSTALL_PATH\bin\*" "${env:OPENSSL_EXT_TARGET_PATH}"
           cp "$env:OPENSSL_INSTALL_PATH\include\openssl\*" "${env:OPENSSL_EXT_TARGET_PATH}\include\openssl\"
-          cp "$env:OPENSSL_INSTALL_PATH\include\openssl\applink.c" "${env:OPENSSL_EXT_TARGET_PATH}\include\"
+          # Copy applink.c from source ms/ folder (or install include if present)
+          if (Test-Path "$env:OPENSSL_SOURCE_PATH\ms\applink.c") {
+            cp "$env:OPENSSL_SOURCE_PATH\ms\applink.c" "${env:OPENSSL_EXT_TARGET_PATH}\include\"
+          } elseif (Test-Path "$env:OPENSSL_INSTALL_PATH\include\openssl\applink.c") {
+            cp "$env:OPENSSL_INSTALL_PATH\include\openssl\applink.c" "${env:OPENSSL_EXT_TARGET_PATH}\include\"
+          }
 
       - name: Windows Install sphinx-build
         if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
