@@ -536,14 +536,14 @@ jobs:
             this_glibc_ver=glibc$(ldd --version | awk '/ldd/{print $NF}')
           fi
           GYB_ARCHIVE="gyb-${GYBVERSION}-linux-$(arch)-${this_glibc_ver}.tar.xz"
-          tar -C dist -cfJ $GYB_ARCHIVE gyb/
+          tar -cJf "$GYB_ARCHIVE" -C dist gyb
 
       - name: MacOS package GYB
         if: runner.os == 'macOS' && matrix.goal == 'build'
         run: |
           MACOSVERSION=$(defaults read loginwindow SystemVersionStampAsString)
           GYB_ARCHIVE="gyb-${GYBVERSION}-macos-${arch}.tar.xz"
-          tar -C dist -cfJ $GYB_ARCHIVE gyb/
+          tar -cJf "$GYB_ARCHIVE" -C dist gyb
 
       - name: Windows package GYB
         if: runner.os == 'Windows' && matrix.goal == 'build'
