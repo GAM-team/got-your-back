@@ -249,7 +249,12 @@ jobs:
       - name: Run OpenSSL
         if: matrix.goal == 'build'
         run: |
-          "${OPENSSL_INSTALL_PATH}/bin/openssl" version
+          echo "=== 1. OpenSSL Build Info and Compiler Flags ==="
+          "${OPENSSL_INSTALL_PATH}/bin/openssl" version -a
+          echo "=== 2. Testing SSL_CTX and Cipher Initialization ==="
+          "${OPENSSL_INSTALL_PATH}/bin/openssl" ciphers -v
+          echo "=== 3. Testing Live TLS Handshake (pypi.org:443) ==="
+          echo "Q" | "${OPENSSL_INSTALL_PATH}/bin/openssl" s_client -connect pypi.org:443 -servername pypi.org -state
 
       - name: Get latest stable Python source
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
