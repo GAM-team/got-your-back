@@ -1701,10 +1701,40 @@ def createLabel(label_name):
   try:
     label_results = callGAPI(gmail.users().labels(), 'create',
                              body=body, userId='me', fields='id',
-                             throw_reasons=['aborted'])
+                             throw_reasons=['aborted', 'invalidArgument', 'invalid'])
     allLabels[label_name] = label_results['id']
+    return
   except googleapiclient.errors.HttpError as e:
-    sys.stderr.write(f'WARNING: failed to create (existing?) label {label_name}\n')
+    pass
+  # Gmail refuses a user label named after a system label, and it does so in the
+  # MAILBOX's language: restoring a Google Takeout export whose X-Gmail-Labels
+  # header says "Archiviert" or "Da leggere" fails with
+  # "400: Invalid label name - invalidArgument". reserved_labels covers the
+  # English names and labellang.mappings covers seven system labels in 73
+  # languages, so a localised "Archived" or "Unread" gets through both and is
+  # then refused by Google.
+  #
+  # Retry with the underscore this code already uses for a reserved name, so a
+  # name nobody can predict does not end the restore.
+  fallback_name = f'_{label_name}'
+  try:
+    label_results = callGAPI(gmail.users().labels(), 'create',
+                             body={**body, 'name': fallback_name},
+                             userId='me', fields='id',
+                             throw_reasons=['aborted', 'invalidArgument', 'invalid'])
+  except googleapiclient.errors.HttpError as e:
+    sys.stderr.write(f'\nWARNING: Google would not accept the label {label_name} '
+                     f'or {fallback_name}. Messages carrying it keep their other '
+                     f'labels.\n')
+    return
+  sys.stderr.write(f'\nWARNING: Google refused the label {label_name} - it matches a '
+                   f'system label name in this mailbox\'s language. Created '
+                   f'{fallback_name} instead.\n')
+  # Both names map to the new label. labelsToLabelIds() looks the id up under
+  # the name it asked for, so without the first mapping the message would be
+  # restored with this label silently dropped.
+  allLabels[label_name] = label_results['id']
+  allLabels[fallback_name] = label_results['id']
 
 def labelsToLabelIds(labels):
   global allLabels
