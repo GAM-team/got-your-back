@@ -377,6 +377,7 @@ jobs:
             # https://github.com/pyca/cryptography/issues/14293
             gh release download --repo "jay0lee/cryptography-wheels" --pattern "*[^t]-win_arm64.whl" --clobber
             "$PYTHON" -m pip install cryptography-*.whl
+          fi
           "$PYTHON" -m pip install --upgrade -r requirements.txt
 
       - name: Install PyInstaller
