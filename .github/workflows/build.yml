@@ -558,7 +558,7 @@ jobs:
           GYB_ARCHIVE="gyb-${GYBVERSION}-macos-${arch}.tar.xz"
           tar -cJf "$GYB_ARCHIVE" -C dist gyb
 
-      - name: Windows package GYB
+      - name: Windows package zip
         if: runner.os == 'Windows' && matrix.goal == 'build'
         run: |
           # Copy setup helper and license into application directory
@@ -568,48 +568,28 @@ jobs:
           # Detect runner architecture using standard GHA env vars
           if [[ "${RUNNER_ARCH}" == "ARM64" ]]; then
             win_arch="arm64"
-            wix_arch="arm64"
           else
             win_arch="x86_64"
-            wix_arch="x64"
           fi
 
-          # 1. Create ZIP Archive containing the top-level gyb/ folder
+          # Create ZIP Archive containing the top-level gyb/ folder
           GYB_ARCHIVE="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-${win_arch}.zip"
           cd dist
           /c/Program\ Files/7-Zip/7z.exe a -tzip "$GYB_ARCHIVE" gyb -xr!.svn
           cd ..
 
-          # 2. Build MSI Installer with WiX Toolset
-          export MSI_FILENAME="${GITHUB_WORKSPACE}/gyb-${GYBVERSION}-windows-${win_arch}.msi"
-
-          # Populate staging folders for WiX
-          mkdir -p gyb-64 gyb
-          cp -rf dist/gyb/* gyb-64/
-          cp -rf dist/gyb/* gyb/
-
-          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/candle.exe -arch ${wix_arch} windows-gyb.wxs
-          /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/light.exe -ext /c/Program\ Files\ \(x86\)/WiX\ Toolset\ v3.14/bin/WixUIExtension.dll windows-gyb.wixobj -o "$MSI_FILENAME" || true
-          rm -f *.wixpdb
-          echo "MSI_FILENAME=${MSI_FILENAME}" >> $GITHUB_ENV
-
-      - name: Sign GYB MSI
+      - name: Windows package exe with Inno Setup
         if: runner.os == 'Windows' && matrix.goal == 'build'
-        shell: pwsh
         run: |
-          Write-Host "Signing ${env:MSI_FILENAME}...."
-          $signtool = "${{ steps.certum.outputs.signtool-path }}"
-          if (-not $signtool) {
-            $signtool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe'
-          }
-          $thumbprint = "${{ steps.certum.outputs.cert-thumbprint }}"
-          if (-not $thumbprint) {
-            $thumbprint = "$env:WINDOWS_CODESIGN_CERT_HASH"
-          }
-
-          Start-Process -Wait -NoNewWindow -ErrorAction Stop -FilePath $signtool -ArgumentList "sign", "/sha1", $thumbprint, "/tr", "http://time.certum.pl", "/td", "SHA256", "/fd", "SHA256", "/v", "$env:MSI_FILENAME"
-          Write-Host "Verifying signature of ${env:MSI_FILENAME}...."
-          & "$signtool" verify /pa /v "$env:MSI_FILENAME"
+          choco install innosetup
+          signtool="${{ steps.certum.outputs.signtool-path }}"
+          if [[ -z "$signtool" ]]; then
+            signtool="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe"
+          fi
+          iscc \
+            /S"gybsigntool=$signtool sign /sha1 $WINDOWS_CODESIGN_CERT_HASH /tr http://time.certum.pl /td SHA256 /fd SHA256 /v \$f" \
+            /O"$GITHUB_WORKSPACE" \
+            gyb.iss
 
       - name: Attest Build Archive Provenance
         uses: actions/attest-build-provenance@0b6e9809265278d02c58acf52849a95818a5a306 # v3.0.0
@@ -618,7 +598,7 @@ jobs:
           subject-path: |
             gyb*.tar.xz
             gyb*.zip
-            gyb*.msi
+            gyb*.exe
 
       - name: Basic Tests build jobs only
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
@@ -681,7 +661,7 @@ jobs:
           path: |
             gyb*.tar.xz
             gyb*.zip
-            gyb*.msi
+            gyb*.exe
 
       - name: Teardown SimplySign Desktop Session
         if: always() && runner.os == 'Windows'
