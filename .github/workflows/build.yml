@@ -23,6 +23,7 @@ env:
   PYTHON_INSTALL_PATH: ${{ github.workspace }}/python
   PYTHON_SOURCE_PATH: ${{ github.workspace }}/cpython
   WINDOWS_CODESIGN_CERT_HASH: F0525AB6343A5E9A5F75CF81FC56CF67E316CB28
+  PYTHONFAULTHANDLER: "1"
 
 jobs:
   build:
@@ -339,7 +340,11 @@ jobs:
 
       - name: Run Python
         run: |
-          "${PYTHON}" -V
+          "${PYTHON}" -VV
+          "${PYTHON}" -c "import ssl; print(f'Using {ssl.OPENSSL_VERSION}')"
+          "${PYTHON}" -c "import hashlib; print(f'hashlib algorithms: {len(hashlib.algorithms_available)}')"
+          "${PYTHON}" -c "import ctypes, zlib, bz2, lzma, sqlite3; print('ctypes, compression, sqlite3 OK')"
+          "${PYTHON}" -c "import urllib.request; resp = urllib.request.urlopen('https://pypi.org', timeout=10); print(f'HTTPS request to pypi.org: {resp.status}')"
 
       - name: Create and use Python .venv
         run: |
@@ -359,7 +364,16 @@ jobs:
 
       - name: Install pip requirements
         run: |
-          "$PYTHON" -m pip install --upgrade -r requirements.txt
+          "$PYTHON" -X faulthandler -m pip -vvv install --upgrade -r requirements.txt
+
+      - name: Windows Diagnostics on Failure
+        if: failure() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Write-Host "=== Windows Application Crash Events (EventID 1000) ==="
+          Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='Application Error'} -MaxEvents 5 -ErrorAction SilentlyContinue | Format-List TimeCreated, Message
+          Write-Host "=== Windows Error Reporting (EventID 1001) ==="
+          Get-WinEvent -FilterHashtable @{LogName='Application'; Id=1001} -MaxEvents 5 -ErrorAction SilentlyContinue | Format-List TimeCreated, Message
 
       - name: Install PyInstaller
         if: matrix.goal == 'build'
