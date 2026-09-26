@@ -23,7 +23,6 @@ env:
   PYTHON_INSTALL_PATH: ${{ github.workspace }}/python
   PYTHON_SOURCE_PATH: ${{ github.workspace }}/cpython
   WINDOWS_CODESIGN_CERT_HASH: F0525AB6343A5E9A5F75CF81FC56CF67E316CB28
-  PYTHONFAULTHANDLER: "1"
 
 jobs:
   build:
@@ -211,14 +210,19 @@ jobs:
 
       - name: Windows NASM Install
         uses: ilammy/setup-nasm@72793074d3c8cdda771dba85f6deafe00623038b # v1.5.2
-        if: matrix.goal == 'build' && runner.os == 'Windows' && steps.cache-python-ssl.outputs.cache-hit != 'true'
+        if: matrix.goal == 'build' && runner.os == 'Windows' && runner.arch == 'X64' && steps.cache-python-ssl.outputs.cache-hit != 'true'
 
       - name: Config OpenSSL
         if: matrix.goal == 'build' && steps.cache-python-ssl.outputs.cache-hit != 'true'
         run: |
           cd "${OPENSSL_SOURCE_PATH}"
-          # Python doesn't like OpenSSL 4.0 with ASM on Linux arm64
-          if ([ "$RUNNER_OS" == "Linux" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
+          # Fix MSVC ARM64 stack probe bug (OpenSSL PR #32872 / Issue #26239): remove /Gs0
+          "${PERL}" -pi -e 's/\/Gs0 //g' Configurations/10-main.conf
+          # Python doesn't like OpenSSL 4.0 with ASM on Linux/Windows arm64
+          if ([ "$RUNNER_OS" == "Windows" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
+            CONFIG_OPTS="${OPENSSL_CONFIG_OPTS/-O3/-O1}"
+            "${PERL}" ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" no-asm $CONFIG_OPTS
+          elif ([ "$RUNNER_OS" == "Linux" ] && [ "$RUNNER_ARCH" == "ARM64" ]); then
             "${PERL}" ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" no-asm $OPENSSL_CONFIG_OPTS
           else
             "${PERL}" ./Configure --libdir=lib --prefix="${OPENSSL_INSTALL_PATH}" $OPENSSL_CONFIG_OPTS
@@ -363,16 +367,7 @@ jobs:
 
       - name: Install pip requirements
         run: |
-          "$PYTHON" -X faulthandler -m pip -vvv install --upgrade -r requirements.txt
-
-      - name: Windows Diagnostics on Failure
-        if: failure() && runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Write-Host "=== Windows Application Crash Events (EventID 1000) ==="
-          Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='Application Error'} -MaxEvents 5 -ErrorAction SilentlyContinue | Format-List TimeCreated, Message
-          Write-Host "=== Windows Error Reporting (EventID 1001) ==="
-          Get-WinEvent -FilterHashtable @{LogName='Application'; Id=1001} -MaxEvents 5 -ErrorAction SilentlyContinue | Format-List TimeCreated, Message
+          "$PYTHON" -m pip install --upgrade -r requirements.txt
 
       - name: Install PyInstaller
         if: matrix.goal == 'build'
