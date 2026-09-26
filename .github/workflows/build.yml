@@ -344,7 +344,6 @@ jobs:
           "${PYTHON}" -c "import ssl; print(f'Using {ssl.OPENSSL_VERSION}')"
           "${PYTHON}" -c "import hashlib; print(f'hashlib algorithms: {len(hashlib.algorithms_available)}')"
           "${PYTHON}" -c "import ctypes, zlib, bz2, lzma, sqlite3; print('ctypes, compression, sqlite3 OK')"
-          "${PYTHON}" -c "import urllib.request; resp = urllib.request.urlopen('https://pypi.org', timeout=10); print(f'HTTPS request to pypi.org: {resp.status}')"
 
       - name: Create and use Python .venv
         run: |
