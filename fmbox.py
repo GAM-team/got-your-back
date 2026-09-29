@@ -78,7 +78,13 @@ class fmbox():
     except IOError:
       raise NoSuchMailboxError(path)
     self._mbox_position = self._file.tell()
-    self._last_from_line = self._file.readline().replace(linesep, b'')
+    first = self._file.readline().replace(linesep, b'')
+    if first.startswith(b'From '):
+      self._last_from_line = first
+    else:
+      # Not an mbox. Rewind and treat whole file as one message.
+      self._file.seek(0)
+      self._last_from_line = b'From MAILER-DAEMON Sat Jan  1 00:00:00 2000'
 
   def __iter__(self):
     return self
