@@ -24,7 +24,7 @@ global __name__, __author__, __email__, __version__, __license__
 __program_name__ = 'Got Your Back: Gmail Backup'
 __author__ = 'Jay Lee'
 __email__ = 'jay0lee@gmail.com'
-__version__ = '1.96'
+__version__ = '1.97'
 __license__ = 'Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)'
 __website__ = 'git.io/gyb'
 __db_schema_version__ = '6'
@@ -83,7 +83,16 @@ import webbrowser
 import threading
 
 # Force use of our limited CA file
-CA_CERTS_PEM = 'cacerts.pem'
+if getattr(sys, 'frozen', False):
+  CA_CERTS_PEM = os.path.join(os.path.dirname(sys.executable), 'lib', 'cacerts.pem')
+  if not os.path.isfile(CA_CERTS_PEM) and hasattr(sys, '_MEIPASS'):
+    CA_CERTS_PEM = os.path.join(sys._MEIPASS, 'cacerts.pem')
+  if not os.path.isfile(CA_CERTS_PEM):
+    CA_CERTS_PEM = os.path.join(os.path.dirname(sys.executable), 'cacerts.pem')
+else:
+  CA_CERTS_PEM = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'cacerts.pem')
+  if not os.path.isfile(CA_CERTS_PEM):
+    CA_CERTS_PEM = 'cacerts.pem'
 os.environ['REQUESTS_CA_BUNDLE'] = CA_CERTS_PEM
 os.environ['DEFAULT_CA_BUNDLE_PATH'] = CA_CERTS_PEM
 os.environ['HTTPLIB2_CA_CERTS'] = CA_CERTS_PEM

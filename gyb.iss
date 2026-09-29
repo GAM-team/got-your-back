@@ -1,7 +1,7 @@
 ; --- 1. PREPROCESSOR DEFINITIONS ---
 #define AppVersion GetEnv("GYBVERSION")
 #if AppVersion == ""
-  #define AppVersion "1.95"
+  #define AppVersion "1.97"
 #endif
 
 ; Pull architecture directly from GitHub Actions environment variable

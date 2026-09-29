@@ -392,6 +392,7 @@ jobs:
 
       - name: Basic Tests build jobs only
         if: matrix.goal == 'build'
+        working-directory: ${{ runner.temp }}
         run: |
           export voutput=$($gyb --version)
           export python_line=$(echo -e "${voutput}" | grep "Python ")
@@ -409,6 +410,32 @@ jobs:
             exit 1
           fi
           echo "We successfully compiled Python ${this_python} and OpenSSL ${this_openssl}"
+
+      - name: Test Windows Inno Setup installer
+        if: runner.os == 'Windows' && matrix.goal == 'build'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Filter "gyb-*-windows-*.exe" | Select-Object -First 1
+          Write-Host "Installing $($installer.Name)..."
+          Start-Process -FilePath $installer.FullName -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
+
+          $installedGyb = "$env:SystemDrive\GYB\gyb.exe"
+          $uninstaller = "$env:SystemDrive\GYB\unins000.exe"
+
+          Push-Location $env:RUNNER_TEMP
+          try {
+            Write-Host "Testing installed GYB from $pwd..."
+            & $installedGyb --version
+            if ($LASTEXITCODE -ne 0) {
+              throw "Installed GYB failed with exit code $LASTEXITCODE"
+            }
+          } finally {
+            Pop-Location
+            if (Test-Path $uninstaller) {
+              Write-Host "Uninstalling GYB..."
+              Start-Process -FilePath $uninstaller -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
+            }
+          }
 
       - name: Live API tests push only
         if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team'
