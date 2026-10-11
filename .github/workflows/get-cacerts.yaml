@@ -1,24 +1,15 @@
 name: Check for Google Root CA Updates
 
 on:
-  push:
-    paths-ignore:
-      - 'wiki/**'
-  pull_request:
-    paths-ignore:
-      - 'wiki/**'
   schedule:
     - cron: '23 23 * * *'
-
-defaults:
-  run:
-    shell: bash
+  workflow_dispatch:
 
 jobs:
   check-certs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
@@ -29,9 +20,51 @@ jobs:
           echo "Current hash is: ${CURRENT_HASH}"
           echo "CURRENT_HASH=${CURRENT_HASH}" >> $GITHUB_ENV
 
-      - name: Get latest cacerts.pem file from Google
+      - name: Generate GAM-specific bundle with LE + Google roots
         run: |
-          curl -o ./cacerts.pem -vvvv https://pki.goog/roots.pem
+          OUTPUT_FILE="cacerts.pem"
+          > "$OUTPUT_FILE"
+
+          process_cert() {
+            local url="$1"
+            local op_ca="$2"
+            local label="$3"
+            local tmp_cert=$(mktemp)
+            curl "$url" > "$tmp_cert"
+            local issuer=$(openssl x509 -noout -issuer -in "$tmp_cert" | sed -e 's/^issuer= *//')
+            local subject=$(openssl x509 -noout -subject -in "$tmp_cert" | sed -e 's/^subject= *//')
+            local serial_hex=$(openssl x509 -noout -serial -in "$tmp_cert" | sed -e 's/^serial=//')
+            local serial_dec=$(python3 -c "print(int('$serial_hex', 16))")
+            local md5=$(openssl x509 -noout -fingerprint -md5 -in "$tmp_cert" | sed -e 's/.*=//' | tr '[:upper:]' '[:lower:]')
+            local sha1=$(openssl x509 -noout -fingerprint -sha1 -in "$tmp_cert" | sed -e 's/.*=//' | tr '[:upper:]' '[:lower:]')
+            local sha256=$(openssl x509 -noout -fingerprint -sha256 -in "$tmp_cert" | sed -e 's/.*=//' | tr '[:upper:]' '[:lower:]')
+            echo "# Operating CA: $op_ca" >> "$OUTPUT_FILE"
+            echo "# Issuer: $issuer" >> "$OUTPUT_FILE"
+            echo "# Subject: $subject" >> "$OUTPUT_FILE"
+            echo "# Label: \"$label\"" >> "$OUTPUT_FILE"
+            echo "# Serial: $serial_dec" >> "$OUTPUT_FILE"
+            echo "# MD5 Fingerprint: $md5" >> "$OUTPUT_FILE"
+            echo "# SHA1 Fingerprint: $sha1" >> "$OUTPUT_FILE"
+            echo "# SHA256 Fingerprint: $sha256" >> "$OUTPUT_FILE"
+            cat "$tmp_cert" >> "$OUTPUT_FILE"
+            echo "" >> "$OUTPUT_FILE"
+            rm "$tmp_cert"
+            }
+
+          echo "#" >> "$OUTPUT_FILE"
+          echo "# This is a custom certificate authority bundle for GYB" >> "$OUTPUT_FILE"
+          echo "# It's composed of Let's Encrypt Root CAs and Google's" >> "$OUTPUT_FILE"
+          echo "# certificate bundle. This should be the minimal list of" >> "$OUTPUT_FILE"
+          echo "# CAs required to talk to Google and Github." >> "$OUTPUT_FILE"
+          echo"" >> "$OUTPUT_FILE"
+          echo "Processing Let's Encrypt ISRG Root X1..."
+          process_cert "https://letsencrypt.org/certs/isrgrootx1.pem" "Let's Encrypt" "ISRG Root X1"
+          echo "Processing Let's Encrypt ISRG Root X2..."
+          process_cert "https://letsencrypt.org/certs/isrg-root-x2.pem" "Let's Encrypt" "ISRG Root X2"
+
+          echo "Appending Google's roots.pem..."
+          curl -s https://pki.goog/roots.pem >> "$OUTPUT_FILE"
+          echo "Done! The new bundle has been saved to $OUTPUT_FILE."
 
       - name: Compare hashes
         run: |
@@ -50,6 +83,6 @@ jobs:
           git diff --quiet && git diff --staged --quiet || git commit -am '[ci skip] Updated cacerts.pem'
 
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@77c5b412c50b723d2a4fbc6d71fb5723bcd439aa
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }} 
