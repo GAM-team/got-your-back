@@ -1857,6 +1857,13 @@ def backup_chat(request_id, response, exception):
 
 def backup_message(request_id, response, exception):
   if exception is not None:
+    if hasattr(exception, "resp") and int(exception.resp.get("status", 0)) in [403, 429, 500, 503]:
+      sys.stderr.write(f"\nRate limit hit on msg {request_id}, sleeping 10s and retrying...\n")
+      time.sleep(10)
+      response = callGAPI(gmail.users().messages(), "get", userId="me", id=request_id, format="raw", fields="id,labelIds,internalDate,raw")
+      if response:
+        backup_message(request_id, response, None)
+      return
     print(exception)
   else:
     labelIds = response.get('labelIds', [])
@@ -2249,7 +2256,7 @@ def main(argv):
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='raw',
         fields='id,labelIds,internalDate,raw'),
-        callback=backup_message)
+        callback=backup_message, request_id=a_message)
       backed_up_messages += 1
     if len(gbatch._order) > 0:
       callGAPI(gbatch, None, soft_errors=True)
