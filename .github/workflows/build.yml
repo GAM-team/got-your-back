@@ -170,6 +170,10 @@ jobs:
           fi
           "$PYTHON" -m pip install --upgrade -r requirements.txt
 
+      - name: Test quota pacing without API credentials
+        if: matrix.goal == 'test'
+        run: '"$PYTHON" -m unittest discover -s tests -v'
+
       - name: Install PyInstaller
         if: matrix.goal == 'build'
         run: |
