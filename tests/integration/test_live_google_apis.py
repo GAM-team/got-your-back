@@ -61,6 +61,7 @@ from gyb.auth import (
     SignerType,
 )
 from gyb.cli.main import cli
+from gyb.cli.options import TransferOptions
 from gyb.core import (
     JobState,
     Message,
@@ -166,7 +167,7 @@ def test_live_dpop_auth_http2_401_recovery_and_negative_binding(
             signer=SignerConfig(
                 signer_type=SignerType.SOFTWARE,
                 key_id="ci-dpop-key",
-                private_key_pem_path=str(pem_path),
+                pem_path=str(pem_path),
             ),
         )
         mgr.save_profile(oauth_prof)
@@ -354,6 +355,7 @@ def test_real_repository_samples_to_gmail_and_google_groups(
 
     # 2. samples/historic-public-mbox/odd-mails.mbox (6 malformed historic mails)
     #    & rfc2047-samples.mbox (11 RFC 2047 ISO-8859-1/2 header vectors)
+    odd_sanitized: list[bool] = []
     odd_summary = TransferPipeline(
         MboxSource(REPO_SAMPLES / "historic-public-mbox" / "odd-mails.mbox"),
         GmailSink(
@@ -363,10 +365,11 @@ def test_real_repository_samples_to_gmail_and_google_groups(
             close_transport=False,
         ),
         tuning=tuning,
+        on_result=lambda res, _: odd_sanitized.append(res.sanitized),
     ).run()
     assert odd_summary.state == JobState.COMPLETED
     assert odd_summary.succeeded == 6
-    assert odd_summary.sanitized >= 2  # <notanemail>, notbracketed, missing Date/Message-ID
+    assert sum(odd_sanitized) >= 2  # <notanemail>, notbracketed, missing Date/Message-ID
 
     rfc2047_summary = TransferPipeline(
         MboxSource(REPO_SAMPLES / "historic-public-mbox" / "rfc2047-samples.mbox"),
@@ -478,7 +481,7 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
     )
 
     # 2. Legacy 8-bit ISO-8859-1 body + From: <> bounce sender + invalid Date header
-    iso_body = f"Café résumé naïve £100 — run {live_env.run_id}\r\n".encode("iso-8859-1")
+    iso_body = f"Café résumé naïve £100 - run {live_env.run_id}\r\n".encode("iso-8859-1")
     iso_subj = Header(f"[gyb-{live_env.run_id}] Café Bounce ISO-8859-1", "iso-8859-1").encode()
     bounce_iso_raw = (
         f"Message-ID: <bounce-iso-{live_env.run_id}@gyb-itest.local>\r\n"
@@ -682,18 +685,22 @@ def test_live_gmail_error_responses_cli_report_and_retry(
 
     mixed_db = tmp_path / "mixed-jobs.sqlite"
     with JobStore(mixed_db) as store:
+        mixed_job = store.create_job(
+            action="restore",
+            source_uri=f"local://{mixed_dir}",
+            sink_uri=f"gmail://{live_env.gmail_user}",
+        )
         mixed_summary = TransferPipeline(
             LocalGYBSource(mixed_dir),
             GmailSink(live_gmail_client, close_transport=False),
-            job_store=store,
-            source_uri=f"local:{mixed_dir}",
-            sink_uri=f"gmail:{live_env.gmail_user}",
+            on_result=lambda res, att: store.record_item(mixed_job.job_id, res, attempts=att),
             tuning=StreamTuningConfig(initial_streams=2, min_streams=1, max_streams=4),
         ).run()
-        assert mixed_summary.state == JobState.COMPLETED_WITH_ERRORS
-        assert mixed_summary.succeeded == 1
-        assert mixed_summary.failed == 1
-        failures = store.get_failed_records(mixed_summary.job_id, retryable_only=False)
+        final_mixed = store.finalize_job(mixed_job.job_id, mixed_summary)
+        assert final_mixed.state == JobState.COMPLETED_WITH_ERRORS
+        assert final_mixed.succeeded == 1
+        assert final_mixed.failed == 1
+        failures = store.list_job_items(mixed_job.job_id, status=TransferStatus.FAILED)
         assert len(failures) == 1
         assert failures[0].source_id == "oversize-draft"
         assert failures[0].retryable is False
@@ -724,8 +731,6 @@ def test_live_gmail_error_responses_cli_report_and_retry(
                 )
             )
 
-    cli_jobs_db = tmp_path / "cli-jobs.sqlite"
-
     class _Flaky429GmailSink(GmailSink):
         def import_message(self, message: Message) -> TransferResult:
             if message.source_id == "throttled-item":
@@ -735,27 +740,33 @@ def test_live_gmail_error_responses_cli_report_and_retry(
                 )
             return super().import_message(message)
 
+    cli_jobs_db = cfg_dir / "jobs.db"
+    job_opts = TransferOptions(dest_profile=profile_name).to_dict()
     with JobStore(cli_jobs_db) as store:
+        initial_job = store.create_job(
+            action="restore",
+            source_uri=f"local://{cli_source_dir}",
+            sink_uri=f"gmail://{live_env.gmail_user}",
+            options=job_opts,
+        )
         initial_summary = TransferPipeline(
             LocalGYBSource(cli_source_dir),
             _Flaky429GmailSink(live_gmail_client, close_transport=False),
-            job_store=store,
-            source_uri=f"local:{cli_source_dir}",
-            sink_uri=f"gmail:{live_env.gmail_user}",
+            on_result=lambda res, att: store.record_item(initial_job.job_id, res, attempts=att),
+            max_item_retries=2,
             tuning=StreamTuningConfig(
                 initial_streams=4,
                 min_streams=1,
                 max_streams=8,
                 base_backoff=0.02,
                 max_backoff=0.05,
-                max_retries=2,
             ),
         ).run()
+        final_initial = store.finalize_job(initial_job.job_id, initial_summary)
 
-    assert initial_summary.state == JobState.COMPLETED_WITH_ERRORS
-    assert initial_summary.succeeded == 3
-    assert initial_summary.failed == 1
-    assert initial_summary.telemetry is not None
+    assert final_initial.state == JobState.COMPLETED_WITH_ERRORS
+    assert final_initial.succeeded == 3
+    assert final_initial.failed == 1
     assert initial_summary.telemetry.throttle_events >= 1
 
     # Exercise `gyb report <job_id> --export-json --export-csv` via Click CliRunner
@@ -765,10 +776,10 @@ def test_live_gmail_error_responses_cli_report_and_retry(
     rep_res = runner.invoke(
         cli,
         [
-            "--job-db",
-            str(cli_jobs_db),
+            "--config-dir",
+            str(cfg_dir),
             "report",
-            initial_summary.job_id,
+            initial_job.job_id,
             "--export-json",
             str(json_out),
             "--export-csv",
@@ -778,29 +789,30 @@ def test_live_gmail_error_responses_cli_report_and_retry(
     assert rep_res.exit_code == 0, rep_res.output
     exported_json = json.loads(json_out.read_text(encoding="utf-8"))
     assert exported_json["job"]["failed"] == 1
-    assert exported_json["failures"][0]["source_id"] == "throttled-item"
+    failed_json = [it for it in exported_json["items"] if it["status"] == "failed"]
+    assert len(failed_json) == 1 and failed_json[0]["source_id"] == "throttled-item"
     with csv_out.open("r", encoding="utf-8", newline="") as fh:
-        csv_rows = list(csv.DictReader(fh))
+        csv_rows = [r for r in csv.DictReader(fh) if r["status"] == "failed"]
     assert len(csv_rows) == 1 and csv_rows[0]["source_id"] == "throttled-item"
 
     # Exercise `gyb retry <job_id>` via Click CliRunner against LIVE Gmail API!
     retry_res = runner.invoke(
         cli,
         [
-            "--job-db",
-            str(cli_jobs_db),
-            "--profile",
-            profile_name,
+            "--config-dir",
+            str(cfg_dir),
             "retry",
-            initial_summary.job_id,
+            initial_job.job_id,
         ],
     )
     assert retry_res.exit_code == 0, retry_res.output
 
     with JobStore(cli_jobs_db) as store:
-        recovered_job = store.get_job(initial_summary.job_id)
-        assert recovered_job["state"] == JobState.COMPLETED.value
-        assert store.get_failed_records(initial_summary.job_id, retryable_only=False) == []
+        recent_jobs = store.list_jobs(limit=5)
+        retry_job = next(j for j in recent_jobs if j.action == "retry")
+        assert retry_job.state == JobState.COMPLETED
+        assert retry_job.succeeded == 1
+        assert retry_job.failed == 0
 
     recovered_gmail_ids = list(live_gmail_client.list_messages(query=f'label:"{ns}/CLIRetry"'))
     assert len(recovered_gmail_ids) == 4
