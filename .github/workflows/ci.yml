@@ -1,4 +1,4 @@
-name: ngyb CI
+name: GYB CI
 
 permissions:
   contents: read
@@ -71,8 +71,8 @@ jobs:
         run: |
           uv run python -c "
           import importlib.util, sys
-          from ngyb.auth.models import SignerType
-          from ngyb.auth.signers import available_signer_types
+          from gyb.auth.models import SignerType
+          from gyb.auth.signers import available_signer_types
 
           has_mac = importlib.util.find_spec('dpop_signer_macos_secureenclave') is not None
           has_win = importlib.util.find_spec('dpop_signer_windows_tpm') is not None
@@ -104,7 +104,7 @@ jobs:
         run: uv run mypy
 
       - name: Run unit tests with 100% line & branch coverage
-        run: uv run pytest tests/unit --cov=ngyb --cov-branch --cov-report=term-missing --cov-fail-under=100
+        run: uv run pytest tests/unit --cov=gyb --cov-branch --cov-report=term-missing --cov-fail-under=100
 
   live-integration:
     name: Live Google API Integration Tests
@@ -139,10 +139,10 @@ jobs:
           export gybpath="$CREDS_DIR"
           source .github/actions/decrypt.sh .github/actions/creds.tar.gpg creds.tar
           export GOOGLE_APPLICATION_CREDENTIALS="${CREDS_DIR}/oauth2service.json"
-          export NGYB_ITEST_GMAIL_USER="gyb-gha-1@pdl.jaylee.us"
-          export NGYB_ITEST_SUBJECT="gyb-gha-1@pdl.jaylee.us"
-          export NGYB_ITEST_GROUP_EMAIL="gyb-travis-group-1@pdl.jaylee.us"
+          export GYB_ITEST_GMAIL_USER="gyb-gha-1@pdl.jaylee.us"
+          export GYB_ITEST_SUBJECT="gyb-gha-1@pdl.jaylee.us"
+          export GYB_ITEST_GROUP_EMAIL="gyb-travis-group-1@pdl.jaylee.us"
           if [ -f "${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg" ]; then
-            export NGYB_ITEST_OAUTH_CFG="${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg"
+            export GYB_ITEST_OAUTH_CFG="${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg"
           fi
           uv run pytest -m integration -v

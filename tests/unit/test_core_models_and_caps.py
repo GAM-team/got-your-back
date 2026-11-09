@@ -1,21 +1,26 @@
-"""Unit tests for core models, exceptions, capabilities, and protocol conformance."""
+"""Unit tests for core models, exceptions, capabilities, protocols, and __main__."""
 
 from __future__ import annotations
 
+import runpy
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from types import TracebackType
+from typing import Self
 
+import modern_httplib2
 import pytest
 
-from ngyb import __version__
-from ngyb.core import (
+import gyb
+from gyb import __version__
+from gyb.core import (
     AuthenticationError,
     Capability,
     ConfigurationError,
+    GYBError,
     JobMetadata,
     JobState,
     Message,
-    NGYBError,
     PermanentTransferError,
     Sink,
     Source,
@@ -27,14 +32,23 @@ from ngyb.core import (
 )
 
 
-def test_version_and_exceptions() -> None:
+def test_version_patch_main_and_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:
+    import httplib2
+
+    assert httplib2 is modern_httplib2
+    assert gyb.__version__ == __version__
     assert __version__.startswith("2.0.0")
     err = TransientTransferError("rate limited", retry_after=3.5)
-    assert isinstance(err, NGYBError)
+    assert isinstance(err, GYBError)
     assert err.retry_after == 3.5
-    assert issubclass(ConfigurationError, NGYBError)
-    assert issubclass(AuthenticationError, NGYBError)
-    assert issubclass(PermanentTransferError, NGYBError)
+    assert issubclass(ConfigurationError, GYBError)
+    assert issubclass(AuthenticationError, GYBError)
+    assert issubclass(PermanentTransferError, GYBError)
+
+    invoked: list[bool] = []
+    monkeypatch.setattr("gyb.cli.main.cli", lambda: invoked.append(True))
+    runpy.run_module("gyb", run_name="__main__")
+    assert invoked == [True]
 
 
 @pytest.mark.parametrize(
@@ -129,6 +143,18 @@ def test_runtime_checkable_protocols() -> None:
         def capabilities(self) -> Capability:
             return Capability.STREAMING_FETCH
 
+        def __enter__(self) -> Self:
+            self.connect()
+            return self
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: TracebackType | None,
+        ) -> None:
+            self.close()
+
         def connect(self) -> None:
             pass
 
@@ -147,6 +173,18 @@ def test_runtime_checkable_protocols() -> None:
         def capabilities(self) -> Capability:
             return Capability.STREAMING_INSERT
 
+        def __enter__(self) -> Self:
+            self.connect()
+            return self
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: TracebackType | None,
+        ) -> None:
+            self.close()
+
         def connect(self) -> None:
             pass
 
@@ -160,12 +198,10 @@ def test_runtime_checkable_protocols() -> None:
     snk = DummySink()
     assert isinstance(src, Source)
     assert isinstance(snk, Sink)
-    src.connect()
-    assert list(src.list_messages()) == []
-    assert src.fetch_message("x").source_id == "x"
-    src.close()
-    snk.connect()
-    assert (
-        snk.import_message(Message(source_id="x", raw_rfc822=b"")).status == TransferStatus.SUCCESS
-    )
-    snk.close()
+    with src, snk:
+        assert list(src.list_messages()) == []
+        assert src.fetch_message("x").source_id == "x"
+        assert (
+            snk.import_message(Message(source_id="x", raw_rfc822=b"")).status
+            == TransferStatus.SUCCESS
+        )

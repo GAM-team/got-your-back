@@ -12,7 +12,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 from google.auth.dpop import DPoPSigner, SoftwareDPoPSigner
 
-from ngyb.auth import (
+from gyb.auth import (
     ADCProfile,
     OAuthProfile,
     ProfileKind,
@@ -24,7 +24,8 @@ from ngyb.auth import (
     ensure_software_pem_key,
     profile_from_dict,
 )
-from ngyb.core.exceptions import AuthenticationError, ConfigurationError
+from gyb.auth.signers import DEFAULT_MACOS_SE_LABEL
+from gyb.core.exceptions import AuthenticationError, ConfigurationError
 
 
 class DummyHardwareSigner(DPoPSigner):
@@ -42,7 +43,8 @@ class DummyHardwareSigner(DPoPSigner):
 
     @property
     def key_id(self) -> str | None:
-        return self._soft.key_id
+        kid = self._soft.key_id
+        return str(kid) if kid is not None else None
 
     def sign(self, data: bytes) -> bytes:
         return bytes(self._soft.sign(data))
@@ -52,6 +54,7 @@ class DummyHardwareSigner(DPoPSigner):
 
 
 def test_auth_models_round_trip_and_errors() -> None:
+    assert DEFAULT_MACOS_SE_LABEL == "gyb-dpop-signing"
     cfg = SignerConfig(
         signer_type=SignerType.YUBIKEY,
         key_id="yk1",
@@ -140,18 +143,17 @@ def test_software_pem_generation_and_thread_safe_signer(
     if os.name != "nt":
         assert (pem_file.stat().st_mode & 0o777) == 0o600
 
-    # Explicitly exercise both POSIX (chmod) and Windows (nt) branches on all OSes
     chmod_calls: list[tuple[str, int]] = []
-    monkeypatch.setattr("ngyb.auth.signers.os.name", "posix")
+    monkeypatch.setattr("gyb.auth.signers.os.name", "posix")
     monkeypatch.setattr(
-        "ngyb.auth.signers.os.chmod",
+        "gyb.auth.signers.os.chmod",
         lambda p, m: chmod_calls.append((str(p), m)),
     )
     posix_pem = tmp_path / "keys" / "posix.pem"
     assert ensure_software_pem_key(posix_pem).startswith(b"-----BEGIN PRIVATE KEY-----")
     assert chmod_calls == [(str(posix_pem), 0o600)]
 
-    monkeypatch.setattr("ngyb.auth.signers.os.name", "nt")
+    monkeypatch.setattr("gyb.auth.signers.os.name", "nt")
     nt_pem = tmp_path / "keys" / "nt.pem"
     assert ensure_software_pem_key(nt_pem).startswith(b"-----BEGIN PRIVATE KEY-----")
     assert len(chmod_calls) == 1
@@ -168,11 +170,17 @@ def test_software_pem_generation_and_thread_safe_signer(
     proof = signer.create_proof("POST", "https://oauth2.googleapis.com/token")
     assert len(proof.split(".")) == 3
 
-    # Reload with explicit pem_path and matching thumbprint succeeds
+    # None key_id branch on ThreadSafeDPoPSigner
+    nokid = build_dpop_signer(
+        SignerConfig(signer_type=SignerType.SOFTWARE, key_id=None),
+        keys_dir=tmp_path / "keys",
+        platform="darwin",
+    )
+    assert nokid.key_id is None
+
     signer_reloaded = build_dpop_signer(cfg, keys_dir=tmp_path / "keys", platform="darwin")
     assert signer_reloaded.thumbprint == signer.thumbprint
 
-    # Mismatched thumbprint raises AuthenticationError
     bad_cfg = SignerConfig(
         signer_type=SignerType.SOFTWARE,
         pem_path=cfg.pem_path,
@@ -185,7 +193,6 @@ def test_software_pem_generation_and_thread_safe_signer(
 def test_all_hardware_signer_builders_and_platform_guards(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # Foreign OS signer rejected before import
     with pytest.raises(AuthenticationError, match="not supported on platform"):
         build_dpop_signer(
             SignerConfig(signer_type=SignerType.WINDOWS_TPM),
@@ -209,7 +216,7 @@ def test_all_hardware_signer_builders_and_platform_guards(
         ),
     }
     monkeypatch.setattr(
-        "ngyb.auth.signers.importlib.import_module",
+        "gyb.auth.signers.importlib.import_module",
         lambda name: fake_modules[name],
     )
 
@@ -249,13 +256,11 @@ def test_all_hardware_signer_builders_and_platform_guards(
     )
     assert yk.thumbprint
 
-    # FIDO2 generation path populates fido2_credential_data
     fido_gen_cfg = SignerConfig(signer_type=SignerType.FIDO2, key_id="fido-new")
     fido_gen = build_dpop_signer(fido_gen_cfg, keys_dir=tmp_path, platform="darwin")
     assert fido_gen.thumbprint
     assert fido_gen_cfg.fido2_credential_data == {"credential_id": "cred-1", "rp_id": "google.com"}
 
-    # FIDO2 reload from stored dict path
     fido_load_cfg = SignerConfig(
         signer_type=SignerType.FIDO2,
         fido2_credential_data={"credential_id": "cred-1"},
@@ -263,7 +268,6 @@ def test_all_hardware_signer_builders_and_platform_guards(
     fido_loaded = build_dpop_signer(fido_load_cfg, keys_dir=tmp_path, platform="darwin")
     assert fido_loaded.key_id == "fido-loaded"
 
-    # Constructor runtime error wrapped in AuthenticationError
     def _boom(**_: Any) -> Any:
         raise RuntimeError("TPM device busy")
 
@@ -275,11 +279,10 @@ def test_all_hardware_signer_builders_and_platform_guards(
             platform="linux",
         )
 
-    # Missing module ImportError wrapped in AuthenticationError
     orig_import = builtins.__import__
     monkeypatch.undo()
     monkeypatch.setattr(
-        "ngyb.auth.signers.importlib.import_module",
+        "gyb.auth.signers.importlib.import_module",
         lambda name: (_ for _ in ()).throw(ImportError(f"No module named {name}")),
     )
     _ = orig_import

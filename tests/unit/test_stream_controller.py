@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import threading
 
-from ngyb.core.models import StreamTuningConfig
-from ngyb.core.stream_controller import AdaptiveStreamController
+from gyb.core.models import StreamTuningConfig
+from gyb.core.stream_controller import AdaptiveStreamController
 
 
 class FakeClock:
@@ -46,7 +46,7 @@ def test_slow_start_throttle_and_congestion_avoidance() -> None:
     assert ctrl.telemetry().target_streams == 8
     assert ctrl.telemetry().peak_streams == 8
 
-    # Window 2: saturate in_flight via stream_permit, double 8 -> 16
+    # Window 2: saturate in_flight via acquire/release, double 8 -> 16
     for _ in range(8):
         ctrl.acquire()
     for _ in range(8):
@@ -64,7 +64,7 @@ def test_slow_start_throttle_and_congestion_avoidance() -> None:
     assert ctrl.telemetry().ssthresh == 8
     assert ctrl.telemetry().throttle_events == 1
 
-    # Simultaneous burst throttle during active pause coalesces without slashing again!
+    # Simultaneous burst throttle during active pause coalesces without slashing again
     assert ctrl.report_throttle() == 2.0
     coalesced_short = ctrl.report_throttle(retry_after=0.5)
     assert coalesced_short == 2.0
@@ -79,7 +79,6 @@ def test_slow_start_throttle_and_congestion_avoidance() -> None:
     # Global pause blocks wait_if_paused() and advances fake clock by 5.0s
     ctrl.wait_if_paused()
     assert clock.slept == [5.0]
-    # Calling wait_if_paused when not paused returns immediately
     ctrl.wait_if_paused()
     assert clock.slept == [5.0]
 
@@ -89,8 +88,6 @@ def test_slow_start_throttle_and_congestion_avoidance() -> None:
     clock.now += 1.0
     ctrl.report_success()
     assert ctrl.telemetry().target_streams == 11
-
-    # Average throughput calculation
     assert ctrl.avg_throughput_rps() > 0.0
 
 
@@ -116,25 +113,25 @@ def test_slow_start_caps_at_ssthresh_and_skips_unutilized_window() -> None:
     ctrl.report_success()
     assert ctrl.telemetry().target_streams == 12
 
-    # Throttle 1 with explicit retry_after -> ssthresh = 6, target = 6
-    d1 = ctrl.report_throttle(retry_after=4.0)
-    assert d1 == 4.0
+    # Throttle 1 with smaller retry_after than base_backoff (0.2 < 1.0) + larger retry_after
+    d1 = ctrl.report_throttle(retry_after=0.2)
+    assert d1 == 1.0
     assert ctrl.telemetry().ssthresh == 6
-    clock.now += 4.0
+    clock.now += 1.0
 
-    # Consecutive Throttle 2 -> ssthresh = 3, target drops to min_streams = 2
-    d2 = ctrl.report_throttle()
-    assert d2 == 2.0
+    # Consecutive Throttle 2 with explicit larger retry_after -> ssthresh = 3, target = 2
+    d2 = ctrl.report_throttle(retry_after=4.0)
+    assert d2 == 4.0
     assert ctrl.telemetry().ssthresh == 3
     assert ctrl.telemetry().target_streams == 2
-    clock.now += 2.0
+    clock.now += 4.0
 
     # Unutilized window (only 1 op when target is 2) does not ramp
     clock.now += 1.0
     ctrl.report_success()
     assert ctrl.telemetry().target_streams == 2
 
-    # Utilized window slow-starts 2*2=4, clamped to ssthresh=3!
+    # Utilized window slow-starts 2*2=4, clamped to ssthresh=3
     ctrl.report_success()
     clock.now += 1.0
     ctrl.report_success()
@@ -157,14 +154,12 @@ def test_acquire_blocks_when_at_capacity_and_during_pause() -> None:
     )
     ctrl = AdaptiveStreamController(cfg, clock=clock, sleep=clock.sleep, rng=lambda: 0.5)
 
-    # Pause via throttle -> acquire() sleeps through the pause window
     ctrl.report_throttle()
     with ctrl.stream_permit():
         assert ctrl.telemetry().in_flight_streams == 1
     assert clock.slept == [1.5]
     assert ctrl.telemetry().in_flight_streams == 0
 
-    # Now test real thread blocking when permit capacity (1) is exhausted
     real_ctrl = AdaptiveStreamController(cfg)
     entered = threading.Event()
     release_first = threading.Event()
@@ -185,7 +180,6 @@ def test_acquire_blocks_when_at_capacity_and_during_pause() -> None:
     t1.start()
     t2.start()
     entered.wait(timeout=2.0)
-    # Give t2 a moment to hit _cond.wait()
     assert not second_acquired.wait(timeout=0.08)
     release_first.set()
     assert second_acquired.wait(timeout=2.0)

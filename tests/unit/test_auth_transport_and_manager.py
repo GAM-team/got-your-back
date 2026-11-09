@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import os
 from datetime import UTC, datetime, timedelta
@@ -17,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from google.auth.dpop import SoftwareDPoPSigner
 from google.oauth2.dpop_credentials import DPoPCredentials
 
-from ngyb.auth import (
+from gyb.auth import (
     ADCProfile,
     ModernAuthorizedHttp,
     OAuthProfile,
@@ -30,7 +31,7 @@ from ngyb.auth import (
     run_dpop_oauth_flow,
     serialize_dpop_credentials,
 )
-from ngyb.core.exceptions import AuthenticationError, ConfigurationError
+from gyb.core.exceptions import AuthenticationError, ConfigurationError
 
 
 def _make_dpop_creds(
@@ -58,29 +59,30 @@ def _make_dpop_creds(
 
 
 class FakeHttpPool:
-    def __init__(self, responses: list[tuple[int, bytes | str]]) -> None:
+    def __init__(self, responses: list[tuple[Any, bytes | str]]) -> None:
         self._responses = list(responses)
-        self.calls: list[tuple[str, str, dict[str, str]]] = []
+        self.calls: list[tuple[str, str, Any, dict[str, str]]] = []
         self.closed = False
 
     def request(
         self,
         uri: str,
         method: str = "GET",
-        body: bytes | str | None = None,
+        body: Any = None,
         headers: dict[str, str] | None = None,
         **_: Any,
     ) -> tuple[Any, bytes | str]:
-        _ = body
-        self.calls.append((method, uri, dict(headers or {})))
-        status, payload = self._responses.pop(0)
-        return SimpleNamespace(status=status, version=20), payload
+        self.calls.append((method, uri, body, dict(headers or {})))
+        resp_obj, payload = self._responses.pop(0)
+        if isinstance(resp_obj, int):
+            resp_obj = SimpleNamespace(status=resp_obj, version=20)
+        return resp_obj, payload
 
     def close(self) -> None:
         self.closed = True
 
 
-def test_modern_authorized_http_refresh_401_and_dpop_headers() -> None:
+def test_modern_authorized_http_refresh_401_stream_body_and_dpop() -> None:
     assert compute_pool_maxsize(32) == 16
     assert compute_pool_maxsize(200) == 16
     assert compute_pool_maxsize(900) == 20
@@ -100,45 +102,56 @@ def test_modern_authorized_http_refresh_401_and_dpop_headers() -> None:
 
     http_pool = FakeHttpPool([(401, b"unauth"), (200, "ok-str")])
     refresh_pool = FakeHttpPool([])
-    transport = ModernAuthorizedHttp(
+    with ModernAuthorizedHttp(
         creds,
         http=http_pool,
         refresh_http=refresh_pool,
         on_credentials_refreshed=lambda c: refreshed_seen.append(str(c.token)),
-    )
-    assert transport.credentials is creds
-    assert transport.http is http_pool
-    assert transport.auth_request is not None
+    ) as transport:
+        assert transport.credentials is creds
+        assert transport.http is http_pool
+        assert transport.auth_request is not None
+        assert transport.last_http_version is None
 
-    resp, content = transport.request(
-        "https://gmail.googleapis.com/gmail/v1/users/me/profile",
-        headers={"Accept": "application/json"},
-    )
-    assert resp.status == 200
-    assert content == b"ok-str"
-    # Expired initial refresh + forced 401 refresh = 2 refreshes
-    assert refresh_calls == 2
-    assert refreshed_seen == ["tok-refreshed-1", "tok-refreshed-2"]
-    # Verify both Authorization and DPoP proof headers were attached!
-    sent_headers = {k.lower(): v for k, v in http_pool.calls[-1][2].items()}
-    assert sent_headers["authorization"] == "Bearer tok-refreshed-2"
-    assert "dpop" in sent_headers
+        # Pass a stream body (like googleapiclient's _StreamSlice / BytesIO) across a 401 retry!
+        stream_body = io.BytesIO(b"chunk-payload")
+        resp, content = transport.request(
+            "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/import",
+            method="POST",
+            body=stream_body,
+            headers={"Accept": "application/json"},
+        )
+        assert resp.status == 200
+        assert content == b"ok-str"
+        assert transport.last_http_version == "HTTP/2"
+        # Both initial 401 and retried 200 received the full stream bytes!
+        assert http_pool.calls[0][2] == b"chunk-payload"
+        assert http_pool.calls[1][2] == b"chunk-payload"
+        assert refresh_calls == 2
+        assert refreshed_seen == ["tok-refreshed-1", "tok-refreshed-2"]
+        sent_headers = {k.lower(): v for k, v in http_pool.calls[-1][3].items()}
+        assert sent_headers["authorization"] == "Bearer tok-refreshed-2"
+        assert "dpop" in sent_headers
+    assert http_pool.closed and refresh_pool.closed
 
-    # Subsequent request when token is already valid & 200 bytes response (no refresh, no 401)
-    http_pool_ok = FakeHttpPool([(200, b"ok-bytes")])
+    # Explicit http_version string vs HTTP/1.1 version=11 branch
+    http_pool_ok = FakeHttpPool(
+        [
+            (SimpleNamespace(status=200, http_version="HTTP/2", version=20), b"ok-bytes"),
+            (SimpleNamespace(status=200, version=11), b"h1-bytes"),
+        ]
+    )
     transport_no_cb = ModernAuthorizedHttp(creds, http=http_pool_ok, refresh_http=refresh_pool)
     resp2, content2 = transport_no_cb.request(
         "https://gmail.googleapis.com/gmail/v1/users/me/profile"
     )
     assert resp2.status == 200
     assert content2 == b"ok-bytes"
+    assert transport_no_cb.last_http_version == "HTTP/2"
+    transport_no_cb.request("https://gmail.googleapis.com/gmail/v1/users/me/profile")
     assert refresh_calls == 2
-    # Forced refresh when on_credentials_refreshed is None
     transport_no_cb.ensure_valid_token(force=True)
     assert refresh_calls == 3
-
-    transport.close()
-    assert http_pool.closed and refresh_pool.closed
 
     # Default modern_httplib2.Http instantiation and RefreshError wrapping
     fail_creds, _ = _make_dpop_creds(expired=True)
@@ -147,12 +160,11 @@ def test_modern_authorized_http_refresh_401_and_dpop_headers() -> None:
         raise google.auth.exceptions.RefreshError("invalid_grant")
 
     fail_creds.refresh = _fail_refresh  # type: ignore[method-assign]
-    default_transport = ModernAuthorizedHttp(fail_creds, max_streams=16, enable_http2=True)
-    try:
-        with pytest.raises(AuthenticationError, match="Credential refresh failed"):
-            default_transport.ensure_valid_token()
-    finally:
-        default_transport.close()
+    with (
+        ModernAuthorizedHttp(fail_creds, max_streams=16, enable_http2=True) as default_tr,
+        pytest.raises(AuthenticationError, match="Credential refresh failed"),
+    ):
+        default_tr.ensure_valid_token()
 
 
 def test_oauth_flow_and_serialization(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -172,39 +184,35 @@ def test_oauth_flow_and_serialization(tmp_path: Path, monkeypatch: pytest.Monkey
             return creds
 
     monkeypatch.setattr(
-        "ngyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
+        "gyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
         lambda path, scopes, dpop_signer: FakeFlow(),
     )
     out = run_dpop_oauth_flow(secrets_file, signer, login_hint="u@example.com", open_browser=False)
     assert out is creds
     assert captured_kwargs["login_hint"] == "u@example.com"
 
-    # Without login_hint
     captured_kwargs.clear()
     run_dpop_oauth_flow(secrets_file, signer, open_browser=False)
     assert "login_hint" not in captured_kwargs
 
-    # Non-DPoPCredentials return value rejected
     class UnboundFlow:
         def run_local_server(self, **_: Any) -> Any:
             return SimpleNamespace(token="unbound")
 
     monkeypatch.setattr(
-        "ngyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
+        "gyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
         lambda path, scopes, dpop_signer: UnboundFlow(),
     )
     with pytest.raises(AuthenticationError, match="unbound OAuth tokens are forbidden"):
         run_dpop_oauth_flow(secrets_file, signer)
 
-    # Flow exception wrapped
     monkeypatch.setattr(
-        "ngyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
+        "gyb.auth.oauth.InstalledAppFlow.from_client_secrets_file",
         lambda *a, **kw: (_ for _ in ()).throw(ValueError("bad client json")),
     )
     with pytest.raises(AuthenticationError, match="authorization flow failed"):
         run_dpop_oauth_flow(secrets_file, signer)
 
-    # Serialization requires bound signer
     unbound_dpop = DPoPCredentials(token="x", dpop_signer=None)
     with pytest.raises(AuthenticationError, match="without a bound DPoPSigner"):
         serialize_dpop_credentials(unbound_dpop)
@@ -229,9 +237,8 @@ def test_oauth_flow_and_serialization(tmp_path: Path, monkeypatch: pytest.Monkey
 def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
     profile = ADCProfile(name="adc1", scopes=("email",), subject="user@example.com")
 
-    # DefaultCredentialsError
     monkeypatch.setattr(
-        "ngyb.auth.adc.google.auth.default",
+        "gyb.auth.adc.google.auth.default",
         lambda scopes: (_ for _ in ()).throw(
             google.auth.exceptions.DefaultCredentialsError("no adc")
         ),
@@ -239,7 +246,6 @@ def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(AuthenticationError, match="Unable to load Application Default"):
         load_adc_credentials(profile)
 
-    # Service account supporting with_subject
     class FakeSACreds(google.auth.credentials.Credentials):
         def __init__(self, subject: str | None = None) -> None:
             super().__init__()
@@ -252,23 +258,21 @@ def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
         def with_subject(self, subject: str) -> FakeSACreds:
             return FakeSACreds(subject=subject)
 
-    monkeypatch.setattr("ngyb.auth.adc.google.auth.default", lambda scopes: (FakeSACreds(), "proj"))
+    monkeypatch.setattr("gyb.auth.adc.google.auth.default", lambda scopes: (FakeSACreds(), "proj"))
     sa_loaded = load_adc_credentials(profile)
     assert isinstance(sa_loaded, FakeSACreds)
     assert sa_loaded.subject == "user@example.com"
 
-    # Credential without with_subject when subject is requested
     class NonDelegatableCreds(google.auth.credentials.Credentials):
         def refresh(self, request: Any) -> None:
             _ = request
 
     monkeypatch.setattr(
-        "ngyb.auth.adc.google.auth.default", lambda scopes: (NonDelegatableCreds(), "proj")
+        "gyb.auth.adc.google.auth.default", lambda scopes: (NonDelegatableCreds(), "proj")
     )
     with pytest.raises(AuthenticationError, match="does not support Domain-Wide Delegation"):
         load_adc_credentials(profile)
 
-    # End-user OAuth credentials from ADC upgraded to DPoPCredentials
     plain_user_creds = google.oauth2.credentials.Credentials(
         token="u-tok",
         refresh_token="u-ref",
@@ -278,7 +282,7 @@ def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
         scopes=["email"],
     )
     monkeypatch.setattr(
-        "ngyb.auth.adc.google.auth.default", lambda scopes: (plain_user_creds, "proj")
+        "gyb.auth.adc.google.auth.default", lambda scopes: (plain_user_creds, "proj")
     )
     no_subj_profile = ADCProfile(name="adc-user", scopes=("email",))
     with pytest.raises(AuthenticationError, match="require a DPoP signer"):
@@ -291,10 +295,10 @@ def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("NGYB_CONFIG_DIR", str(tmp_path / "env-cfg"))
+    monkeypatch.setenv("GYB_CONFIG_DIR", str(tmp_path / "env-cfg"))
     assert default_config_dir() == (tmp_path / "env-cfg").resolve()
-    monkeypatch.delenv("NGYB_CONFIG_DIR", raising=False)
-    assert default_config_dir().name == "ngyb"
+    monkeypatch.delenv("GYB_CONFIG_DIR", raising=False)
+    assert default_config_dir().name == "gyb"
 
     mgr = ProfileManager(tmp_path / "cfg")
     assert mgr.config_dir == (tmp_path / "cfg").resolve()
@@ -309,25 +313,23 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
     with pytest.raises(ConfigurationError, match="does not exist"):
         mgr.delete_profile("nope")
 
-    # Explicitly exercise both POSIX (chmod) and Windows (nt) branches on all OSes
     chmod_calls: list[tuple[str, int]] = []
-    monkeypatch.setattr("ngyb.auth.manager.os.name", "posix")
+    monkeypatch.setattr("gyb.auth.manager.os.name", "posix")
     monkeypatch.setattr(
-        "ngyb.auth.manager.os.chmod",
+        "gyb.auth.manager.os.chmod",
         lambda p, m: chmod_calls.append((str(p), m)),
     )
     posix_saved = mgr.save_profile(ADCProfile(name="posix-adc", scopes=("email",)))
     assert chmod_calls == [(str(posix_saved), 0o600)]
     mgr.delete_profile("posix-adc")
 
-    monkeypatch.setattr("ngyb.auth.manager.os.name", "nt")
+    monkeypatch.setattr("gyb.auth.manager.os.name", "nt")
     mgr.save_profile(ADCProfile(name="win-adc", scopes=("email",)))
     assert len(chmod_calls) == 1
     monkeypatch.undo()
     assert len(mgr.list_profiles()) == 1
     mgr.delete_profile("win-adc")
 
-    # Corrupt JSON detection
     mgr.profiles_dir.mkdir(parents=True, exist_ok=True)
     bad_path = mgr.profiles_dir / "corrupt.json"
     bad_path.write_text("{not-json")
@@ -335,7 +337,6 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
         mgr.get_profile("corrupt")
     bad_path.unlink()
 
-    # setup_oauth_profile & build_authorized_http with refresh persistence
     secrets = tmp_path / "secrets.json"
     secrets.write_text("{}")
 
@@ -348,7 +349,7 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
         open_browser: bool = True,
     ) -> DPoPCredentials:
         _ = (client_secrets_file, scopes, login_hint, open_browser)
-        c = DPoPCredentials(
+        return DPoPCredentials(
             token="t1",
             dpop_signer=signer,
             dpop_nonce="n1",
@@ -358,9 +359,8 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
             client_secret="csec",
             scopes=["email"],
         )
-        return c
 
-    monkeypatch.setattr("ngyb.auth.manager.run_dpop_oauth_flow", _fake_flow)
+    monkeypatch.setattr("gyb.auth.manager.run_dpop_oauth_flow", _fake_flow)
     oauth_prof = mgr.setup_oauth_profile(
         "default",
         secrets,
@@ -372,32 +372,25 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
         assert ((mgr.profiles_dir / "default.json").stat().st_mode & 0o777) == 0o600
     assert oauth_prof.signer.key_id == "default"
 
-    # Build authorized HTTP using implicit 'default' profile and trigger refresh callback
-    http_default = mgr.build_authorized_http(None)
-    try:
+    with mgr.build_authorized_http(None) as http_default:
         assert isinstance(http_default.credentials, DPoPCredentials)
         http_default.credentials._dpop_nonce = "rotated-nonce"
         assert http_default._on_refreshed is not None
         http_default._on_refreshed(http_default.credentials)
-        # Non-DPoPCredentials passed to _on_refreshed is safely ignored
         http_default._on_refreshed(SimpleNamespace())  # type: ignore[arg-type]
         reloaded = json.loads((mgr.profiles_dir / "default.json").read_text())
         assert reloaded["authorized_user_info"]["dpop_nonce"] == "rotated-nonce"
-    finally:
-        http_default.close()
 
-    # Named OAuth profile lookup with pre-populated key_id
     mgr.setup_oauth_profile(
         "explicit-key",
         secrets,
         signer_config=SignerConfig(key_id="custom-kid"),
         open_browser=False,
     )
-    http_named = mgr.build_authorized_http("explicit-key")
-    http_named.close()
+    with mgr.build_authorized_http("explicit-key"):
+        pass
     mgr.delete_profile("default")
 
-    # setup_adc_profile (with signer & without signer) + default-adc fallback
     adc_with_signer = mgr.setup_adc_profile("adc-signed", signer_config=SignerConfig())
     assert adc_with_signer.signer is not None and adc_with_signer.signer.key_id == "adc-signed"
     mgr.setup_adc_profile("adc-explicit-kid", signer_config=SignerConfig(key_id="kid2"))
@@ -411,8 +404,8 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
             _ = subject
             return self
 
-    monkeypatch.setattr("ngyb.auth.adc.google.auth.default", lambda scopes: (DummySA(), "proj"))
-    t1 = mgr.build_authorized_http("adc-nosigner")
-    t1.close()
-    t2 = mgr.build_authorized_http(None, subject_override="carol@example.com")
-    t2.close()
+    monkeypatch.setattr("gyb.auth.adc.google.auth.default", lambda scopes: (DummySA(), "proj"))
+    with mgr.build_authorized_http("adc-nosigner"):
+        pass
+    with mgr.build_authorized_http(None, subject_override="carol@example.com"):
+        pass

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from rich.console import Console
 
-from ngyb.core import (
+from gyb.core import (
     Capability,
     ConfigurationError,
     JobState,
@@ -20,7 +20,7 @@ from ngyb.core import (
     TransferResult,
     TransferStatus,
 )
-from ngyb.db import (
+from gyb.db import (
     JobStore,
     default_job_db_path,
     export_job_csv,
@@ -31,12 +31,11 @@ from ngyb.db import (
 
 
 def test_job_store_lifecycle_and_reporting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("NGYB_CONFIG_DIR", str(tmp_path / "cfg"))
+    monkeypatch.setenv("GYB_CONFIG_DIR", str(tmp_path / "cfg"))
     assert default_job_db_path() == (tmp_path / "cfg" / "jobs.db").resolve()
 
-    store = JobStore()
-    assert store.db_path == default_job_db_path()
-    try:
+    with JobStore() as store:
+        assert store.db_path == default_job_db_path()
         job = store.create_job(
             "migrate",
             "gmail://a@example.com",
@@ -105,7 +104,6 @@ def test_job_store_lifecycle_and_reporting(tmp_path: Path, monkeypatch: pytest.M
         assert store.failed_source_ids(job.job_id) == ["m-fail-retry", "m-fail-perm"]
         assert len(store.list_job_items(job.job_id)) == 3
 
-        # Aborted job marking
         aborted = store.create_job("backup", "gmail://u@example.com", "local:///tmp/x")
         marked = store.mark_job_failed(aborted.job_id)
         assert marked.state == JobState.FAILED
@@ -118,7 +116,6 @@ def test_job_store_lifecycle_and_reporting(tmp_path: Path, monkeypatch: pytest.M
         with pytest.raises(ConfigurationError, match="not found"):
             store.get_job_options("missing-id")
 
-        # Rich rendering (both explicit console and default console, with & without failures)
         buf = io.StringIO()
         con = Console(file=buf, force_terminal=False, width=120)
         all_items = store.list_job_items(job.job_id)
@@ -127,13 +124,12 @@ def test_job_store_lifecycle_and_reporting(tmp_path: Path, monkeypatch: pytest.M
         render_job_history(jobs, console=con)
         text_out = buf.getvalue()
         assert job.job_id in text_out
-        assert "ngyb retry" in text_out
+        assert "gyb retry" in text_out
+        assert "GYB Job History" in text_out
 
-        # Default console instantiation branch
         render_job_history([])
         render_job_summary(aborted)
 
-        # JSON & CSV export
         json_out = tmp_path / "exports" / "report.json"
         csv_out = tmp_path / "exports" / "report.csv"
         export_job_json(final_job, all_items, json_out)
@@ -143,11 +139,8 @@ def test_job_store_lifecycle_and_reporting(tmp_path: Path, monkeypatch: pytest.M
         assert parsed_json["job"]["job_id"] == job.job_id
         assert len(parsed_json["items"]) == 3
 
-        # Also export unfinished job (finished_at is None)
         export_job_json(aborted, (), tmp_path / "exports" / "aborted.json")
 
         with csv_out.open("r", encoding="utf-8") as fh:
             rows = list(csv.reader(fh))
         assert len(rows) == 4
-    finally:
-        store.close()

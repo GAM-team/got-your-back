@@ -3,9 +3,9 @@ requires = ["hatchling>=1.24.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ngyb"
+name = "got-your-back"
 version = "2.0.0a1"
-description = "Got Your Back (ngyb) — Modular, HTTP/2-multiplexed, DPoP-bound email backup and migration tool"
+description = "Got Your Back (GYB) — Modular, HTTP/2-multiplexed, DPoP-bound email backup and migration tool"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
@@ -17,6 +17,7 @@ dependencies = [
     "rich>=13.7.0",
     "cryptography>=42.0.0",
     "modern-httplib2",
+    "google-api-python-client>=2.160.0",
     "google-auth",
     "google-auth-oauthlib",
     "google-auth-httplib2",
@@ -29,7 +30,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ngyb = "ngyb.cli.main:cli"
+gyb = "gyb.cli.main:cli"
 
 [dependency-groups]
 dev = [
@@ -54,7 +55,7 @@ dpop-signer-fido2-previewsign = { git = "https://github.com/jay0lee/dpop-signers
 dpop-signer-ephemeral = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "ephemeral" }
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ngyb"]
+packages = ["src/gyb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -64,7 +65,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["ngyb"]
+source = ["gyb"]
 branch = true
 
 [tool.coverage.report]
@@ -73,6 +74,7 @@ show_missing = true
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
     "\\.\\.\\.",
 ]
 
@@ -87,7 +89,10 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.mypy]
 python_version = "3.11"
 mypy_path = "src"
-packages = ["ngyb"]
+packages = ["gyb"]
+strict = true
 ignore_missing_imports = true
-check_untyped_defs = true
-warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["gyb.auth.*"]
+disallow_untyped_calls = false

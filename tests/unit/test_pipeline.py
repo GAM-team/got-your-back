@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Iterator
+from types import TracebackType
+from typing import Self
 
-from ngyb.core import (
+from gyb.core import (
     AdaptiveStreamController,
     Capability,
     JobState,
@@ -30,14 +32,30 @@ class InMemorySource:
             | Capability.LABEL_SUPPORT
             | Capability.QUERY_FILTERING
         ),
+        transient_fetch_counts: dict[str, int] | None = None,
         fail_ids: dict[str, Exception] | None = None,
     ) -> None:
         self._items = items
         self._caps = caps
+        self._transient_fetch_counts = dict(transient_fetch_counts or {})
         self._fail_ids = fail_ids or {}
+        self._lock = threading.Lock()
+        self.fetch_calls: dict[str, int] = {}
         self.connected = False
         self.closed = False
         self.last_query: str | None = None
+
+    def __enter__(self) -> Self:
+        self.connect()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.close()
 
     @property
     def capabilities(self) -> Capability:
@@ -51,8 +69,16 @@ class InMemorySource:
         yield from self._items.keys()
 
     def fetch_message(self, source_id: str) -> Message:
-        if source_id in self._fail_ids:
-            raise self._fail_ids[source_id]
+        with self._lock:
+            self.fetch_calls[source_id] = self.fetch_calls.get(source_id, 0) + 1
+            if (
+                source_id in self._transient_fetch_counts
+                and self._transient_fetch_counts[source_id] > 0
+            ):
+                self._transient_fetch_counts[source_id] -= 1
+                raise TransientTransferError("Source 503", retry_after=0.01)
+            if source_id in self._fail_ids:
+                raise self._fail_ids[source_id]
         return self._items[source_id]
 
     def close(self) -> None:
@@ -77,6 +103,18 @@ class InMemorySink:
         self.permanent_fail_ids: set[str] = set()
         self.unexpected_error_ids: set[str] = set()
         self.skip_ids: set[str] = set()
+
+    def __enter__(self) -> Self:
+        self.connect()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.close()
 
     @property
     def capabilities(self) -> Capability:
@@ -167,32 +205,21 @@ def test_pipeline_happy_path_with_skip_and_callbacks() -> None:
     assert discovered_counts[-1] == 10
 
 
-def test_pipeline_retries_transient_errors_and_records_failures() -> None:
-    items = {f"id-{i}": Message(source_id=f"id-{i}", raw_rfc822=b"raw") for i in range(6)}
-    source = InMemorySource(items, caps=Capability.STREAMING_FETCH)
-    sink = InMemorySink(caps=Capability.STREAMING_INSERT)
-    # id-0: succeeds after 1 TransientTransferError
-    sink.transient_counts["id-0"] = 1
-    # id-1: succeeds after 1 retryable FAILED TransferResult
-    sink.result_retryable_counts["id-1"] = 1
-    # id-2: exhausts all retries with TransientTransferError
-    sink.transient_counts["id-2"] = 5
-    # id-3: PermanentTransferError (no retry)
-    sink.permanent_fail_ids.add("id-3")
-    # id-4: unexpected RuntimeError (no retry)
-    sink.unexpected_error_ids.add("id-4")
-    # id-5: non-retryable FAILED TransferResult from sink
-    # Let's also test explicit_ids override!
-
-    tuning = StreamTuningConfig(
-        initial_streams=1,
-        min_streams=1,
-        max_streams=2,
-        base_backoff=0.01,
-        max_backoff=0.02,
+def test_pipeline_separates_fetch_and_import_retries() -> None:
+    items = {f"id-{i}": Message(source_id=f"id-{i}", raw_rfc822=b"raw") for i in range(9)}
+    source = InMemorySource(
+        items,
+        caps=Capability.STREAMING_FETCH,
+        transient_fetch_counts={
+            "id-6": 1,  # transient fetch once, then succeeds
+            "id-7": 5,  # exhausts fetch retries
+        },
+        fail_ids={
+            "id-8": PermanentTransferError("missing uid"),
+            "id-err": RuntimeError("disk io error"),
+        },
     )
-    ctrl = AdaptiveStreamController(tuning, sleep=lambda _: None)
-    attempts_by_id: dict[str, int] = {}
+    items["id-err"] = Message(source_id="id-err", raw_rfc822=b"raw")
 
     class NonRetryableResultSink(InMemorySink):
         def import_message(self, message: Message) -> TransferResult:
@@ -206,10 +233,22 @@ def test_pipeline_retries_transient_errors_and_records_failures() -> None:
             return super().import_message(message)
 
     custom_sink = NonRetryableResultSink(caps=Capability.STREAMING_INSERT)
-    custom_sink.transient_counts = sink.transient_counts
-    custom_sink.result_retryable_counts = sink.result_retryable_counts
-    custom_sink.permanent_fail_ids = sink.permanent_fail_ids
-    custom_sink.unexpected_error_ids = sink.unexpected_error_ids
+    # id-0: sink transient error once -> source is NOT re-fetched!
+    custom_sink.transient_counts["id-0"] = 1
+    custom_sink.result_retryable_counts["id-1"] = 1
+    custom_sink.transient_counts["id-2"] = 5
+    custom_sink.permanent_fail_ids.add("id-3")
+    custom_sink.unexpected_error_ids.add("id-4")
+
+    tuning = StreamTuningConfig(
+        initial_streams=1,
+        min_streams=1,
+        max_streams=2,
+        base_backoff=0.01,
+        max_backoff=0.02,
+    )
+    ctrl = AdaptiveStreamController(tuning, sleep=lambda _: None)
+    attempts_by_id: dict[str, int] = {}
 
     pipeline = TransferPipeline(
         source,
@@ -221,16 +260,19 @@ def test_pipeline_retries_transient_errors_and_records_failures() -> None:
     )
     summary = pipeline.run(explicit_ids=list(items.keys()))
     assert summary.state == JobState.COMPLETED_WITH_ERRORS
-    assert summary.succeeded == 2
-    assert summary.failed == 4
+    # id-0, id-1, id-6 succeed!
+    assert summary.succeeded == 3
+    assert summary.failed == 7
+    # Crucial verification: sink retry on id-0 only fetched from source ONCE!
+    assert source.fetch_calls["id-0"] == 1
+    assert source.fetch_calls["id-6"] == 2
+    assert source.fetch_calls["id-7"] == 2
     assert attempts_by_id["id-0"] == 2
-    assert attempts_by_id["id-1"] == 2
-    assert attempts_by_id["id-2"] == 2
-    assert attempts_by_id["id-3"] == 1
-    assert attempts_by_id["id-4"] == 1
-    assert attempts_by_id["id-5"] == 1
+    assert attempts_by_id["id-6"] == 2
+    assert attempts_by_id["id-7"] == 2
+    assert attempts_by_id["id-8"] == 1
+    assert attempts_by_id["id-err"] == 1
 
-    # Also verify default tuning/controller without callbacks
     minimal_source = InMemorySource({"only": Message(source_id="only", raw_rfc822=b"ok")})
     minimal_sink = InMemorySink()
     minimal_summary = TransferPipeline(minimal_source, minimal_sink).run()

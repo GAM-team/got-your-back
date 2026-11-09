@@ -11,14 +11,14 @@ from pathlib import Path
 
 import pytest
 
-from ngyb.auth import (
+from gyb.auth import (
     DEFAULT_OAUTH_SCOPES,
     ADCProfile,
     ModernAuthorizedHttp,
     ProfileManager,
     SignerConfig,
 )
-from ngyb.modules.gmail import GmailClient
+from gyb.modules.gmail import GmailClient
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,22 +37,38 @@ class LiveTestEnv:
 
 @pytest.fixture(scope="session")
 def live_env() -> LiveTestEnv:
-    gmail_user = os.environ.get("NGYB_ITEST_GMAIL_USER", "").strip()
+    gmail_user = os.environ.get("GYB_ITEST_GMAIL_USER", "").strip()
     if not gmail_user:
-        pytest.skip("Set NGYB_ITEST_GMAIL_USER to run live Google API integration tests.")
+        pytest.skip("Set GYB_ITEST_GMAIL_USER to run live Google API integration tests.")
 
     run_id = uuid.uuid4().hex[:10]
-    legacy_cfg_raw = os.environ.get("NGYB_ITEST_OAUTH_CFG", "").strip()
+    legacy_cfg_raw = os.environ.get("GYB_ITEST_OAUTH_CFG", "").strip()
     return LiveTestEnv(
         gmail_user=gmail_user,
-        subject=os.environ.get("NGYB_ITEST_SUBJECT", "").strip() or gmail_user,
-        profile_name=os.environ.get("NGYB_ITEST_PROFILE", "").strip() or None,
-        group_email=os.environ.get("NGYB_ITEST_GROUP_EMAIL", "").strip() or None,
-        dpop_profile_name=os.environ.get("NGYB_ITEST_DPOP_PROFILE", "").strip() or None,
+        subject=os.environ.get("GYB_ITEST_SUBJECT", "").strip() or gmail_user,
+        profile_name=os.environ.get("GYB_ITEST_PROFILE", "").strip() or None,
+        group_email=os.environ.get("GYB_ITEST_GROUP_EMAIL", "").strip() or None,
+        dpop_profile_name=os.environ.get("GYB_ITEST_DPOP_PROFILE", "").strip() or None,
         legacy_oauth_cfg=Path(legacy_cfg_raw) if legacy_cfg_raw else None,
         run_id=run_id,
-        label_namespace=f"ngyb-itest-{run_id}",
+        label_namespace=f"gyb-itest-{run_id}",
     )
+
+
+def setup_live_profile_dir(env: LiveTestEnv, config_dir: Path) -> str:
+    """Ensure a valid GYB auth profile exists in ``config_dir`` and return its name."""
+    if env.profile_name:
+        return env.profile_name
+    mgr = ProfileManager(config_dir)
+    profile_name = "itest-adc"
+    adc_prof = ADCProfile(
+        name=profile_name,
+        scopes=DEFAULT_OAUTH_SCOPES,
+        subject=env.subject,
+        signer=SignerConfig(key_id="itest-adc"),
+    )
+    mgr.save_profile(adc_prof)
+    return profile_name
 
 
 def build_live_transport(
@@ -62,24 +78,10 @@ def build_live_transport(
     max_streams: int = 16,
 ) -> ModernAuthorizedHttp:
     """Create a ModernAuthorizedHttp transport for live Google API tests."""
-    mgr = ProfileManager(tmp_config_dir)
-    if env.profile_name:
-        return mgr.build_authorized_http(
-            env.profile_name,
-            scopes=DEFAULT_OAUTH_SCOPES,
-            max_streams=max_streams,
-            enable_http2=True,
-        )
-
-    adc_prof = ADCProfile(
-        name="itest-adc",
-        scopes=DEFAULT_OAUTH_SCOPES,
-        subject=env.subject,
-        signer=SignerConfig(key_id="itest-adc"),
-    )
-    mgr.save_profile(adc_prof)
+    profile_name = setup_live_profile_dir(env, tmp_config_dir)
+    mgr = ProfileManager(None if env.profile_name else tmp_config_dir)
     return mgr.build_authorized_http(
-        "itest-adc",
+        profile_name,
         scopes=DEFAULT_OAUTH_SCOPES,
         max_streams=max_streams,
         enable_http2=True,
@@ -91,35 +93,43 @@ def live_gmail_client(
     live_env: LiveTestEnv,
     tmp_path: Path,
 ) -> Iterator[GmailClient]:
-    """Provide an HTTP/2 GmailClient and guarantee post-test message & label cleanup."""
+    """Provide an HTTP/2 GmailClient and guarantee safe post-test message & label cleanup."""
     transport = build_live_transport(live_env, tmp_path / "itest-cfg")
     client = GmailClient(transport, user_id=live_env.gmail_user)
+    preexisting_ids = set(client.list_messages(include_spam_trash=True))
     try:
         yield client
     finally:
         try:
-            # Clean up any messages matching our unique run_id header/subject token
-            msg_ids = list(
-                client.list_messages(
-                    query=live_env.run_id,
-                    include_spam_trash=True,
-                )
+            prefix = live_env.label_namespace.lower()
+            labels = client.list_labels()
+            matching_labels = sorted(
+                (lbl for lbl in labels if str(lbl.get("name", "")).lower().startswith(prefix)),
+                key=lambda item: len(str(item.get("name", ""))),
+                reverse=True,
             )
-            for mid in msg_ids:
+
+            candidate_msg_ids: set[str] = set(
+                client.list_messages(query=live_env.run_id, include_spam_trash=True)
+            )
+            for lbl in matching_labels:
+                lbl_name = str(lbl.get("name", ""))
+                if lbl_name:
+                    escaped = lbl_name.replace('"', '\\"')
+                    candidate_msg_ids.update(
+                        client.list_messages(
+                            query=f'label:"{escaped}"',
+                            include_spam_trash=True,
+                        )
+                    )
+
+            for mid in candidate_msg_ids - preexisting_ids:
                 try:
                     client.delete_message(mid)
                 except Exception:
                     pass
 
-            # Clean up all labels under our unique namespace (deepest children first)
-            prefix = live_env.label_namespace.lower()
-            labels = client.list_labels()
-            matching = sorted(
-                (lbl for lbl in labels if str(lbl.get("name", "")).lower().startswith(prefix)),
-                key=lambda item: len(str(item.get("name", ""))),
-                reverse=True,
-            )
-            for lbl in matching:
+            for lbl in matching_labels:
                 try:
                     client.delete_label(str(lbl["id"]))
                 except Exception:
