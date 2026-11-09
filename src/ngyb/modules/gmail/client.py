@@ -263,6 +263,26 @@ class GmailClient:
             or {}
         )
 
+    def modify_message_labels(
+        self,
+        message_id: str,
+        *,
+        add_label_ids: Sequence[str] = (),
+    ) -> dict[str, Any]:
+        """Apply additional label IDs to an existing Gmail message."""
+        encoded_id = urllib.parse.quote(message_id, safe="")
+        url = f"{GMAIL_API_BASE}/users/{self._user_id}/messages/{encoded_id}/modify"
+        payload = json.dumps({"addLabelIds": list(add_label_ids)}).encode("utf-8")
+        return (
+            self._request_json(
+                url,
+                method="POST",
+                body=payload,
+                headers={"Content-Type": "application/json; charset=UTF-8"},
+            )
+            or {}
+        )
+
     def create_draft(
         self,
         raw_rfc822: bytes,
@@ -270,15 +290,18 @@ class GmailClient:
         label_ids: Sequence[str] = (),
         thread_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a Gmail draft message via HTTP/2 multipart/related upload."""
+        """Create a Gmail draft message via HTTP/2 multipart/related upload.
+
+        Gmail's ``drafts.create`` endpoint rejects ``labelIds`` in the initial upload
+        payload (``400 Bad Request: Cannot set labels on drafts``), so any non-``DRAFT``
+        labels are applied afterward via ``messages.modify`` on the draft's message ID.
+        """
         msg_meta: dict[str, Any] = {}
-        if label_ids:
-            msg_meta["labelIds"] = list(label_ids)
         if thread_id:
             msg_meta["threadId"] = thread_id
         content_type, body = build_multipart_related({"message": msg_meta}, raw_rfc822)
         url = f"{GMAIL_UPLOAD_BASE}/users/{self._user_id}/drafts?uploadType=multipart"
-        return (
+        draft_resp = (
             self._request_json(
                 url,
                 method="POST",
@@ -287,6 +310,12 @@ class GmailClient:
             )
             or {}
         )
+        extra_labels = [lid for lid in label_ids if lid != "DRAFT"]
+        msg_obj = draft_resp.get("message")
+        msg_id = msg_obj.get("id") if isinstance(msg_obj, dict) else None
+        if extra_labels and msg_id:
+            self.modify_message_labels(str(msg_id), add_label_ids=extra_labels)
+        return draft_resp
 
     def delete_message(self, message_id: str) -> None:
         """Permanently delete a message by ID."""

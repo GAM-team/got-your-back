@@ -310,14 +310,14 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
         mgr.delete_profile("nope")
 
     # Explicitly exercise both POSIX (chmod) and Windows (nt) branches on all OSes
-    chmod_calls: list[tuple[Path, int]] = []
+    chmod_calls: list[tuple[str, int]] = []
     monkeypatch.setattr("ngyb.auth.manager.os.name", "posix")
     monkeypatch.setattr(
         "ngyb.auth.manager.os.chmod",
-        lambda p, m: chmod_calls.append((Path(p), m)),
+        lambda p, m: chmod_calls.append((str(p), m)),
     )
     posix_saved = mgr.save_profile(ADCProfile(name="posix-adc", scopes=("email",)))
-    assert chmod_calls == [(posix_saved, 0o600)]
+    assert chmod_calls == [(str(posix_saved), 0o600)]
     mgr.delete_profile("posix-adc")
 
     monkeypatch.setattr("ngyb.auth.manager.os.name", "nt")

@@ -141,15 +141,15 @@ def test_software_pem_generation_and_thread_safe_signer(
         assert (pem_file.stat().st_mode & 0o777) == 0o600
 
     # Explicitly exercise both POSIX (chmod) and Windows (nt) branches on all OSes
-    chmod_calls: list[tuple[Path, int]] = []
+    chmod_calls: list[tuple[str, int]] = []
     monkeypatch.setattr("ngyb.auth.signers.os.name", "posix")
     monkeypatch.setattr(
         "ngyb.auth.signers.os.chmod",
-        lambda p, m: chmod_calls.append((Path(p), m)),
+        lambda p, m: chmod_calls.append((str(p), m)),
     )
     posix_pem = tmp_path / "keys" / "posix.pem"
     assert ensure_software_pem_key(posix_pem).startswith(b"-----BEGIN PRIVATE KEY-----")
-    assert chmod_calls == [(posix_pem, 0o600)]
+    assert chmod_calls == [(str(posix_pem), 0o600)]
 
     monkeypatch.setattr("ngyb.auth.signers.os.name", "nt")
     nt_pem = tmp_path / "keys" / "nt.pem"

@@ -237,10 +237,11 @@ def test_gmail_http2_deep_mailbox_verification_and_roundtrip(
     fetched_reply = live_gmail_client.get_message(r_reply.destination_id, fmt="full")
     assert fetched_root["threadId"] == fetched_reply["threadId"]
 
-    # 4. Verify Draft Exists with DRAFT System Label
+    # 4. Verify Draft Exists with DRAFT System Label + Custom User Label
     assert r_draft.destination_id is not None
     fetched_draft = live_gmail_client.get_message(r_draft.destination_id, fmt="full")
-    assert "DRAFT" in fetched_draft.get("labelIds", [])
+    draft_labels = {label_id_to_name.get(lid, lid) for lid in fetched_draft.get("labelIds", [])}
+    assert {"DRAFT", f"{ns}/Drafts"}.issubset(draft_labels)
 
     # 5. Verify Malformed Message Exists in Mailbox with GYB Hygiene Audit Headers
     assert r_mal.destination_id is not None

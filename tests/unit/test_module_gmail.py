@@ -350,7 +350,7 @@ def test_gmail_source_and_sink_full_flows() -> None:
     assert res_fallback.destination_id == "gmail-inserted-1"
     assert res_fallback.sanitized is True
 
-    # Draft upload with threadId & user label
+    # Draft upload with threadId & user label (drafts.create + messages.modify)
     draft_msg = Message(
         source_id="d1",
         raw_rfc822=raw_msg,
@@ -358,8 +358,10 @@ def test_gmail_source_and_sink_full_flows() -> None:
         thread_id="th-draft",
     )
     tr.push_json({"id": "draft-1", "message": {"id": "msg-draft-1"}})
+    tr.push_json({"id": "msg-draft-1", "labelIds": ["DRAFT", "INBOX"]})
     res_draft = sink.import_message(draft_msg)
     assert res_draft.destination_id == "msg-draft-1"
+    assert tr.requests[-1][1].endswith("/messages/msg-draft-1/modify")
 
     # Draft that fails twice with 400 raises GmailBadRequestError
     tr.push_json({"error": {"message": "Bad draft"}}, status=400)
