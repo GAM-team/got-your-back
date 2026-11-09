@@ -74,6 +74,7 @@ from gyb.core import (
 from gyb.db import JobStore
 from gyb.modules.gmail import (
     RESUMABLE_THRESHOLD_BYTES,
+    GmailBadRequestError,
     GmailClient,
     GmailNotFoundError,
     GmailSink,
@@ -530,11 +531,12 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
     with GmailSink(
         live_gmail_client,
         label_prefix=f"{ns}/Edge",
+        cleanup=True,
         cleanup_from="Mailer Daemon <postmaster@gyb-itest.local>",
         preserve_threads=True,
         close_transport=False,
     ) as sink:
-        # Resumable > 1.5 MiB upload + foreign threadId ("deadbeefcafebabe" -> 404 -> fallback!)
+        # Resumable > 1.5 MiB upload + foreign threadId ("deadbeefcafebabe" -> 400/404 -> fallback!)
         r_large = sink.import_message(
             Message(
                 source_id="large-resumable",
@@ -544,8 +546,9 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
             )
         )
         assert r_large.status == TransferStatus.SUCCESS and r_large.destination_id is not None
+        assert r_large.sanitized is False
 
-        # Bounce From:<> + ISO-8859-1 + invalid Date -> live 400 sanitization
+        # Bounce From:<> + ISO-8859-1 + invalid Date -> header hygiene without 8-bit body mutation
         r_bounce = sink.import_message(
             Message(
                 source_id="bounce-iso",
@@ -653,9 +656,11 @@ def test_live_gmail_error_responses_cli_report_and_retry(
     ns = live_env.label_namespace
     fixed_dt = datetime(2024, 8, 1, 10, 0, 0, tzinfo=UTC)
 
-    # 1. Live Gmail 404 Not Found -> GmailNotFoundError
+    # 1. Live Gmail 404 Not Found -> GmailNotFoundError & 400 Bad Request -> GmailBadRequestError
     with pytest.raises(GmailNotFoundError, match="404 Not Found"):
         live_gmail_client.get_message("0000000000000000")
+    with pytest.raises(GmailBadRequestError, match="400 Bad Request"):
+        live_gmail_client.create_label("")
 
     # 2. Mixed batch with permanent oversize draft (36 MiB > 35 MiB Discovery maxSize)
     mixed_dir = tmp_path / "mixed-batch-local"

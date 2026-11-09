@@ -298,13 +298,14 @@ def test_gmail_client_discovery_resumable_and_errors() -> None:
     tr.push_json({"messages": []})
     assert list(client.list_messages(query=None)) == []
 
-    # Small upload (< 64 bytes) uses 1-RTT multipart/related
+    # Small upload (< 64 bytes) uses 1-RTT JSON base64url (safe on 8-bit ISO-8859-1 MIME bodies)
     tr.push_json({"id": "small-1"})
-    assert client.import_message(b"Subject: hi\r\n\r\nok")["id"] == "small-1"
-    assert "uploadType=multipart" in tr.requests[-1][1]
+    assert client.import_message(b"Subject: hi\r\n\r\nCaf\xe9")["id"] == "small-1"
+    assert "uploadType=" not in tr.requests[-1][1]
+    assert "raw" in json.loads(tr.requests[-1][2])
 
     # Larger upload (>= 64 bytes) uses MediaIoBaseUpload resumable protocol (init POST + chunk PUT)
-    large_payload = b"Subject: big\r\n\r\n" + (b"A" * 100)
+    large_payload = b"Subject: big\r\n\r\nCaf\xe9 " + (b"A" * 100)
     tr.push_raw(
         b"",
         status=200,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from functools import partial
@@ -141,13 +142,26 @@ class GmailClient:
         """HTTP protocol version negotiated on the most recent API response."""
         return self._transport.last_http_version
 
-    def _build_media(self, raw_rfc822: bytes) -> MediaIoBaseUpload:
-        use_resumable = len(raw_rfc822) >= self._resumable_threshold_bytes
+    def _prepare_upload(
+        self,
+        raw_rfc822: bytes,
+        payload_dict: dict[str, Any],
+    ) -> MediaIoBaseUpload | None:
+        """Select 1-RTT JSON base64url (<1 MiB) or chunked resumable MediaIoBaseUpload (>=1 MiB).
+
+        Using JSON ``raw`` for small messages avoids ``googleapiclient``'s
+        ``MIMENonMultipart("message", "rfc822")`` ASCII generator bug on 8-bit MIME bodies
+        while preserving 1-RTT HTTP/2 multiplexing; ``resumable=True`` streams raw binary
+        chunks directly for larger messages.
+        """
+        if len(raw_rfc822) < self._resumable_threshold_bytes:
+            payload_dict["raw"] = base64.urlsafe_b64encode(raw_rfc822).decode("ascii")
+            return None
         return MediaIoBaseUpload(
             BytesIO(raw_rfc822),
             mimetype="message/rfc822",
-            chunksize=RESUMABLE_CHUNK_SIZE if use_resumable else -1,
-            resumable=use_resumable,
+            chunksize=RESUMABLE_CHUNK_SIZE,
+            resumable=True,
         )
 
     def _execute(
@@ -253,7 +267,7 @@ class GmailClient:
         if thread_id:
             metadata["threadId"] = thread_id
 
-        media = self._build_media(raw_rfc822)
+        media = self._prepare_upload(raw_rfc822, metadata)
         if use_insert:
             data = self._execute(
                 lambda: self._messages.insert(
@@ -309,7 +323,7 @@ class GmailClient:
         msg_meta: dict[str, Any] = {}
         if thread_id:
             msg_meta["threadId"] = thread_id
-        media = self._build_media(raw_rfc822)
+        media = self._prepare_upload(raw_rfc822, msg_meta)
         data = self._execute(
             lambda: self._drafts.create(
                 userId=self._user_id,
