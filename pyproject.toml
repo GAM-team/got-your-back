@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling>=1.24.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ngyb"
+version = "2.0.0a1"
+description = "Got Your Back (ngyb) — Modular, HTTP/2-multiplexed, DPoP-bound email backup and migration tool"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [
+    { name = "GAM Team" },
+]
+dependencies = [
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "cryptography>=42.0.0",
+    "modern-httplib2",
+    "google-auth",
+    "google-auth-oauthlib",
+    "google-auth-httplib2",
+    "dpop-signer-macos-secureenclave ; sys_platform == 'darwin'",
+    "dpop-signer-windows-tpm ; sys_platform == 'win32'",
+    "dpop-signer-linux-tpm ; sys_platform == 'linux'",
+    "dpop-signer-ecp",
+    "dpop-signer-yubikey",
+    "dpop-signer-fido2-previewsign",
+]
+
+[project.scripts]
+ngyb = "ngyb.cli.main:cli"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+    "dpop-signer-ephemeral",
+]
+
+[tool.uv.sources]
+modern-httplib2 = { git = "https://github.com/GAM-team/modern-httplib2.git" }
+google-auth = { git = "https://github.com/jay0lee/google-cloud-python.git", branch = "dpop-oauthlib", subdirectory = "packages/google-auth" }
+google-auth-oauthlib = { git = "https://github.com/jay0lee/google-cloud-python.git", branch = "dpop-oauthlib", subdirectory = "packages/google-auth-oauthlib" }
+google-auth-httplib2 = { git = "https://github.com/jay0lee/google-cloud-python.git", branch = "dpop-oauthlib", subdirectory = "packages/google-auth-httplib2" }
+dpop-signer-macos-secureenclave = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "macos-secureenclave" }
+dpop-signer-windows-tpm = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "windows-tpm" }
+dpop-signer-linux-tpm = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "linux-tpm" }
+dpop-signer-ecp = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "ecp" }
+dpop-signer-yubikey = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "yubikey" }
+dpop-signer-fido2-previewsign = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "fido2-previewsign" }
+dpop-signer-ephemeral = { git = "https://github.com/jay0lee/dpop-signers.git", subdirectory = "ephemeral" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ngyb"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib -m 'not integration'"
+markers = [
+    "integration: live integration tests against Google servers and APIs",
+]
+
+[tool.coverage.run]
+source = ["ngyb"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["ngyb"]
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true

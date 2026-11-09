@@ -1,0 +1,136 @@
+name: ngyb CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - ngyb
+      - main
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  unit-and-quality:
+    name: Unit Tests & Signer Isolation (${{ matrix.os }}, py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: "3.11"
+          - os: ubuntu-24.04
+            python: "3.12"
+          - os: ubuntu-24.04
+            python: "3.13"
+          - os: macos-15
+            python: "3.12"
+          - os: windows-latest
+            python: "3.12"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux native libraries for TPM2 and PC/SC
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Python and project dependencies
+        run: |
+          uv python install ${{ matrix.python }}
+          uv sync --dev --python ${{ matrix.python }}
+
+      - name: Verify OS-scoped DPoP signer package isolation
+        run: |
+          uv run python -c "
+          import importlib.util, sys
+          from ngyb.auth.models import SignerType
+          from ngyb.auth.signers import available_signer_types
+
+          has_mac = importlib.util.find_spec('dpop_signer_macos_secureenclave') is not None
+          has_win = importlib.util.find_spec('dpop_signer_windows_tpm') is not None
+          has_lin = importlib.util.find_spec('dpop_signer_linux_tpm') is not None
+          avail = set(available_signer_types())
+
+          if sys.platform == 'darwin':
+              assert has_mac and not has_win and not has_lin, (has_mac, has_win, has_lin)
+              assert SignerType.MACOS_SE in avail
+              assert SignerType.WINDOWS_TPM not in avail
+              assert SignerType.LINUX_TPM not in avail
+          elif sys.platform == 'win32':
+              assert has_win and not has_mac and not has_lin, (has_mac, has_win, has_lin)
+              assert SignerType.WINDOWS_TPM in avail
+              assert SignerType.MACOS_SE not in avail
+              assert SignerType.LINUX_TPM not in avail
+          elif sys.platform.startswith('linux'):
+              assert has_lin and not has_mac and not has_win, (has_mac, has_win, has_lin)
+              assert SignerType.LINUX_TPM in avail
+              assert SignerType.MACOS_SE not in avail
+              assert SignerType.WINDOWS_TPM not in avail
+          print(f'Verified signer isolation on {sys.platform}: {[s.value for s in avail]}')
+          "
+
+      - name: Lint with Ruff
+        run: uv run ruff check src tests
+
+      - name: Type-check with Mypy
+        run: uv run mypy
+
+      - name: Run unit tests with 100% line & branch coverage
+        run: uv run pytest tests/unit --cov=ngyb --cov-branch --cov-report=term-missing --cov-fail-under=100
+
+  live-integration:
+    name: Live Google API Integration Tests
+    needs: unit-and-quality
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team'
+    runs-on: ubuntu-24.04
+    env:
+      PASSCODE: ${{ secrets.PASSCODE }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux native libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config gpg
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv python install 3.12
+          uv sync --dev --python 3.12
+
+      - name: Decrypt CI credentials and run live Google integration suite
+        if: env.PASSCODE != ''
+        run: |
+          CREDS_DIR="$(mktemp -d)"
+          trap 'rm -rf "$CREDS_DIR" creds.tar' EXIT
+          export gybpath="$CREDS_DIR"
+          source .github/actions/decrypt.sh .github/actions/creds.tar.gpg creds.tar
+          export GOOGLE_APPLICATION_CREDENTIALS="${CREDS_DIR}/oauth2service.json"
+          export NGYB_ITEST_GMAIL_USER="gyb-gha-1@pdl.jaylee.us"
+          export NGYB_ITEST_SUBJECT="gyb-gha-1@pdl.jaylee.us"
+          export NGYB_ITEST_GROUP_EMAIL="gyb-travis-group-1@pdl.jaylee.us"
+          if [ -f "${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg" ]; then
+            export NGYB_ITEST_OAUTH_CFG="${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg"
+          fi
+          uv run pytest -m integration -v

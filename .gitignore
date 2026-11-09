@@ -1,74 +1,30 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
 
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-env/
-bin/
-build/
-develop-eggs/
-dist/
-eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
+# Virtual environments & caches
+.venv/
+venv/
+.uv-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
-.cache
-nosetests.xml
 coverage.xml
+htmlcov/
 
-# Translations
-*.mo
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
 
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# Rope
-.ropeproject
-
-# Django stuff:
-*.log
-*.pot
-
-# Sphinx documentation
-docs/_build/
-
-# Project specific
-*.cfg
-nobrowser.txt
-GYB-GMail-Backup-*/
-lastcheck.txt
-gyb/
+# Local test / credential artifacts
+creds.tar
 oauth2service.json
 client_secrets.json
-*.sqlite
-
-# Prevents committing private key.
-privatekey.p12
-
-# builds
-*.zip
-*.exe
-*.msi
-*.tar.xz
-*.wixobj
-*.wixpdb
+*.cfg
+*.pem
+sa-backup/
+GYB-GMail-Backup-*/
+.DS_Store
