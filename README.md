@@ -15,6 +15,8 @@
 
 ## Development
 
+> **Windows Note:** Enable Git long paths (`git config --global core.longpaths true`) before syncing Git dependencies.
+
 ```bash
 uv sync --dev
 uv run pytest tests/unit --cov=ngyb --cov-branch --cov-report=term-missing --cov-fail-under=100

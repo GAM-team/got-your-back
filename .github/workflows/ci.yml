@@ -3,6 +3,10 @@ name: ngyb CI
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -14,6 +18,9 @@ on:
 defaults:
   run:
     shell: bash
+
+env:
+  PYTHONUTF8: "1"
 
 jobs:
   unit-and-quality:
@@ -35,8 +42,14 @@ jobs:
             python: "3.12"
 
     steps:
+      - name: Enable Git long paths on Windows
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true || true
+          git config --global core.longpaths true
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Linux native libraries for TPM2 and PC/SC
         if: runner.os == 'Linux'
@@ -45,7 +58,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
 
@@ -95,14 +108,13 @@ jobs:
 
   live-integration:
     name: Live Google API Integration Tests
-    needs: unit-and-quality
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team'
     runs-on: ubuntu-24.04
     env:
       PASSCODE: ${{ secrets.PASSCODE }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Linux native libraries
         run: |
@@ -110,7 +122,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config gpg
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
 

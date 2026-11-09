@@ -309,9 +309,20 @@ def test_profile_manager_full_lifecycle(tmp_path: Path, monkeypatch: pytest.Monk
     with pytest.raises(ConfigurationError, match="does not exist"):
         mgr.delete_profile("nope")
 
-    # Save on simulated Windows branch
+    # Explicitly exercise both POSIX (chmod) and Windows (nt) branches on all OSes
+    chmod_calls: list[tuple[Path, int]] = []
+    monkeypatch.setattr("ngyb.auth.manager.os.name", "posix")
+    monkeypatch.setattr(
+        "ngyb.auth.manager.os.chmod",
+        lambda p, m: chmod_calls.append((Path(p), m)),
+    )
+    posix_saved = mgr.save_profile(ADCProfile(name="posix-adc", scopes=("email",)))
+    assert chmod_calls == [(posix_saved, 0o600)]
+    mgr.delete_profile("posix-adc")
+
     monkeypatch.setattr("ngyb.auth.manager.os.name", "nt")
     mgr.save_profile(ADCProfile(name="win-adc", scopes=("email",)))
+    assert len(chmod_calls) == 1
     monkeypatch.undo()
     assert len(mgr.list_profiles()) == 1
     mgr.delete_profile("win-adc")
