@@ -130,15 +130,18 @@ class GmailSink:
         except GmailNotFoundError:
             if thread_id is None:
                 raise
-            # Cross-mailbox --preserve-threads: foreign threadId does not exist in target mailbox
-            return self._upload_once(
-                raw_bytes,
-                label_ids=label_ids,
-                thread_id=None,
-                is_draft=is_draft,
-                is_deleted=is_deleted,
-                use_insert=use_insert,
-            )
+        except GmailBadRequestError as exc:
+            if thread_id is None or "thread" not in str(exc).lower():
+                raise
+        # Cross-mailbox --preserve-threads: foreign/invalid threadId rejected by target mailbox
+        return self._upload_once(
+            raw_bytes,
+            label_ids=label_ids,
+            thread_id=None,
+            is_draft=is_draft,
+            is_deleted=is_deleted,
+            use_insert=use_insert,
+        )
 
     def import_message(self, message: Message) -> TransferResult:
         if not self._connected:

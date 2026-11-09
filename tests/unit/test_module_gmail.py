@@ -441,6 +441,15 @@ def test_gmail_source_and_sink_full_flows() -> None:
         assert res_foreign.status == TransferStatus.SUCCESS
         assert res_foreign.destination_id == "imported-no-thread"
 
+        # Foreign threadId 400 Invalid thread_id value -> falls back to thread_id=None without
+        # mutating headers!
+        tr.push_json({"error": {"message": "Invalid thread_id value"}}, status=400)
+        tr.push_json({"id": "imported-400-thread"})
+        res_foreign_400 = sink.import_message(fetched)
+        assert res_foreign_400.status == TransferStatus.SUCCESS
+        assert res_foreign_400.destination_id == "imported-400-thread"
+        assert res_foreign_400.sanitized is False
+
         # 404 when thread_id is None propagates GmailNotFoundError
         tr.push_json({"error": {"message": "Mailbox not found"}}, status=404)
         with pytest.raises(GmailNotFoundError):

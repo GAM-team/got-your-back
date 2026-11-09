@@ -353,7 +353,7 @@ def test_real_repository_samples_to_gmail_and_google_groups(
     )
     assert len(sample_drafts) == 1
 
-    # 2. samples/historic-public-mbox/odd-mails.mbox (6 malformed historic mails)
+    # 2. samples/historic-public-mbox/odd-mails.mbox (6 malformed historic mails with cleanup=True)
     #    & rfc2047-samples.mbox (11 RFC 2047 ISO-8859-1/2 header vectors)
     odd_sanitized: list[bool] = []
     odd_summary = TransferPipeline(
@@ -361,6 +361,7 @@ def test_real_repository_samples_to_gmail_and_google_groups(
         GmailSink(
             live_gmail_client,
             label_restored=f"{ns}/OddMails",
+            cleanup=True,
             use_insert=False,
             close_transport=False,
         ),
@@ -369,7 +370,7 @@ def test_real_repository_samples_to_gmail_and_google_groups(
     ).run()
     assert odd_summary.state == JobState.COMPLETED
     assert odd_summary.succeeded == 6
-    assert sum(odd_sanitized) >= 2  # <notanemail>, notbracketed, missing Date/Message-ID
+    assert sum(odd_sanitized) == 6  # all 6 lack Date/Message-ID; 2 also repair invalid From
 
     rfc2047_summary = TransferPipeline(
         MboxSource(REPO_SAMPLES / "historic-public-mbox" / "rfc2047-samples.mbox"),
