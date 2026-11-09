@@ -12,8 +12,8 @@ Exercises:
 4. Unusual source migration data & Gmail quirks: > 1.5 MiB resumable attachment upload
    (``MediaIoBaseUpload(resumable=True)``) with SHA-256 verification, legacy ISO-8859-1 8-bit
    bodies, ``From: <>`` bounce sender cleanup, reserved/CHAT label collisions, ``deleted=True``
-   (TRASH), editable drafts, server Message-ID deduplication, and foreign ``threadId`` 404
-   fallback.
+   (Google Vault permanently deleted) & ``TRASH``, editable drafts, server Message-ID
+   deduplication, and foreign ``threadId`` fallback.
 5. Live Gmail API error responses (404 Not Found, oversize ``MediaUploadSizeError`` mixed batch,
    transient 429 global backoff) and end-to-end ``gyb`` CLI (``report``, ``retry``) recovery.
 """
@@ -508,14 +508,24 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
         f"Deduplication payload {live_env.run_id}\r\n"
     ).encode()
 
+    vault_deleted_raw = (
+        f"Message-ID: <vault-deleted-{live_env.run_id}@gyb-itest.local>\r\n"
+        f"Date: {format_datetime(fixed_dt)}\r\n"
+        "From: Vault Tester <vault@gyb-itest.local>\r\n"
+        "To: recipient@gyb-itest.local\r\n"
+        f"Subject: [gyb-{live_env.run_id}] Vault Permanently Deleted Verification\r\n"
+        f"X-GYB-ITest-Run: {live_env.run_id}\r\n\r\n"
+        f"Vault permanently deleted payload {live_env.run_id}\r\n"
+    ).encode()
+
     trash_raw = (
         f"Message-ID: <trash-{live_env.run_id}@gyb-itest.local>\r\n"
         f"Date: {format_datetime(fixed_dt)}\r\n"
         "From: Trash Tester <trash@gyb-itest.local>\r\n"
         "To: recipient@gyb-itest.local\r\n"
-        f"Subject: [gyb-{live_env.run_id}] Deleted Message Verification\r\n"
+        f"Subject: [gyb-{live_env.run_id}] Trash Label Verification\r\n"
         f"X-GYB-ITest-Run: {live_env.run_id}\r\n\r\n"
-        f"Deleted payload {live_env.run_id}\r\n"
+        f"Trash payload {live_env.run_id}\r\n"
     ).encode()
 
     draft_raw = (
@@ -570,13 +580,25 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
         r_dedup_2 = sink.import_message(dedup_msg)
         assert r_dedup_1.destination_id == r_dedup_2.destination_id
 
-        # Deleted message -> TRASH
+        # Vault permanently deleted (deleted=True: archived for Vault only, invisible to mailbox)
+        r_vault_deleted = sink.import_message(
+            Message(
+                source_id="vault-deleted-1",
+                raw_rfc822=vault_deleted_raw,
+                is_deleted=True,
+            )
+        )
+        assert (
+            r_vault_deleted.status == TransferStatus.SUCCESS
+            and r_vault_deleted.destination_id is not None
+        )
+
+        # Standard TRASH label import (visible in user TRASH)
         r_trash = sink.import_message(
             Message(
                 source_id="trash-1",
                 raw_rfc822=trash_raw,
-                labels=("DeletedItems",),
-                is_deleted=True,
+                labels=("TRASH", "DeletedItems"),
             )
         )
         assert r_trash.status == TransferStatus.SUCCESS and r_trash.destination_id is not None
@@ -634,9 +656,16 @@ def test_unusual_data_edge_cases_and_large_resumable_upload(
         f"{ns}/Edge/_muted",
     }.issubset(dedup_label_names)
 
-    # Verify is_deleted=True landed in TRASH
+    # Verify deleted=True is Vault-only permanently deleted (invisible to mailbox get_message)
+    with pytest.raises(GmailNotFoundError, match="404 Not Found"):
+        live_gmail_client.get_message(r_vault_deleted.destination_id, fmt="full")
+
+    # Verify TRASH label import landed in user TRASH alongside prefixed custom label
     fetched_trash = live_gmail_client.get_message(r_trash.destination_id, fmt="full")
-    assert "TRASH" in fetched_trash.get("labelIds", [])
+    trash_label_names = {
+        label_id_to_name.get(lid, lid) for lid in fetched_trash.get("labelIds", [])
+    }
+    assert {"TRASH", f"{ns}/Edge/DeletedItems"}.issubset(trash_label_names)
 
     # Verify editable DRAFT has both DRAFT and custom user label
     fetched_draft = live_gmail_client.get_message(r_draft.destination_id, fmt="full")
