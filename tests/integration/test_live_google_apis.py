@@ -24,6 +24,7 @@ import base64
 import csv
 import hashlib
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 from email import policy
 from email.header import Header
@@ -44,7 +45,9 @@ from cryptography.hazmat.primitives.serialization import (
     PrivateFormat,
 )
 from dpop_signer_ephemeral import EphemeralDPoPSigner
+from google.auth import external_account, impersonated_credentials
 from google.auth.dpop import SoftwareDPoPSigner
+from google.oauth2 import service_account
 from google.oauth2.dpop_credentials import DPoPCredentials
 from tests.integration.conftest import (
     LiveTestEnv,
@@ -63,6 +66,7 @@ from gyb.auth import (
 from gyb.cli.main import cli
 from gyb.cli.options import TransferOptions
 from gyb.core import (
+    AuthenticationError,
     JobState,
     Message,
     StreamTuningConfig,
@@ -197,6 +201,48 @@ def test_live_dpop_auth_http2_401_recovery_and_negative_binding(
     pytest.skip(
         "Set GYB_ITEST_DPOP_PROFILE or GYB_ITEST_OAUTH_CFG to run live OAuth/DPoP token tests."
     )
+
+
+def test_live_adc_domain_wide_delegation_identity(
+    live_env: LiveTestEnv,
+    tmp_path: Path,
+) -> None:
+    """Verify ADC Domain-Wide Delegation (SA key or keyless WIF) acts as the exact subject."""
+    if live_env.profile_name:
+        pytest.skip("GYB_ITEST_PROFILE overrides ADC; DwD identity test requires ADC mode.")
+    assert live_env.subject is not None
+
+    with build_live_transport(live_env, tmp_path / "dwd-cfg", max_streams=4) as transport:
+        creds = transport.credentials
+        match live_env.adc_mode:
+            case "wif":
+                # GitHub Actions OIDC -> STS federated token -> IAM signJwt DwD assertion
+                assert isinstance(creds, impersonated_credentials.Credentials), type(creds)
+                assert isinstance(creds._source_credentials, external_account.Credentials)
+                assert creds._subject == live_env.subject
+            case "sa-key":
+                assert isinstance(creds, service_account.Credentials), type(creds)
+                assert creds._subject == live_env.subject
+            case _:
+                pass
+
+        gmail = GmailClient(transport, user_id=live_env.gmail_user)
+        prof = gmail.get_profile()
+        assert prof.get("emailAddress", "").lower() == live_env.subject.lower()
+        assert gmail.last_http_version == "HTTP/2"
+
+        # Forced refresh re-runs the full delegation chain (signJwt / local JWT -> jwt_grant)
+        transport.ensure_valid_token(force=True)
+        assert gmail.get_profile().get("emailAddress", "").lower() == live_env.subject.lower()
+
+    # Negative: delegation to a nonexistent user in the domain must fail at token exchange
+    domain = live_env.subject.split("@", 1)[1]
+    bogus_env = replace(live_env, subject=f"gyb-itest-nouser-{live_env.run_id}@{domain}")
+    with (
+        build_live_transport(bogus_env, tmp_path / "dwd-bogus-cfg", max_streams=1) as bogus,
+        pytest.raises(AuthenticationError, match="Credential refresh failed"),
+    ):
+        bogus.ensure_valid_token(force=True)
 
 
 def test_parallel_multistream_http2_migration_aimd_and_cloud_to_cloud(

@@ -15,6 +15,7 @@ import google.auth.exceptions
 import google.oauth2.credentials
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
+from google.auth import identity_pool, impersonated_credentials
 from google.auth.dpop import SoftwareDPoPSigner
 from google.oauth2.dpop_credentials import DPoPCredentials
 
@@ -272,6 +273,40 @@ def test_adc_loader_cases(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     with pytest.raises(AuthenticationError, match="does not support Domain-Wide Delegation"):
         load_adc_credentials(profile)
+
+    # GCE metadata credentials before first refresh report service_account_email="default"
+    class UnresolvedGCECreds(NonDelegatableCreds):
+        service_account_email = "default"
+
+    monkeypatch.setattr(
+        "gyb.auth.adc.google.auth.default", lambda scopes: (UnresolvedGCECreds(), "proj")
+    )
+    with pytest.raises(AuthenticationError, match="no service account identity"):
+        load_adc_credentials(profile)
+
+    # Keyless Workload Identity Federation (GitHub Actions OIDC) -> IAM signJwt DwD
+    wif_info = {
+        "type": "external_account",
+        "audience": (
+            "//iam.googleapis.com/projects/123456/locations/global/"
+            "workloadIdentityPools/gyb-github/providers/github"
+        ),
+        "subject_token_type": "urn:ietf:params:oauth:token-type:jwt",
+        "token_url": "https://sts.googleapis.com/v1/token",
+        "service_account_impersonation_url": (
+            "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
+            "gyb-ci@gyb-project.iam.gserviceaccount.com:generateAccessToken"
+        ),
+        "credential_source": {"file": "/nonexistent/oidc-token"},
+    }
+    wif_creds = identity_pool.Credentials.from_info(wif_info)
+    monkeypatch.setattr("gyb.auth.adc.google.auth.default", lambda scopes: (wif_creds, None))
+    wif_profile = ADCProfile(name="wif", scopes=("https://mail.google.com/", "email"))
+    dwd = load_adc_credentials(wif_profile, subject_override="alice@example.com")
+    assert isinstance(dwd, impersonated_credentials.Credentials)
+    assert dwd.service_account_email == "gyb-ci@gyb-project.iam.gserviceaccount.com"
+    assert dwd._subject == "alice@example.com"
+    assert dwd._target_scopes == ["https://mail.google.com/", "email"]
 
     plain_user_creds = google.oauth2.credentials.Credentials(
         token="u-tok",

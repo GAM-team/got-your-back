@@ -107,19 +107,51 @@ jobs:
         run: uv run pytest tests/unit --cov=gyb --cov-branch --cov-report=term-missing --cov-fail-under=100
 
   live-integration:
-    name: Live Google API Integration Tests
+    name: Live Google APIs (${{ matrix.os }}, SA key DwD + DPoP OAuth)
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team'
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Each OS gets its own test mailbox & group so parallel jobs never collide.
+          - os: ubuntu-24.04
+            jid: 1
+          - os: macos-15
+            jid: 2
+          - os: windows-latest
+            jid: 3
     env:
       PASSCODE: ${{ secrets.PASSCODE }}
+      # Run live tests in the OS's native locale (e.g. cp1252 on Windows) like real users do,
+      # instead of the UTF-8 mode forced on the unit test jobs.
+      PYTHONUTF8: "0"
     steps:
+      - name: Enable Git long paths on Windows
+        if: runner.os == 'Windows'
+        run: |
+          git config --system core.longpaths true || true
+          git config --global core.longpaths true
+
       - name: Checkout repository
         uses: actions/checkout@v7
 
       - name: Install Linux native libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config gpg
+
+      - name: Ensure GnuPG is available
+        run: |
+          if ! command -v gpg >/dev/null 2>&1; then
+            if [[ "${RUNNER_OS}" == "macOS" ]]; then
+              brew install gnupg
+            elif [[ "${RUNNER_OS}" == "Windows" ]]; then
+              choco install gnupg -y --no-progress
+              echo "C:\\Program Files (x86)\\GnuPG\\bin" >> "$GITHUB_PATH"
+            fi
+          fi
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v10.3.3
@@ -133,16 +165,78 @@ jobs:
 
       - name: Decrypt CI credentials and run live Google integration suite
         if: env.PASSCODE != ''
+        env:
+          JID: ${{ matrix.jid }}
         run: |
           CREDS_DIR="$(mktemp -d)"
           trap 'rm -rf "$CREDS_DIR" creds.tar' EXIT
           export gybpath="$CREDS_DIR"
           source .github/actions/decrypt.sh .github/actions/creds.tar.gpg creds.tar
-          export GOOGLE_APPLICATION_CREDENTIALS="${CREDS_DIR}/oauth2service.json"
-          export GYB_ITEST_GMAIL_USER="gyb-gha-1@pdl.jaylee.us"
-          export GYB_ITEST_SUBJECT="gyb-gha-1@pdl.jaylee.us"
-          export GYB_ITEST_GROUP_EMAIL="gyb-travis-group-1@pdl.jaylee.us"
-          if [ -f "${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg" ]; then
-            export GYB_ITEST_OAUTH_CFG="${CREDS_DIR}/gyb-gha-1@pdl.jaylee.us.cfg"
+          # Python on Windows needs native paths, not Git Bash /tmp/... paths
+          NATIVE_DIR="$CREDS_DIR"
+          if [[ "${RUNNER_OS}" == "Windows" ]]; then
+            NATIVE_DIR="$(cygpath -w "$CREDS_DIR")"
           fi
-          uv run pytest -m integration -v
+          export GOOGLE_APPLICATION_CREDENTIALS="${NATIVE_DIR}/oauth2service.json"
+          export GYB_ITEST_ADC_MODE="sa-key"
+          export GYB_ITEST_GMAIL_USER="gyb-gha-${JID}@pdl.jaylee.us"
+          export GYB_ITEST_SUBJECT="${GYB_ITEST_GMAIL_USER}"
+          export GYB_ITEST_GROUP_EMAIL="gyb-travis-group-${JID}@pdl.jaylee.us"
+          if [ -f "${CREDS_DIR}/${GYB_ITEST_GMAIL_USER}.cfg" ]; then
+            export GYB_ITEST_OAUTH_CFG="${NATIVE_DIR}/${GYB_ITEST_GMAIL_USER}.cfg"
+          else
+            echo "::warning::No legacy OAuth cfg for ${GYB_ITEST_GMAIL_USER}; DPoP OAuth test will skip."
+          fi
+          uv run python -c "import locale, sys; print('platform', sys.platform, 'preferred encoding', locale.getpreferredencoding(False), 'utf8_mode', sys.flags.utf8_mode)"
+          uv run pytest -m integration -v -rs --durations=10
+
+  live-integration-wif:
+    name: Live Google APIs (ubuntu-24.04, keyless GitHub OIDC + WIF DwD)
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.repository_owner == 'GAM-team' && vars.GYB_WIF_PROVIDER != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Linux native libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends swig libpcsclite-dev libtss2-dev pkg-config
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv python install 3.12
+          uv sync --dev --python 3.12
+
+      - name: Authenticate to Google Cloud via GitHub OIDC (no stored keys)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GYB_WIF_PROVIDER }}
+          service_account: ${{ vars.GYB_WIF_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Run live Google integration suite with keyless ADC Domain-Wide Delegation
+        env:
+          GYB_ITEST_ADC_MODE: wif
+          GYB_ITEST_GMAIL_USER: gyb-gha-4@pdl.jaylee.us
+          GYB_ITEST_SUBJECT: gyb-gha-4@pdl.jaylee.us
+          GYB_ITEST_GROUP_EMAIL: gyb-travis-group-4@pdl.jaylee.us
+        run: |
+          # Sanity check: ADC must be a keyless external_account config, never a private key.
+          uv run python -c "
+          import json, os
+          info = json.load(open(os.environ['GOOGLE_APPLICATION_CREDENTIALS'], encoding='utf-8'))
+          assert info['type'] == 'external_account', info['type']
+          assert 'private_key' not in info
+          print('ADC type:', info['type'], '| impersonating:', info['service_account_impersonation_url'].split('/')[-1])
+          "
+          uv run pytest -m integration -v -rs --durations=10

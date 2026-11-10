@@ -33,6 +33,7 @@ class LiveTestEnv:
     legacy_oauth_cfg: Path | None
     run_id: str
     label_namespace: str
+    adc_mode: str | None = None
 
 
 @pytest.fixture(scope="session")
@@ -52,6 +53,7 @@ def live_env() -> LiveTestEnv:
         legacy_oauth_cfg=Path(legacy_cfg_raw) if legacy_cfg_raw else None,
         run_id=run_id,
         label_namespace=f"gyb-itest-{run_id}",
+        adc_mode=os.environ.get("GYB_ITEST_ADC_MODE", "").strip().lower() or None,
     )
 
 
