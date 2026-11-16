@@ -1855,6 +1855,24 @@ def backup_chat(request_id, response, exception):
 def backup_message(request_id, response, exception):
   if exception is not None:
     print(exception)
+    # request_id is the message id. Don't drop the message silently: queue
+    # it for retry if the error is transient, otherwise record the failure.
+    try:
+      http_status = int(exception.resp['status'])
+    except (AttributeError, KeyError, TypeError, ValueError):
+      http_status = 0
+    try:
+      error = json.loads(exception.content.decode('utf-8'))
+      reason = error['error']['errors'][0]['reason']
+    except (AttributeError, KeyError, IndexError, TypeError, ValueError):
+      reason = None
+    if http_status == 404:
+      return # message was deleted after we listed it, nothing to back up
+    if (http_status >= 500 or http_status == 429 or
+        reason in ['rateLimitExceeded', 'userRateLimitExceeded', 'backendError']):
+      retry_messages.append(request_id)
+    else:
+      failed_messages.append(request_id)
   else:
     labelIds = response.get('labelIds', [])
     if 'CHATS' in labelIds or 'CHAT' in labelIds: # skip CHATS
@@ -2231,6 +2249,9 @@ def main(argv):
       message_sizes = getSizeOfMessages(messages_to_backup, gmail)
       request_size = 0
     backed_up_messages = 0
+    global retry_messages, failed_messages
+    retry_messages = []
+    failed_messages = []
     gbatch = gmail.new_batch_http_request()
     for a_message in messages_to_backup:
       if options.memory_limit:
@@ -2246,7 +2267,7 @@ def main(argv):
       gbatch.add(gmail.users().messages().get(userId='me',
         id=a_message, format='raw',
         fields='id,labelIds,internalDate,raw'),
-        callback=backup_message)
+        callback=backup_message, request_id=a_message)
       backed_up_messages += 1
     if len(gbatch._order) > 0:
       callGAPI(gbatch, None, soft_errors=True)
@@ -2254,7 +2275,46 @@ def main(argv):
       rewrite_line("backed up %s of %s messages" %
         (backed_up_messages, backup_count))
     print("\n")
- 
+
+    # Messages that failed inside a batch with a transient error (5xx,
+    # rate limit) are not covered by callGAPI's retries, retry them here.
+    max_retries = 5
+    for attempt in range(1, max_retries+1):
+      if not retry_messages:
+        break
+      pending_messages = retry_messages
+      retry_messages = []
+      wait_on_fail = min(2 ** (attempt + 2), 60) + random.random()
+      print("%s messages failed with a temporary error, retrying in %s seconds (attempt %s/%s)" %
+        (len(pending_messages), int(wait_on_fail), attempt, max_retries))
+      time.sleep(wait_on_fail)
+      if options.memory_limit:
+        request_size = 0
+      gbatch = gmail.new_batch_http_request()
+      for a_message in pending_messages:
+        if options.memory_limit:
+          request_size += message_sizes[a_message]
+        if len(gbatch._order) == options.batch_size or (options.memory_limit and request_size >= memory_limit):
+          callGAPI(gbatch, None, soft_errors=True)
+          gbatch = gmail.new_batch_http_request()
+          sqlconn.commit()
+          if options.memory_limit:
+            request_size = message_sizes[a_message]
+        gbatch.add(gmail.users().messages().get(userId='me',
+          id=a_message, format='raw',
+          fields='id,labelIds,internalDate,raw'),
+          callback=backup_message, request_id=a_message)
+      if len(gbatch._order) > 0:
+        callGAPI(gbatch, None, soft_errors=True)
+        sqlconn.commit()
+    failed_messages.extend(retry_messages)
+    if failed_messages:
+      sys.stderr.write('\nERROR: %s messages could not be backed up:\n' %
+        len(failed_messages))
+      for a_message in failed_messages:
+        sys.stderr.write('  %s\n' % a_message)
+      sys.stderr.write('The backup is incomplete. Run GYB again to fetch the missing messages.\n\n')
+
     if not options.refresh:
       messages_to_refresh = []
     refreshed_messages = 0
@@ -2282,6 +2342,8 @@ def main(argv):
       rewrite_line("refreshed %s of %s messages" %
         (refreshed_messages, refresh_count))
     print("\n")
+    if failed_messages:
+      sys.exit(10)
 
   # BACKUP-CHAT
   elif options.action == 'backup-chat':
